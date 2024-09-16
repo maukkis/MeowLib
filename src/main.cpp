@@ -4,7 +4,6 @@
 #include <curl/websockets.h>
 #include <unistd.h>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include "includes/initConnection.h"
 
 
