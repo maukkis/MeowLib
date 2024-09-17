@@ -32,7 +32,7 @@ void sendHeartbeat(CURL *meow, std::uint64_t interval){
       op = meowJson["op"];
     } catch (nlohmann::json::parse_error& e) {} // this is here so it doesnt crash because discord sucks
     if (op == 11 || op == 10){
-      std::cout << "ACK\n";
+      std::cout << "server sent ACK\n";
     }
     else {
       std::cerr << "server did not send ACK\n";
