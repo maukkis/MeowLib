@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
-
+#include "includes/eventCodes.h"
 
 void sendHeartbeat(CURL *meow, std::uint64_t interval){
   while(true){
@@ -31,7 +31,7 @@ void sendHeartbeat(CURL *meow, std::uint64_t interval){
       auto meowJson = nlohmann::json::parse(buffer);
       op = meowJson["op"];
     } catch (nlohmann::json::parse_error& e) {} // this is here so it doesnt crash because discord sucks
-    if (op == 11 || op == 10){
+    if (op == HeartbeatACK || op == Hello){
       std::cout << "server sent ACK\n";
     }
     else {
