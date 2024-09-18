@@ -8,9 +8,9 @@
 #include "includes/eventCodes.h"
 
 void sendHeartbeat(CURL *meow, std::uint64_t interval){
-  while(true){
-    float random = ((float) rand()) / (float) RAND_MAX;
-    sleep(interval * random / 1000);
+  float random = ((float) rand()) / (float) RAND_MAX;
+  sleep(interval * random / 1000);
+  while (true) {
     std::string heartbeat{R"({"op": 1,"d": null})"};
     size_t sent;
     CURLcode res;
@@ -37,6 +37,7 @@ void sendHeartbeat(CURL *meow, std::uint64_t interval){
     else {
       std::cerr << "server did not send ACK\n";
     }
+    sleep(interval / 1000);
   }
 }
 
