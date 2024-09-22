@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "includes/initConnection.h"
-
+#include <thread>
 
 int main(){
   CURL *meow;
@@ -23,7 +23,9 @@ int main(){
     return 1;
   }
   std::uint64_t interval{getHeartbeatInterval(meow)};
-  sendHeartbeat(meow,interval);
+  std::thread heartbeatT(sendHeartbeat, meow, interval);
+  sendIdent(meow);
+  heartbeatT.join();
   curl_easy_cleanup(meow);
   // close the websocket
   size_t sent;

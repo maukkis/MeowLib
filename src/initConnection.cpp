@@ -7,6 +7,21 @@
 #include <nlohmann/json.hpp>
 #include "includes/eventCodes.h"
 
+void sendIdent(CURL *meow){
+  std::cout << "sending ident";
+  std::string ident {R"({"op": 2, "d": {"token": "put token here", "intents": 513, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  size_t sent;
+  CURLcode res;
+  res = curl_ws_send(meow, ident.c_str(), strlen(ident.c_str()), &sent, 0, CURLWS_TEXT);
+  std::cout << res << '\n';
+  sleep(3);
+  char buffer[4096];
+  size_t rlen;
+  const struct curl_ws_frame *nya;
+  curl_ws_recv(meow, buffer, sizeof(buffer), &rlen, &nya);
+}
+
+
 void sendHeartbeat(CURL *meow, std::uint64_t interval){
   float random = ((float) rand()) / (float) RAND_MAX;
   sleep(interval * random / 1000);
