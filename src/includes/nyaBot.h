@@ -35,7 +35,7 @@ public:
     curl_easy_setopt(meow, CURLOPT_URL, "wss://gateway.discord.gg");
     connect();
     getHeartbeatInterval();
-    std::cout << interval;
+    std::cout << "interval is " << interval << '\n';
     sendIdent();
   }
   ~nyaBot(){

@@ -41,7 +41,7 @@ void nyaBot::connect(){
 }
 
 void nyaBot::sendIdent(){
-  std::cout << "sending ident";
+  std::cout << "sending ident\n";
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 513, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   size_t sent;
   CURLcode res;
@@ -92,21 +92,25 @@ void nyaBot::sendHeartbeat(){
 
 
 void nyaBot::getHeartbeatInterval(){
-  char buffer[124];
+  char buffer[4096];
   size_t rlen;
   const struct curl_ws_frame *nya;
   // receive data from websocket
-  curl_ws_recv(meow, buffer, sizeof(buffer), &rlen, &nya);
-  std::cout << buffer;
   try{
-  // initialize a json object with the data of buffer
-  auto meowJson = nlohmann::json::parse(buffer);
-  // create a new json object that has the data of d because discord api sucks
-  auto meowNested = meowJson["d"];
-  // parse the data of heartbeat_interval into uint64_t and return it
-  interval = meowNested["heartbeat_interval"];
-  } catch(nlohmann::json::exception& e){
-    e.what();
+    curl_ws_recv(meow, buffer, sizeof(buffer), &rlen, &nya);
+    // initialize a json object with the data of buffer
+    auto meowJson = nlohmann::json::parse(buffer);
+    // create a new json object that has the data of d because discord api sucks
+    auto meowNested = meowJson["d"];
+    // parse the data of heartbeat_interval into uint64_t and return it
+    interval = meowNested["heartbeat_interval"];
+
   }
+  catch(nlohmann::json::exception& e){
+    std::cout << "failed to parse buffer\n";
+    std::cout << "buffer is " << buffer << '\n';
+    std::exit(1);
+  }
+
 }
 
