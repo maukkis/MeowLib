@@ -97,7 +97,9 @@ void nyaBot::getHeartbeatInterval(){
   const struct curl_ws_frame *nya;
   // receive data from websocket
   try{
-    curl_ws_recv(meow, buffer, sizeof(buffer), &rlen, &nya);
+    curl_ws_recv(meow, buffer, sizeof(buffer)-1, &rlen, &nya);
+    buffer[rlen] = '\0';
+    std::cout << buffer;
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buffer);
     // create a new json object that has the data of d because discord api sucks
