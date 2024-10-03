@@ -74,7 +74,11 @@ void nyaBot::sendHeartbeat(){
     char buffer[4096];
     size_t rlen;
     const struct curl_ws_frame *joo;
-    curl_ws_recv(meow, buffer, sizeof(buffer), &rlen, &joo);
+    curl_ws_recv(meow, buffer, sizeof(buffer)-1, &rlen, &joo);
+    if (rlen < 1){
+    	std::cout << "did not receive data\n";
+    }
+    buffer[rlen] = '\0';
     int op;
     try {
       auto meowJson = nlohmann::json::parse(buffer);
@@ -99,7 +103,6 @@ void nyaBot::getHeartbeatInterval(){
   try{
     curl_ws_recv(meow, buffer, sizeof(buffer)-1, &rlen, &nya);
     buffer[rlen] = '\0';
-    std::cout << buffer;
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buffer);
     // create a new json object that has the data of d because discord api sucks
