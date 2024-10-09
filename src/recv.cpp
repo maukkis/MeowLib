@@ -1,9 +1,12 @@
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include "includes/nyaBot.h"
 #include <nlohmann/json.hpp>
 #include "includes/eventCodes.h"
 #include <unistd.h>
+#include <stdio.h>
+
 
 void nyaBot::listen(){
   std::ofstream meowlog{"meow.log"};
@@ -17,6 +20,7 @@ void nyaBot::listen(){
     }
     else {
       std::cout << "[*] received: " << rlen << " bytes\n";
+      parseAgain:
       buffer[rlen] = '\0';
       try {
         auto meowJson = nlohmann::json::parse(buffer);
@@ -44,9 +48,25 @@ void nyaBot::listen(){
         }
       }
       catch(nlohmann::json::exception& e){
-        std::cout << e.what() << '\n';
-        std::cout << "buffer printed to log\n";
-        meowlog << buffer << std::endl;
+        std::cout << "[!] got parse error :( partial data?\n";
+        std::cout << "[*] trying to receive again\n";
+        char buffer1[8192];
+        size_t rlen1;
+        const struct curl_ws_frame *nya1;
+        curl_ws_recv(meow, buffer1, sizeof(buffer1)-1, &rlen1, &nya1);
+        if (rlen1 < 1){
+          std::cout << "[!] buffer printed to log\n";
+          meowlog << buffer << std::endl;
+          continue;
+        }
+        else {
+          std::cout << "[*] got data: " << rlen1 << " bytes\n";
+          buffer[rlen] = static_cast<char>(NULL);
+          rlen += rlen1 + 1;
+          strncat(buffer, buffer1, rlen1);
+          goto parseAgain;
+        }
+ 
       }
     }
   }
