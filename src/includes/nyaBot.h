@@ -35,8 +35,15 @@ public:
     curl_easy_setopt(meow, CURLOPT_URL, "wss://gateway.discord.gg");
     connect();
     getHeartbeatInterval();
-    std::cout << "interval is " << interval << '\n';
+    std::cout << "[*] interval is " << interval << '\n';
     sendIdent();
+    std::thread listenT{&nyaBot::listen, this};
+    listenT.detach();
+  }
+  void close(){
+    size_t sent;
+    (void)curl_ws_send(meow, "", 0, &sent, 0, CURLWS_CLOSE);
+    std::cout << "[*] closed!\n"; 
   }
   ~nyaBot(){
     // close the websocket
@@ -49,8 +56,10 @@ private:
   void connect();
   void sendIdent();
   void getHeartbeatInterval();
+  void listen();
   CURL *meow;
-  std::string token;
+  const std::string token;
   std::uint64_t interval;
+  size_t sequence{0};
 };
 #endif

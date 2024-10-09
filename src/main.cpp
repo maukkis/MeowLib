@@ -18,13 +18,15 @@ along with nyaBot; see the file COPYING3.  If not see
 
 
 
-
+#include <unistd.h>
 #include "includes/nyaBot.h"
 
 int main(){
-  nyaBot bot{"TOKEN HERE"};
+  nyaBot bot{"token"};
   std::thread meowT{&nyaBot::sendHeartbeat, bot};
-  meowT.join();
+  sleep(120);
+  meowT.detach();
+  bot.close();
   return 0;
 }
 
