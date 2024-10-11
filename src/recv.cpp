@@ -22,15 +22,13 @@ along with nyaBot; see the file COPYING3.  If not see
 #include <fstream>
 #include <iostream>
 #include "includes/nyaBot.h"
-#include <nlohmann/json.hpp>
 #include "includes/eventCodes.h"
-#include <unistd.h>
 #include <stdio.h>
 
 
 void nyaBot::listen(){
-  std::ofstream meowlog{"meow.log"};
-  while (true){
+  std::ofstream meowlog{"meow.log"}; 
+  while (!stop){
     char buffer[8192];
     size_t rlen;
     const struct curl_ws_frame *nya;
@@ -54,14 +52,25 @@ void nyaBot::listen(){
             if (meow == "READY"){
               sequence = meowJson["s"];
               std::cout << "[*] got ready!\n";
+              meowJson = meowJson["d"];
+              meowJson = meowJson["user"];
+              appId = meowJson["id"];
             }
             else if(meow == "GUILD_CREATE"){
               sequence = meowJson["s"];
               std::cout << "[*] got guild info!\n";
             }
+            else if(meow == "INTERACTION_CREATE"){
+              std::cout << "[*] got slash\n";
+              std::thread meowT{&nyaBot::handleSlash, this,meowJson};
+              meowT.detach();
+            }
+            else if(meow == "MESSAGE_CREATE"){
+              std::cout << "[*] new message got created\n";
+            }
             else {
               std::cout << "[!] got unknown request printing to log\n";
-              meowlog << buffer << '\n';
+              meowlog << buffer << std::endl;
               sequence = meowJson["s"];
             }
           break;
@@ -86,7 +95,6 @@ void nyaBot::listen(){
           strncat(buffer, buffer1, rlen1);
           goto parseAgain;
         }
- 
       }
     }
   }

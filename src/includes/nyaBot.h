@@ -22,10 +22,12 @@ along with nyaBot; see the file COPYING3.  If not see
 #ifndef nyaBot_H
 #define nyaBot_H
 
+#include <csignal>
 #include <cstdint>
 #include <string>
 #include <curl/curl.h>
 #include <thread>
+#include <nlohmann/json.hpp>
 #include <iostream>
 class nyaBot {
 public:
@@ -40,26 +42,25 @@ public:
     std::thread listenT{&nyaBot::listen, this};
     listenT.detach();
   }
-  void close(){
+  ~nyaBot(){
+    stop = true;
     size_t sent;
     (void)curl_ws_send(meow, "", 0, &sent, 0, CURLWS_CLOSE);
     std::cout << "[*] closed!\n"; 
-  }
-  ~nyaBot(){
-    // close the websocket
-    size_t sent;
-    (void)curl_ws_send(meow, "", 0, &sent, 0, CURLWS_CLOSE);
+    curl_easy_cleanup(meow);
   }
   void sendHeartbeat();
-
+  void listen();
 private:
+  void handleSlash(nlohmann::json meowJson);
   void connect();
   void sendIdent();
   void getHeartbeatInterval();
-  void listen();
+  bool stop{false};
   CURL *meow;
   const std::string token;
   std::uint64_t interval;
   size_t sequence{0};
+  std::string appId;
 };
 #endif

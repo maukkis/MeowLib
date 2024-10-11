@@ -18,15 +18,16 @@ along with nyaBot; see the file COPYING3.  If not see
 
 
 
+#include <csignal>
+#include <pthread.h>
 #include <unistd.h>
 #include "includes/nyaBot.h"
 
 int main(){
   nyaBot bot{"token"};
   std::thread meowT{&nyaBot::sendHeartbeat, bot};
-  sleep(120);
+  sleep(5);
   meowT.detach();
-  bot.close();
   return 0;
 }
 

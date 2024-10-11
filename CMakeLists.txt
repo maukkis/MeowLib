@@ -12,7 +12,7 @@ endif()
 file(GLOB_RECURSE nyaBot_src "src/*.cpp"
 "src/*.h")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-02")
+set(CMAKE_CXX_FLAGS_RELEASE "-03")
 add_executable(nyaBot ${nyaBot_src})
 target_link_libraries(nyaBot PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(nyaBot PRIVATE ${CURL_LIBRARIES})

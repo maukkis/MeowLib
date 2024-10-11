@@ -23,7 +23,6 @@ along with nyaBot; see the file COPYING3.  If not see
 #include <string>
 #include <unistd.h>
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include "includes/nyaBot.h"
 
 void nyaBot::connect(){
