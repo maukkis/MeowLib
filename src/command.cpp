@@ -20,6 +20,12 @@ along with nyaBot; see the file COPYING3.  If not see
 
 #include "includes/nyaBot.h"
 #include <cstdlib>
+#include <curl/curl.h>
+#include <curl/easy.h>
+
+static void curlToSring(void *ptr, size_t len, size_t nmemb, std::string *woof){
+  woof->append(static_cast<char *>(ptr), len * nmemb);
+}
 
 void nyaBot::handleSlash(nlohmann::json meowJson){
   CURL *meow = curl_easy_init();
@@ -41,5 +47,34 @@ void nyaBot::handleSlash(nlohmann::json meowJson){
     curl_easy_perform(meow);
     curl_slist_free_all(headers);
   }
+  if (commandName == "showpp"){
+    dataJson = dataJson["options"];
+    std::string value;
+    for(const auto& tapamut : dataJson){
+      value = tapamut["value"].get<std::string>();
+    }
+    std::string woof;
+    curl_easy_setopt(meow, CURLOPT_URL, std::string{"https://scoresaber.com/api/player/" + value + "/basic"}.c_str());
+    curl_easy_setopt(meow, CURLOPT_WRITEFUNCTION, curlToSring);
+    curl_easy_setopt(meow, CURLOPT_WRITEDATA, &woof);
+    curl_easy_perform(meow);
+    auto nyaJson = nlohmann::json::parse(woof);
+    size_t pp = nyaJson["pp"];
+    std::string ppString{"8"};
+    for(size_t i{0}; i < pp / 100; ++i ){
+      ppString.append("="); 
+    }
+    ppString.append("D");
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    headers = curl_slist_append(headers, "charset: utf-8");
+    std::string json{R"({"type":4, "data":{"content": "pp size is )" + ppString + R"("}})"};
+    curl_easy_setopt(meow, CURLOPT_HTTPHEADER, headers); 
+    curl_easy_setopt(meow, CURLOPT_URL, std::string{"https://discord.com/api/interactions/" + interactionId + '/' + interactionToken + "/callback"}.c_str());
+    curl_easy_setopt(meow, CURLOPT_POSTFIELDS, json.c_str());
+    curl_easy_perform(meow);
+    curl_slist_free_all(headers);
+    }
   curl_easy_cleanup(meow);
 }

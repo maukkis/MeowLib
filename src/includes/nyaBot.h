@@ -39,8 +39,10 @@ public:
     getHeartbeatInterval();
     std::cout << "[*] interval is " << interval << '\n';
     sendIdent();
+    std::thread heartbeatT{&nyaBot::sendHeartbeat, this};
     std::thread listenT{&nyaBot::listen, this};
     listenT.detach();
+    heartbeatT.detach();
   }
   ~nyaBot(){
     stop = true;
@@ -49,9 +51,9 @@ public:
     std::cout << "[*] closed!\n"; 
     curl_easy_cleanup(meow);
   }
+private:
   void sendHeartbeat();
   void listen();
-private:
   void handleSlash(nlohmann::json meowJson);
   void connect();
   void sendIdent();

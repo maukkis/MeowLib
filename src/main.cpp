@@ -24,10 +24,8 @@ along with nyaBot; see the file COPYING3.  If not see
 #include "includes/nyaBot.h"
 
 int main(){
-  nyaBot bot{"token"};
-  std::thread meowT{&nyaBot::sendHeartbeat, bot};
-  sleep(5);
-  meowT.detach();
+  nyaBot bot{"tokenm"};
+  sleep(60);
   return 0;
 }
 

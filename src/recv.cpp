@@ -61,11 +61,13 @@ void nyaBot::listen(){
               std::cout << "[*] got guild info!\n";
             }
             else if(meow == "INTERACTION_CREATE"){
+              sequence = meowJson["s"];
               std::cout << "[*] got slash\n";
-              std::thread meowT{&nyaBot::handleSlash, this,meowJson};
+              std::thread meowT{&nyaBot::handleSlash, this, meowJson};
               meowT.detach();
             }
             else if(meow == "MESSAGE_CREATE"){
+              sequence = meowJson["s"];
               std::cout << "[*] new message got created\n";
             }
             else {
