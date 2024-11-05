@@ -44,7 +44,7 @@ void nyaBot::sendIdent(){
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 14, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   size_t sent;
   CURLcode res;
-  res = curl_ws_send(meow, ident.c_str(), strlen(ident.c_str()), &sent, 0, CURLWS_TEXT);
+  res = curl_ws_send(meow, ident.c_str(), ident.length(), &sent, 0, CURLWS_TEXT);
   if (res == CURLE_OK){
     std::cout << "[*] ident sent!\n";
   }
@@ -55,13 +55,14 @@ void nyaBot::sendIdent(){
 
 
 void nyaBot::sendHeartbeat(){
+  srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
   sleep(interval * random / 1000);
   while (!stop) {
     std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
     size_t sent;
     CURLcode res;
-    res = curl_ws_send(meow, heartbeat.c_str(), strlen(heartbeat.c_str()), &sent, 0, CURLWS_TEXT);
+    res = curl_ws_send(meow, heartbeat.c_str(), heartbeat.length(), &sent, 0, CURLWS_TEXT);
     if (res == CURLE_OK){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }

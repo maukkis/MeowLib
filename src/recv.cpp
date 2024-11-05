@@ -62,7 +62,7 @@ void nyaBot::listen(){
             }
             else if(meow == "INTERACTION_CREATE"){
               sequence = meowJson["s"];
-              std::cout << "[*] got slash\n";
+              std::cout << "[*] got interaction\n";
               std::thread meowT{&nyaBot::handleSlash, this, meowJson};
               meowT.detach();
             }

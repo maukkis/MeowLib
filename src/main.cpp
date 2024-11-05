@@ -24,8 +24,8 @@ along with nyaBot; see the file COPYING3.  If not see
 #include "includes/nyaBot.h"
 
 int main(){
-  nyaBot bot{"tokenm"};
-  sleep(60);
+  nyaBot bot{"token"};
+  sleep(60 * 10);
   return 0;
 }
 
