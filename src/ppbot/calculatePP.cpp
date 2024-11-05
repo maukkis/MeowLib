@@ -57,7 +57,7 @@ double calculateNormalizedScore(double score, double maxScore){
 }
 
 double getPP(const std::string& songName, const std::string& instrument, const double& score){
-  std::ifstream meow{"sigmat.json"};
+  std::ifstream meow{"meow.json"};
   auto meoww = nlohmann::json::parse(meow);
   double pp = 0;
   for (const auto& nya : meoww) {

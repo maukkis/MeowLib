@@ -31,7 +31,7 @@ std::string to_lowercase(const std::string& bark) {
     return lower_str;
 }
 std::vector<std::string> getArrayOfOptions(const std::string& value){
-  std::ifstream meow{"sigmat.json"};
+  std::ifstream meow{"meow.json"};
   std::vector<std::string> songs;
   auto meowJson = nlohmann::json::parse(meow);
   for (const auto& nya: meowJson){
