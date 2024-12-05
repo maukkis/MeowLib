@@ -21,20 +21,18 @@ along with nyaBot; see the file COPYING3.  If not see
 
 #ifndef nyaBot_H
 #define nyaBot_H
-
+#include "../../meowHttp/src/includes/websocket.h"
 #include <csignal>
 #include <cstdint>
 #include <string>
-#include <curl/curl.h>
 #include <thread>
 #include <nlohmann/json.hpp>
 #include <iostream>
 class nyaBot {
 public:
   nyaBot(std::string tokenya) : token{tokenya}{
-    meow = curl_easy_init();
-    curl_easy_setopt(meow, CURLOPT_CONNECT_ONLY, 2L);
-    curl_easy_setopt(meow, CURLOPT_URL, "wss://gateway.discord.gg");
+    handle = meowWs::Websocket()
+      .setUrl("https://gateway.discord.gg");
     connect();
     getHeartbeatInterval();
     std::cout << "[*] interval is " << interval << '\n';
@@ -47,9 +45,7 @@ public:
   ~nyaBot(){
     stop = true;
     size_t sent;
-    (void)curl_ws_send(meow, "", 0, &sent, 0, CURLWS_CLOSE);
     std::cout << "[*] closed!\n"; 
-    curl_easy_cleanup(meow);
   }
 private:
   void sendHeartbeat();
@@ -59,8 +55,8 @@ private:
   void sendIdent();
   void getHeartbeatInterval();
   bool stop{false};
-  CURL *meow;
   const std::string token;
+  meowWs::Websocket handle;
   std::uint64_t interval;
   size_t sequence{0};
   std::string appId;

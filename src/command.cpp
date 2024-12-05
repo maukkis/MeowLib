@@ -17,7 +17,7 @@ along with nyaBot; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 
-
+#include <curl/curl.h>
 #include "includes/nyaBot.h"
 #include <cstdlib>
 #include <cstring>

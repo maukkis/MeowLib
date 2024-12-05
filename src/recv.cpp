@@ -29,19 +29,16 @@ along with nyaBot; see the file COPYING3.  If not see
 void nyaBot::listen(){
   std::ofstream meowlog{"meow.log"}; 
   while (!stop){
-    char buffer[8192];
-    size_t rlen;
-    const struct curl_ws_frame *nya;
-    curl_ws_recv(meow, buffer, sizeof(buffer)-1, &rlen, &nya);
+    std::string buf;
+    size_t rlen = handle.wsRecv(buf, 8192);
     if (rlen < 1){
       continue;
     }
     else {
       std::cout << "[*] received: " << rlen << " bytes\n";
       parseAgain:
-      buffer[rlen] = '\0';
       try {
-        auto meowJson = nlohmann::json::parse(buffer);
+        auto meowJson = nlohmann::json::parse(buf);
         size_t op = meowJson["op"];
         switch(op){
           case HeartbeatACK:
@@ -72,7 +69,7 @@ void nyaBot::listen(){
             }
             else {
               std::cout << "[!] got unknown request printing to log\n";
-              meowlog << buffer << std::endl;
+              meowlog << buf << std::endl;
               sequence = meowJson["s"];
             }
           break;
@@ -81,20 +78,17 @@ void nyaBot::listen(){
       catch(nlohmann::json::exception& e){
         std::cout << "[!] got parse error :( partial data?\n";
         std::cout << "[*] trying to receive again\n";
-        char buffer1[8192];
-        size_t rlen1;
-        const struct curl_ws_frame *nya1;
-        curl_ws_recv(meow, buffer1, sizeof(buffer1)-1, &rlen1, &nya1);
+        std::string buf1;
+        size_t rlen1 = handle.wsRecv(buf1, 8192);
         if (rlen1 < 1){
           std::cout << "[!] buffer printed to log\n";
-          meowlog << buffer << std::endl;
+          meowlog << buf1 << std::endl;
           continue;
         }
         else {
           std::cout << "[*] got data: " << rlen1 << " bytes\n";
-          buffer[rlen] = static_cast<char>(NULL);
           rlen += rlen1;
-          strncat(buffer, buffer1, rlen1);
+          buf.append(buf1);
           goto parseAgain;
         }
       }

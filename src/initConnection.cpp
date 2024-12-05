@@ -16,24 +16,18 @@ You should have received a copy of the GNU General Public License
 along with nyaBot; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-
-#include <curl/curl.h>
-#include <curl/easy.h>
-#include <curl/websockets.h>
+#include "../meowHttp/src/includes/websocket.h"
 #include <string>
 #include <unistd.h>
 #include <iostream>
 #include "includes/nyaBot.h"
 
 void nyaBot::connect(){
-  CURLcode res;
-  res = curl_easy_perform(meow);
-  if (res == CURLE_OK){
+  if(handle.perform() == OK){
     std::cout << "[*] connected to the websocket succesfully!\n";
   }
   else {
-    std::cerr << "[!] something went wrong curl code is " << res << '\n';
-    curl_easy_cleanup(meow);
+    std::cerr << "[!] something went wrong\n";
     std::exit(1);
   }
   
@@ -42,14 +36,11 @@ void nyaBot::connect(){
 void nyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 14, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
-  size_t sent;
-  CURLcode res;
-  res = curl_ws_send(meow, ident.c_str(), ident.length(), &sent, 0, CURLWS_TEXT);
-  if (res == CURLE_OK){
+  if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     std::cout << "[*] ident sent!\n";
   }
   else {
-    std::cout << "[!] something went wrong curl code is: " << res << '\n';
+    std::cout << "[!] something went wrong\n";
   }
 }
 
@@ -60,14 +51,11 @@ void nyaBot::sendHeartbeat(){
   sleep(interval * random / 1000);
   while (!stop) {
     std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
-    size_t sent;
-    CURLcode res;
-    res = curl_ws_send(meow, heartbeat.c_str(), heartbeat.length(), &sent, 0, CURLWS_TEXT);
-    if (res == CURLE_OK){
+    if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
     else{
-      std::cerr << "[!] something went wrong curlcode is: " << res << '\n';
+      std::cerr << "[!] something went wrong\n";
       return;
     }
    sleep(interval / 1000);
@@ -76,15 +64,12 @@ void nyaBot::sendHeartbeat(){
 
 
 void nyaBot::getHeartbeatInterval(){
-  char buffer[4096];
-  size_t rlen;
-  const struct curl_ws_frame *nya;
+  std::string buf;
   // receive data from websocket
   try{
-    curl_ws_recv(meow, buffer, sizeof(buffer)-1, &rlen, &nya);
-    buffer[rlen] = '\0';
+    handle.wsRecv(buf, 8192);
     // initialize a json object with the data of buffer
-    auto meowJson = nlohmann::json::parse(buffer);
+    auto meowJson = nlohmann::json::parse(buf);
     // create a new json object that has the data of d because discord api sucks
     auto meowNested = meowJson["d"];
     // parse the data of heartbeat_interval into uint64_t and return it
@@ -93,7 +78,7 @@ void nyaBot::getHeartbeatInterval(){
   }
   catch(nlohmann::json::exception& e){
     std::cout << "[!] failed to parse buffer\n";
-    std::cout << "[!] buffer is " << buffer << '\n';
+    std::cout << "[!] buffer is " << buf << '\n';
     std::exit(1);
   }
 
