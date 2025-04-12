@@ -17,7 +17,7 @@ along with nyaBot; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 
-
+#include "../meowHttp/src/includes/websocket.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -30,13 +30,17 @@ void nyaBot::listen(){
   std::ofstream meowlog{"meow.log"}; 
   while (!stop){
     std::string buf;
-    size_t rlen = handle.wsRecv(buf, 8192);
+    meowWs::meowWsFrame frame;
+    size_t rlen = handle.wsRecv(buf, &frame);
     if (rlen < 1){
       continue;
     }
     else {
       std::cout << "[*] received: " << rlen << " bytes\n";
-      parseAgain:
+      if(frame.opcode == meowWs::meowWS_CLOSE) {
+        std::cout << "[!] connection closed\n";
+        return;
+      }
       try {
         auto meowJson = nlohmann::json::parse(buf);
         size_t op = meowJson["op"];
@@ -77,20 +81,6 @@ void nyaBot::listen(){
       }
       catch(nlohmann::json::exception& e){
         std::cout << "[!] got parse error :( partial data?\n";
-        std::cout << "[*] trying to receive again\n";
-        std::string buf1;
-        size_t rlen1 = handle.wsRecv(buf1, 8192);
-        if (rlen1 < 1){
-          std::cout << "[!] buffer printed to log\n";
-          meowlog << buf1 << std::endl;
-          continue;
-        }
-        else {
-          std::cout << "[*] got data: " << rlen1 << " bytes\n";
-          rlen += rlen1;
-          buf.append(buf1);
-          goto parseAgain;
-        }
       }
     }
   }

@@ -17,10 +17,33 @@ along with nyaBot; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 #include "../meowHttp/src/includes/websocket.h"
+#include <chrono>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <iostream>
 #include "includes/nyaBot.h"
+
+nyaBot::nyaBot(std::string tokenya) : token{tokenya}{
+  handle = meowWs::Websocket()
+    .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
+  connect();
+  getHeartbeatInterval();
+  std::cout << "[*] interval is " << interval << '\n';
+  sendIdent();
+  std::thread heartbeatT{&nyaBot::sendHeartbeat, this};
+  std::thread listenT{&nyaBot::listen, this};
+  listenT.detach();
+  heartbeatT.detach();
+}
+
+
+nyaBot::~nyaBot(){
+  stop = true;
+  handle.wsClose(1000, "going away :3");
+  std::cout << "[*] closed!\n"; 
+}
+
 
 void nyaBot::connect(){
   if(handle.perform() == OK){
@@ -48,7 +71,7 @@ void nyaBot::sendIdent(){
 void nyaBot::sendHeartbeat(){
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
-  sleep(interval * random / 1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
   while (!stop) {
     std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
@@ -58,7 +81,7 @@ void nyaBot::sendHeartbeat(){
       std::cerr << "[!] something went wrong\n";
       return;
     }
-   sleep(interval / 1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(interval));
   }
 }
 
@@ -67,7 +90,8 @@ void nyaBot::getHeartbeatInterval(){
   std::string buf;
   // receive data from websocket
   try{
-    handle.wsRecv(buf, 8192);
+    meowWs::meowWsFrame frame;
+    handle.wsRecv(buf, &frame);
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buf);
     // create a new json object that has the data of d because discord api sucks

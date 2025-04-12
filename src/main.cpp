@@ -25,7 +25,7 @@ along with nyaBot; see the file COPYING3.  If not see
 
 int main(){
   nyaBot bot{"token"};
-  sleep(60 * 10);
+  sleep(60);
   return 0;
 }
 

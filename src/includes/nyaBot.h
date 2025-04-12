@@ -30,23 +30,8 @@ along with nyaBot; see the file COPYING3.  If not see
 #include <iostream>
 class nyaBot {
 public:
-  nyaBot(std::string tokenya) : token{tokenya}{
-    handle = meowWs::Websocket()
-      .setUrl("https://gateway.discord.gg");
-    connect();
-    getHeartbeatInterval();
-    std::cout << "[*] interval is " << interval << '\n';
-    sendIdent();
-    std::thread heartbeatT{&nyaBot::sendHeartbeat, this};
-    std::thread listenT{&nyaBot::listen, this};
-    listenT.detach();
-    heartbeatT.detach();
-  }
-  ~nyaBot(){
-    stop = true;
-    size_t sent;
-    std::cout << "[*] closed!\n"; 
-  }
+  nyaBot(std::string tokenya);
+  ~nyaBot();
 private:
   void sendHeartbeat();
   void listen();

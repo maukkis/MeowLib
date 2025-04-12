@@ -17,14 +17,12 @@ along with nyaBot; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 
-#include <curl/curl.h>
 #include "includes/nyaBot.h"
 #include <cstdlib>
 #include <cstring>
-#include <curl/easy.h>
 #include "includes/getAutoCorrect.h"
 #include "includes/calculatePP.h"
-
+#include "../meowHttp/src/includes/https.h"
 
 enum types{
   PING = 1,
@@ -40,24 +38,14 @@ static std::string doubleTo2Precision(double meow){
   return bark.str();
 }
 
-static void sendResponse(const std::string& json, CURL *meow, const std::string& interactionId, const std::string& interactionToken){
-    struct curl_slist *headers = NULL;
-    headers = curl_slist_append(headers, "Accept: application/json");
-    headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, "charset: utf-8");
-    curl_easy_setopt(meow, CURLOPT_HTTPHEADER, headers); 
-    curl_easy_setopt(meow, CURLOPT_URL, std::string{"https://discord.com/api/interactions/" + interactionId + '/' + interactionToken + "/callback"}.c_str());
-    curl_easy_setopt(meow, CURLOPT_POSTFIELDS, json.c_str());
-    curl_easy_perform(meow);
-    curl_slist_free_all(headers);
-}
-
-static void curlToSring(void *ptr, size_t len, size_t nmemb, std::string *woof){
-  woof->append(static_cast<char *>(ptr), len * nmemb);
+static void sendResponse(const std::string& json, meowHttp::Https &meow, const std::string& interactionId, const std::string& interactionToken){
+    meow.setUrl("https://discord.com/api/interactions/" + interactionId + '/' + interactionToken + "/callback")
+      .setPostfields(json)
+      .perform();
 }
 
 void nyaBot::handleSlash(nlohmann::json meowJson){
-  CURL *meow = curl_easy_init();
+  auto meow = meowHttp::Https();
   meowJson = meowJson["d"];
   std::string interactionId = meowJson["id"];
   std::string interactionToken = meowJson["token"];
@@ -78,10 +66,9 @@ void nyaBot::handleSlash(nlohmann::json meowJson){
         value = tapamut["value"].get<std::string>();
       }
       std::string woof;
-      curl_easy_setopt(meow, CURLOPT_URL, std::string{"https://scoresaber.com/api/player/" + value + "/basic"}.c_str());
-      curl_easy_setopt(meow, CURLOPT_WRITEFUNCTION, curlToSring);
-      curl_easy_setopt(meow, CURLOPT_WRITEDATA, &woof);
-      curl_easy_perform(meow);
+      meow.setUrl("https://scoresaber.com/api/player/" + value + "/basic")
+      .setWriteData(&woof)
+      .perform();
       auto nyaJson = nlohmann::json::parse(woof);
       size_t pp = nyaJson["pp"];
       std::string ppString{"8"};
@@ -141,5 +128,4 @@ void nyaBot::handleSlash(nlohmann::json meowJson){
       sendResponse(json, meow, interactionId, interactionToken);
     break;
   }
-  curl_easy_cleanup(meow);
 }
