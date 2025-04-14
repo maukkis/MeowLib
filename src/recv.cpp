@@ -24,9 +24,10 @@ along with nyaBot; see the file COPYING3.  If not see
 #include "includes/nyaBot.h"
 #include "includes/eventCodes.h"
 #include <stdio.h>
+#include <nlohmann/json.hpp>
+#include <thread>
 
-
-void nyaBot::listen(){
+void NyaBot::listen(){
   std::ofstream meowlog{"meow.log"}; 
   while (!stop){
     std::string buf;
@@ -52,10 +53,11 @@ void nyaBot::listen(){
             std::string meow = meowJson["t"];
             if (meow == "READY"){
               sequence = meowJson["s"];
-              std::cout << "[*] got ready!\n";
               meowJson = meowJson["d"];
               meowJson = meowJson["user"];
               appId = meowJson["id"];
+              std::thread meow{onReadyF};
+              meow.detach();
             }
             else if(meow == "GUILD_CREATE"){
               sequence = meowJson["s"];
@@ -64,7 +66,7 @@ void nyaBot::listen(){
             else if(meow == "INTERACTION_CREATE"){
               sequence = meowJson["s"];
               std::cout << "[*] got interaction\n";
-              std::thread meowT{&nyaBot::handleSlash, this, meowJson};
+              std::thread meowT{&NyaBot::interaction, this, meowJson};
               meowT.detach();
             }
             else if(meow == "MESSAGE_CREATE"){

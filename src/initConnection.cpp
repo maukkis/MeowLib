@@ -23,29 +23,33 @@ along with nyaBot; see the file COPYING3.  If not see
 #include <unistd.h>
 #include <iostream>
 #include "includes/nyaBot.h"
+#include <nlohmann/json.hpp>
 
-nyaBot::nyaBot(std::string tokenya) : token{tokenya}{
+NyaBot::NyaBot(){
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
+}
+
+void NyaBot::run(const std::string& token){
+  this->token = token;
   connect();
   getHeartbeatInterval();
   std::cout << "[*] interval is " << interval << '\n';
   sendIdent();
-  std::thread heartbeatT{&nyaBot::sendHeartbeat, this};
-  std::thread listenT{&nyaBot::listen, this};
+  std::thread heartbeatT{&NyaBot::sendHeartbeat, this};
+  std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
   heartbeatT.detach();
 }
 
-
-nyaBot::~nyaBot(){
+NyaBot::~NyaBot(){
   stop = true;
   handle.wsClose(1000, "going away :3");
   std::cout << "[*] closed!\n"; 
 }
 
 
-void nyaBot::connect(){
+void NyaBot::connect(){
   if(handle.perform() == OK){
     std::cout << "[*] connected to the websocket succesfully!\n";
   }
@@ -56,7 +60,7 @@ void nyaBot::connect(){
   
 }
 
-void nyaBot::sendIdent(){
+void NyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 14, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
@@ -68,7 +72,7 @@ void nyaBot::sendIdent(){
 }
 
 
-void nyaBot::sendHeartbeat(){
+void NyaBot::sendHeartbeat(){
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
   std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
@@ -86,7 +90,7 @@ void nyaBot::sendHeartbeat(){
 }
 
 
-void nyaBot::getHeartbeatInterval(){
+void NyaBot::getHeartbeatInterval(){
   std::string buf;
   // receive data from websocket
   try{
@@ -98,7 +102,6 @@ void nyaBot::getHeartbeatInterval(){
     auto meowNested = meowJson["d"];
     // parse the data of heartbeat_interval into uint64_t and return it
     interval = meowNested["heartbeat_interval"];
-
   }
   catch(nlohmann::json::exception& e){
     std::cout << "[!] failed to parse buffer\n";

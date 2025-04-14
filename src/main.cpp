@@ -19,13 +19,26 @@ along with nyaBot; see the file COPYING3.  If not see
 
 
 #include <csignal>
+#include <cstdlib>
 #include <pthread.h>
 #include <unistd.h>
 #include "includes/nyaBot.h"
+#include <iostream>
+
 
 int main(){
-  nyaBot bot{"token"};
-  sleep(60);
+  NyaBot bot;
+  bot.onReady([]() {
+    std::cout << "woofBot is online :3\n";
+  });
+  
+  bot.onSlash([](auto slash){
+    if(slash.commandName == "meow"){
+      slash.respond("meow");
+    }
+  });
+  bot.run(std::getenv("TOKEN"));
+  sleep(30);
   return 0;
 }
 

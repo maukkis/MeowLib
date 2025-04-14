@@ -22,26 +22,38 @@ along with nyaBot; see the file COPYING3.  If not see
 #ifndef nyaBot_H
 #define nyaBot_H
 #include "../../meowHttp/src/includes/websocket.h"
-#include <csignal>
-#include <cstdint>
+#include "slashcommand.h"
+#include <functional>
 #include <string>
-#include <thread>
 #include <nlohmann/json.hpp>
-#include <iostream>
-class nyaBot {
+
+
+class NyaBot {
 public:
-  nyaBot(std::string tokenya);
-  ~nyaBot();
+  NyaBot();
+  ~NyaBot();
+
+  void run(const std::string& token);
+  void onReady(std::function<void()> f);
+  void onSlash(std::function<void(SlashCommand)> f);
+  void onAutocomplete(std::function<void()> f);
 private:
   void sendHeartbeat();
   void listen();
-  void handleSlash(nlohmann::json meowJson);
   void connect();
   void sendIdent();
   void getHeartbeatInterval();
+  void interaction(nlohmann::json j);
+
+  std::function<void(SlashCommand)> onSlashF = {};
+  std::function<void()> onReadyF = {};
+  std::function<void()> onAutocompleteF = {};
+
   bool stop{false};
-  const std::string token;
+  std::string token;
   meowWs::Websocket handle;
+
+
   std::uint64_t interval;
   size_t sequence{0};
   std::string appId;
