@@ -2,8 +2,7 @@
 #define _SLASHCOMMAND_H
 #include <string>
 #include <utility>
-#include <vector>
-
+#include <map>
 
 enum types{
   PING = 1,
@@ -14,11 +13,12 @@ enum types{
 };
 
 
-class SlashCommand {
+class SlashCommandInt {
 public:
-  SlashCommand(const std::string& id, const std::string& token, const std::string& commandName);
+  SlashCommandInt(const std::string& id, const std::string& token, const std::string& commandName);
   void respond(const std::string& response);
-  std::vector<std::pair<std::string, std::string>> parameters;
+
+  std::map<std::string, std::string> parameters;
   const std::string commandName;
 private:
   const std::string interactionId;

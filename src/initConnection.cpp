@@ -18,6 +18,7 @@ along with nyaBot; see the file COPYING3.  If not see
 
 #include "../meowHttp/src/includes/websocket.h"
 #include <chrono>
+#include <csignal>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -26,8 +27,10 @@ along with nyaBot; see the file COPYING3.  If not see
 #include <nlohmann/json.hpp>
 
 NyaBot::NyaBot(){
+  a = this;
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
+  std::signal(SIGINT, NyaBot::signalHandler);
 }
 
 void NyaBot::run(const std::string& token){
@@ -40,10 +43,13 @@ void NyaBot::run(const std::string& token){
   std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
   heartbeatT.detach();
+  while(!stop.load()){
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 }
 
 NyaBot::~NyaBot(){
-  stop = true;
+  stop.store(true);
   handle.wsClose(1000, "going away :3");
   std::cout << "[*] closed!\n"; 
 }
@@ -76,8 +82,8 @@ void NyaBot::sendHeartbeat(){
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
   std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
-  while (!stop) {
-    std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
+  while (!stop.load()) {
+    const std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
@@ -98,10 +104,8 @@ void NyaBot::getHeartbeatInterval(){
     handle.wsRecv(buf, &frame);
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buf);
-    // create a new json object that has the data of d because discord api sucks
-    auto meowNested = meowJson["d"];
     // parse the data of heartbeat_interval into uint64_t and return it
-    interval = meowNested["heartbeat_interval"];
+    interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
     std::cout << "[!] failed to parse buffer\n";

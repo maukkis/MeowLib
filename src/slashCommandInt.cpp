@@ -1,11 +1,11 @@
-#include "includes/slashcommand.h"
+#include "includes/slashCommandInt.h"
 #include "../meowHttp/src/includes/https.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <nlohmann/json_fwd.hpp>
 
 
-SlashCommand::SlashCommand(
+SlashCommandInt::SlashCommandInt(
   const std::string& id,
   const std::string& token,
   const std::string& commandNamee
@@ -13,7 +13,7 @@ SlashCommand::SlashCommand(
     interactionToken{token},
     commandName{commandNamee} {}
 
-void SlashCommand::respond(const std::string& response) {
+void SlashCommandInt::respond(const std::string& response) {
   nlohmann::json j;
   j["type"] = 4;
   j["data"] = nlohmann::json::object();
@@ -21,7 +21,7 @@ void SlashCommand::respond(const std::string& response) {
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/interactions/" + interactionId + '/' + interactionToken + "/callback")
     .setPostfields(j.dump());
-  if(handle.perform() != OK){
+  if(handle.perform() != OK) {
     std::cout << "aaaaaaaaaaa\n";
   }
 }

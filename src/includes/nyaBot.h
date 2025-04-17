@@ -22,9 +22,11 @@ along with nyaBot; see the file COPYING3.  If not see
 #ifndef nyaBot_H
 #define nyaBot_H
 #include "../../meowHttp/src/includes/websocket.h"
-#include "slashcommand.h"
+#include "slashCommandInt.h"
+#include "slashCommands.h"
 #include <functional>
 #include <string>
+#include <atomic>
 #include <nlohmann/json.hpp>
 
 
@@ -34,9 +36,11 @@ public:
   ~NyaBot();
 
   void run(const std::string& token);
+  void addSlash(const SlashCommand& slash);
   void onReady(std::function<void()> f);
-  void onSlash(std::function<void(SlashCommand)> f);
+  void onSlash(std::function<void(SlashCommandInt)> f);
   void onAutocomplete(std::function<void()> f);
+  void syncSlashCommands();
 private:
   void sendHeartbeat();
   void listen();
@@ -44,12 +48,15 @@ private:
   void sendIdent();
   void getHeartbeatInterval();
   void interaction(nlohmann::json j);
-
-  std::function<void(SlashCommand)> onSlashF = {};
+  static void signalHandler(int){
+    a->stop.store(true);
+  }
+  inline static NyaBot *a = nullptr;
+  std::function<void(SlashCommandInt)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
 
-  bool stop{false};
+  std::atomic<bool> stop{false};
   std::string token;
   meowWs::Websocket handle;
 
@@ -57,5 +64,6 @@ private:
   std::uint64_t interval;
   size_t sequence{0};
   std::string appId;
+  std::vector<SlashCommand> slashs;
 };
 #endif

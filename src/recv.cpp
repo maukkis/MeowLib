@@ -29,7 +29,7 @@ along with nyaBot; see the file COPYING3.  If not see
 
 void NyaBot::listen(){
   std::ofstream meowlog{"meow.log"}; 
-  while (!stop){
+  while (!stop.load()){
     std::string buf;
     meowWs::meowWsFrame frame;
     size_t rlen = handle.wsRecv(buf, &frame);

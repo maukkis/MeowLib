@@ -28,17 +28,31 @@ along with nyaBot; see the file COPYING3.  If not see
 
 int main(){
   NyaBot bot;
-  bot.onReady([]() {
+  SlashCommand slash = SlashCommand("woof", "woofs"); // (commandName, description)
+  
+  slash.addParam("puppy", "dogSound", STRING, true) // (paramName, valueName, Type)
+    .addChoice("woof")
+    .addChoice("bark")
+    .addChoice("arf")
+    .addChoice("wruff");
+
+  bot.addSlash(slash);
+  
+  bot.onReady([&bot]() {
+    bot.syncSlashCommands();
     std::cout << "woofBot is online :3\n";
   });
-  
+ 
+
   bot.onSlash([](auto slash){
-    if(slash.commandName == "meow"){
-      slash.respond("meow");
+    if(slash.commandName == "woof"){
+      std::string dogSound = slash.parameters["puppy"];
+      slash.respond("puppy! " + dogSound);
     }
   });
+
+
   bot.run(std::getenv("TOKEN"));
-  sleep(30);
   return 0;
 }
 
