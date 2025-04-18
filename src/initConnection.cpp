@@ -1,51 +1,43 @@
-/* nyaBot simple discord bot written in C++ using libcurl
-    Copyright (C) 2024  Luna
-This file is part of nyaBot.
-
-nyaBot is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 3, or (at your option) any later
-version.
-
-nyaBot is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
-
-You should have received a copy of the GNU General Public License
-along with nyaBot; see the file COPYING3.  If not see
-<http://www.gnu.org/licenses/>.  */
-
 #include "../meowHttp/src/includes/websocket.h"
 #include <chrono>
+#include <csignal>
 #include <string>
 #include <thread>
 #include <unistd.h>
 #include <iostream>
 #include "includes/nyaBot.h"
+#include <nlohmann/json.hpp>
 
-nyaBot::nyaBot(std::string tokenya) : token{tokenya}{
+NyaBot::NyaBot(){
+  a = this;
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
+  std::signal(SIGINT, NyaBot::signalHandler);
+}
+
+void NyaBot::run(const std::string& token){
+  this->token = token;
   connect();
   getHeartbeatInterval();
   std::cout << "[*] interval is " << interval << '\n';
   sendIdent();
-  std::thread heartbeatT{&nyaBot::sendHeartbeat, this};
-  std::thread listenT{&nyaBot::listen, this};
+  std::thread heartbeatT{&NyaBot::sendHeartbeat, this};
+  std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
   heartbeatT.detach();
+  while(!stop.load()){
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 }
 
-
-nyaBot::~nyaBot(){
-  stop = true;
+NyaBot::~NyaBot(){
+  stop.store(true);
   handle.wsClose(1000, "going away :3");
   std::cout << "[*] closed!\n"; 
 }
 
 
-void nyaBot::connect(){
+void NyaBot::connect(){
   if(handle.perform() == OK){
     std::cout << "[*] connected to the websocket succesfully!\n";
   }
@@ -56,7 +48,7 @@ void nyaBot::connect(){
   
 }
 
-void nyaBot::sendIdent(){
+void NyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 14, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
@@ -68,12 +60,12 @@ void nyaBot::sendIdent(){
 }
 
 
-void nyaBot::sendHeartbeat(){
+void NyaBot::sendHeartbeat(){
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
   std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
-  while (!stop) {
-    std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
+  while (!stop.load()) {
+    const std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
@@ -86,7 +78,7 @@ void nyaBot::sendHeartbeat(){
 }
 
 
-void nyaBot::getHeartbeatInterval(){
+void NyaBot::getHeartbeatInterval(){
   std::string buf;
   // receive data from websocket
   try{
@@ -94,11 +86,8 @@ void nyaBot::getHeartbeatInterval(){
     handle.wsRecv(buf, &frame);
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buf);
-    // create a new json object that has the data of d because discord api sucks
-    auto meowNested = meowJson["d"];
     // parse the data of heartbeat_interval into uint64_t and return it
-    interval = meowNested["heartbeat_interval"];
-
+    interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
     std::cout << "[!] failed to parse buffer\n";
