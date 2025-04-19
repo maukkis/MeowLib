@@ -11,7 +11,7 @@ int main(){
   NyaBot bot;
   SlashCommand slash = SlashCommand("woof", "woofs"); // (commandName, description)
   
-  slash.addParam("puppy", "dogSound", STRING, true) // (paramName, valueName, Type)
+  slash.addParam("puppy", "dogSound", STRING, true) // (paramName, valueName, Type, required)
     .addChoice("woof")
     .addChoice("bark")
     .addChoice("arf")
