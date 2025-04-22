@@ -40,7 +40,7 @@ meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool
   } else {
     sendIdent();
   }
-  hbT = std::move(std::thread{&NyaBot::sendHeartbeat, this});
+  hbT = std::thread{&NyaBot::sendHeartbeat, this};
   reconnecting.store(false);
   return OK;
 }
@@ -51,7 +51,7 @@ void NyaBot::run(const std::string& token){
   getHeartbeatInterval();
   std::cout << "[*] interval is " << interval << '\n';
   sendIdent();
-  hbT = std::move(std::thread{&NyaBot::sendHeartbeat, this});
+  hbT = std::thread{&NyaBot::sendHeartbeat, this};
   std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
   while(!stop.load()){
