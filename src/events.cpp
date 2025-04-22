@@ -1,6 +1,5 @@
 #include "includes/nyaBot.h"
 #include <nlohmann/json.hpp>
-#include <utility>
 #include "includes/slashCommandInt.h"
 
 void NyaBot::onReady(std::function<void ()> f) {
@@ -28,7 +27,7 @@ static SlashCommandInt constructSlash(nlohmann::json& json){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
     }
   }
-  return std::move(slash);
+  return slash;
 }
 
 void NyaBot::interaction(nlohmann::json j){

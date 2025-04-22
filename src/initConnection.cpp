@@ -1,10 +1,12 @@
 #include "../meowHttp/src/includes/websocket.h"
 #include <chrono>
 #include <csignal>
+#include <pthread.h>
 #include <string>
 #include <thread>
 #include <unistd.h>
 #include <iostream>
+#include "includes/eventCodes.h"
 #include "includes/nyaBot.h"
 #include <nlohmann/json.hpp>
 
@@ -15,16 +17,43 @@ NyaBot::NyaBot(){
   std::signal(SIGINT, NyaBot::signalHandler);
 }
 
+meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume){
+  reconnecting.store(true);
+  pthread_cancel(hbT.native_handle());
+  hbT.detach();
+  if(handle.wsClose(1000, "arf") != OK){
+    std::cout << "woof?\n"; 
+  }
+  reconnectUrl.replace(0, 3, "https");
+  handle.setUrl(reconnectUrl);
+  connect();
+  getHeartbeatInterval();
+  nlohmann::json j;
+  if(resume){
+    j["op"] = Resume;
+    j["d"]["token"] = token;
+    j["d"]["session_id"] = sesId;
+    j["d"]["seq"] = sequence;
+    if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
+      std::cout << "sent resume!\n";
+    }
+  } else {
+    sendIdent();
+  }
+  hbT = std::move(std::thread{&NyaBot::sendHeartbeat, this});
+  reconnecting.store(false);
+  return OK;
+}
+
 void NyaBot::run(const std::string& token){
   this->token = token;
   connect();
   getHeartbeatInterval();
   std::cout << "[*] interval is " << interval << '\n';
   sendIdent();
-  std::thread heartbeatT{&NyaBot::sendHeartbeat, this};
+  hbT = std::move(std::thread{&NyaBot::sendHeartbeat, this});
   std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
-  heartbeatT.detach();
   while(!stop.load()){
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
@@ -32,6 +61,8 @@ void NyaBot::run(const std::string& token){
 
 NyaBot::~NyaBot(){
   stop.store(true);
+  pthread_cancel(hbT.native_handle());
+  hbT.detach();
   handle.wsClose(1000, "going away :3");
   std::cout << "[*] closed!\n"; 
 }
@@ -50,7 +81,7 @@ void NyaBot::connect(){
 
 void NyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
-  std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 14, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     std::cout << "[*] ident sent!\n";
   }
@@ -70,7 +101,7 @@ void NyaBot::sendHeartbeat(){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
     else{
-      std::cerr << "[!] something went wrong\n";
+      std::cerr << "[!] HBT something went wrong\n";
       return;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(interval));

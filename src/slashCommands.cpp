@@ -4,9 +4,10 @@
 #include <nlohmann/json_fwd.hpp>
 #include "../meowHttp/src/includes/https.h"
 
-SlashCommand::SlashCommand(const std::string& name, const std::string& desc) 
+SlashCommand::SlashCommand(const std::string& name, const std::string& desc, enum IntegrationTypes type) 
   : name{name},
-    desc{desc} {}
+    desc{desc},
+    types{type} {}
 
 SlashCommandParameter& SlashCommand::addParam(const std::string& name, const std::string& value, Types type, bool required){
   params.emplace_back(name, value, type, required);
@@ -37,6 +38,18 @@ void NyaBot::syncSlashCommands(){
     a["name"] = it.name;
     a["type"] = 1;
     a["description"] = it.desc;
+    if(it.types == BOTH){
+      a["integration_types"] = {0,1};
+      a["contexts"] = {0,1,2};
+    } else {
+      a["integration_types"] = {it.types};
+      if(it.types == USER_INSTALL){
+        a["contexts"] = {2};
+      }
+      else{
+        a["contexts"] = {0};
+      }
+    }
     a["options"] = nlohmann::json::array();
     for(const auto& opt : it.params){
       nlohmann::json p;
@@ -63,5 +76,6 @@ void NyaBot::syncSlashCommands(){
     .setCustomMethod("PUT")
     .setPostfields(json.dump())
     .setWriteData(&write);
-  if(meow.perform() != OK) std::cout << "wooof!" << '\n';
+  if(meow.perform() != OK || meow.getLastStatusCode() != HTTPCODES::HTTP_OK) 
+    std::cout << "wooof!\n" << write << std::endl;
 }

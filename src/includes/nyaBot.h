@@ -7,6 +7,8 @@
 #include <string>
 #include <atomic>
 #include <nlohmann/json.hpp>
+#include <thread>
+
 
 template<typename F, typename... Args>
 auto runOnce(F&& f, Args&&... a) {
@@ -35,6 +37,7 @@ private:
   void sendIdent();
   void getHeartbeatInterval();
   void interaction(nlohmann::json j);
+  meow reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume);
   static void signalHandler(int){
     a->stop.store(true);
   }
@@ -42,11 +45,11 @@ private:
   std::function<void(SlashCommandInt)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
-
+  std::atomic<bool> reconnecting{false};
   std::atomic<bool> stop{false};
   std::string token;
   meowWs::Websocket handle;
-
+  std::thread hbT;
 
   std::uint64_t interval;
   size_t sequence{0};

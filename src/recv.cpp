@@ -1,17 +1,27 @@
 #include "../meowHttp/src/includes/websocket.h"
+#include <cstdint>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include "includes/nyaBot.h"
 #include "includes/eventCodes.h"
+#include <netinet/in.h>
 #include <stdio.h>
 #include <nlohmann/json.hpp>
 #include <thread>
 
 void NyaBot::listen(){
-  std::ofstream meowlog{"meow.log"}; 
+  std::ofstream meowlog{"meow.log"};
+  std::string sesId;
+  std::string resumeUrl;
   while (!stop.load()){
     std::string buf;
+    std::time_t lastHB = std::time(nullptr);
+    if(std::time(nullptr) - lastHB >= 60){
+      std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
+      reconnect(sesId, resumeUrl, false);
+    }
     meowWs::meowWsFrame frame;
     size_t rlen = handle.wsRecv(buf, &frame);
     if (rlen < 1){
@@ -21,7 +31,28 @@ void NyaBot::listen(){
       std::cout << "[*] received: " << rlen << " bytes\n";
       if(frame.opcode == meowWs::meowWS_CLOSE) {
         std::cout << "[!] connection closed\n";
-        return;
+        uint16_t arf;
+        memcpy(&arf, buf.data(), 2);
+        arf = ntohs(arf);
+        std::cout << "code = " <<  arf << "\nbuf = " << buf.substr(2) << std::endl;
+        switch(arf){
+          case 4000:
+          case 4001:
+          case 4002:
+          case 4003:
+          case 4005:
+          case 4008:
+          case 4009:
+            reconnect(sesId, resumeUrl, true);
+          break;
+          case 4007:
+            reconnect(sesId, resumeUrl, false);
+          break;
+          default:
+            stop.store(true);
+            std::cout << "[!] something went horribly wrong" << std::endl;
+            return;
+        }
       }
       try {
         auto meowJson = nlohmann::json::parse(buf);
@@ -29,12 +60,19 @@ void NyaBot::listen(){
         switch(op){
           case HeartbeatACK:
             std::cout << "[*] server sent ACK\n";
+            lastHB = std::time(nullptr);
           break;
+          case Reconnect:
+            std::cout << "got reconnectTwT\n";
+            reconnect(sesId, resumeUrl, true);
+          break; 
           case Dispatch:
             std::string meow = meowJson["t"];
             if (meow == "READY"){
               sequence = meowJson["s"];
               meowJson = meowJson["d"];
+              sesId = meowJson["session_id"];
+              resumeUrl = meowJson["resume_gateway_url"];
               meowJson = meowJson["user"];
               appId = meowJson["id"];
               std::thread meow{onReadyF};

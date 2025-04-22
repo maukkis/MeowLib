@@ -10,6 +10,11 @@ enum Types {
   USER,
 };
 
+enum IntegrationTypes {
+  GUILD_INSTALL,
+  USER_INSTALL,
+  BOTH
+};
 
 class SlashCommandParameter{
 public:
@@ -25,10 +30,11 @@ public:
 
 class SlashCommand {
 public:
-  SlashCommand(const std::string& name, const std::string& desc);
+  SlashCommand(const std::string& name, const std::string& desc, IntegrationTypes type);
   SlashCommandParameter& addParam(const std::string& name, const std::string& value, Types type, bool required);
   const std::string name;
   const std::string desc;
   std::vector<SlashCommandParameter> params;
+  enum IntegrationTypes types;
 };
 #endif

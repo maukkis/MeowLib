@@ -9,9 +9,10 @@ SlashCommandInt::SlashCommandInt(
   const std::string& id,
   const std::string& token,
   const std::string& commandNamee
-) : interactionId{id},
-    interactionToken{token},
-    commandName{commandNamee} {}
+
+) : commandName{commandNamee}, 
+    interactionId{id},
+    interactionToken{token} {}
 
 void SlashCommandInt::respond(const std::string& response) {
   nlohmann::json j;
