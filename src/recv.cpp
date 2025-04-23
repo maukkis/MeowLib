@@ -46,6 +46,11 @@ void NyaBot::listen(){
             reconnect(sesId, resumeUrl, true);
           break;
           case 4007:
+          case 1000:
+          case 1001:
+          case 1005:
+          case 1006:
+          case 1011:
             reconnect(sesId, resumeUrl, false);
           break;
           default:
@@ -102,6 +107,7 @@ void NyaBot::listen(){
       }
       catch(nlohmann::json::exception& e){
         std::cout << "[!] got parse error :( partial data?\n";
+        meowlog << buf << std::endl;
       }
     }
   }
