@@ -16,9 +16,9 @@ void NyaBot::listen(){
   std::ofstream meowlog{"meow.log"};
   std::string sesId;
   std::string resumeUrl;
+  std::time_t lastHB = std::time(nullptr);
   while (!stop.load()){
     std::string buf;
-    std::time_t lastHB = std::time(nullptr);
     if(std::time(nullptr) - lastHB >= 60){
       std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
       reconnect(sesId, resumeUrl, false);
