@@ -39,9 +39,9 @@ void NyaBot::listen(){
         memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
         std::cout << "code = " <<  arf << "\nbuf = " << buf.substr(2) << std::endl;
-          handleLock.lock();
-          handle.wsClose(arf, buf.substr(2));
-          handleLock.unlock();
+        handleLock.lock();
+        handle.wsClose(arf, buf.substr(2));
+        handleLock.unlock();
         switch(arf){
           case 4000:
           case 4001:
@@ -65,6 +65,7 @@ void NyaBot::listen(){
             std::cout << "[!] something went horribly wrong" << std::endl;
             return;
         }
+        continue;
       }
       try {
         auto meowJson = nlohmann::json::parse(buf);
@@ -111,6 +112,10 @@ void NyaBot::listen(){
                 sequence = meowJson["s"];
             }
             }
+          break;
+          case InvalidSession:
+            std::cout << "invalid session owo reconnecting without resuming :3\n";
+            reconnect(sesId, resumeUrl, false);
           break;
           default:
             std::cout << "barks?\n";

@@ -23,14 +23,14 @@ int main(){
   bot.addSlash(SlashCommand("meow", "meows", BOTH));
 
   bot.addSlash(SlashCommand("aix", "what is AIX", BOTH));
-
+  
   bot.onReady([&bot]() {
     runOnce(&NyaBot::syncSlashCommands, &bot);
     std::cout << "woofBot is online :3\n";
   });
  
 
-  bot.onSlash([](auto slash){
+  bot.onSlash([](auto slash) {
     if(slash.commandName == "woof"){
       std::string dogSound = slash.parameters["puppy"];
       slash.respond("puppy! " + dogSound);

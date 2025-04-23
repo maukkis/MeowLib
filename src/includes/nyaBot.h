@@ -3,13 +3,14 @@
 #include "../../meowHttp/src/includes/websocket.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
+#include <algorithm>
 #include <functional>
 #include <mutex>
 #include <string>
 #include <atomic>
 #include <nlohmann/json.hpp>
 #include <thread>
-
+#include <iostream>
 
 template<typename F, typename... Args>
 auto runOnce(F&& f, Args&&... a) {

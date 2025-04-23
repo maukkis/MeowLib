@@ -1,6 +1,7 @@
 #include "../meowHttp/src/includes/websocket.h"
 #include <chrono>
 #include <csignal>
+#include <mutex>
 #include <pthread.h>
 #include <string>
 #include <thread>
@@ -24,13 +25,14 @@ meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool
   if(handle.wsClose(1000, "arf") != OK){
     std::cout << "woof?\n"; 
   }
-  reconnectUrl.replace(0, 3, "https");
+  if(reconnectUrl.find("wss") != std::string::npos) reconnectUrl.replace(0, 3, "https");
+  std::cout << reconnectUrl << std::endl;
   handle.setUrl(reconnectUrl);
   handleLock.unlock();
   connect();
   getHeartbeatInterval();
-  nlohmann::json j;
   if(resume){
+    nlohmann::json j;
     j["op"] = Resume;
     j["d"]["token"] = token;
     j["d"]["session_id"] = sesId;
@@ -101,7 +103,7 @@ void NyaBot::sendHeartbeat(){
   std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
   while (!stop.load()) {
     const std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
-    handleLock.lock();
+    std::unique_lock<std::mutex> lock(handleLock);
     std::cout << "sending heartbeat :3\n";
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
@@ -109,7 +111,7 @@ void NyaBot::sendHeartbeat(){
     else{
       std::cerr << "[!] HBT something went wrong\n";
     }
-    handleLock.unlock();
+    lock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(interval));
   }
 }
