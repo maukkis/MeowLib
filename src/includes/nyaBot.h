@@ -4,6 +4,7 @@
 #include "slashCommandInt.h"
 #include "slashCommands.h"
 #include <functional>
+#include <mutex>
 #include <string>
 #include <atomic>
 #include <nlohmann/json.hpp>
@@ -45,12 +46,12 @@ private:
   std::function<void(SlashCommandInt)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
-  std::atomic<bool> reconnecting{false};
   std::atomic<bool> stop{false};
   std::string token;
   meowWs::Websocket handle;
   std::thread hbT;
-
+  
+  std::mutex handleLock;
   std::uint64_t interval;
   size_t sequence{0};
   std::string appId;

@@ -18,7 +18,6 @@ NyaBot::NyaBot(){
 }
 
 meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume){
-  reconnecting.store(true);
   pthread_cancel(hbT.native_handle());
   hbT.detach();
   if(handle.wsClose(1000, "arf") != OK){
@@ -34,14 +33,15 @@ meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool
     j["d"]["token"] = token;
     j["d"]["session_id"] = sesId;
     j["d"]["seq"] = sequence;
+    handleLock.lock();
     if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
       std::cout << "sent resume!\n";
     }
+    handleLock.unlock();
   } else {
     sendIdent();
   }
   hbT = std::thread{&NyaBot::sendHeartbeat, this};
-  reconnecting.store(false);
   return OK;
 }
 
@@ -82,12 +82,14 @@ void NyaBot::connect(){
 void NyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
   std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  handleLock.lock();
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     std::cout << "[*] ident sent!\n";
   }
   else {
     std::cout << "[!] something went wrong\n";
   }
+  handleLock.unlock();
 }
 
 
@@ -97,6 +99,7 @@ void NyaBot::sendHeartbeat(){
   std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(interval * random)));
   while (!stop.load()) {
     const std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
+    handleLock.lock();
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
@@ -104,6 +107,7 @@ void NyaBot::sendHeartbeat(){
       std::cerr << "[!] HBT something went wrong\n";
       return;
     }
+    handleLock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(interval));
   }
 }
@@ -113,8 +117,10 @@ void NyaBot::getHeartbeatInterval(){
   std::string buf;
   // receive data from websocket
   try{
+    handleLock.lock();
     meowWs::meowWsFrame frame;
     handle.wsRecv(buf, &frame);
+    handleLock.unlock();
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buf);
     // parse the data of heartbeat_interval into uint64_t and return it

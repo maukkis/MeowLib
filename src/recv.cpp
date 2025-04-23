@@ -23,7 +23,9 @@ void NyaBot::listen(){
       reconnect(sesId, resumeUrl, false);
     }
     meowWs::meowWsFrame frame;
+    handleLock.lock();
     size_t rlen = handle.wsRecv(buf, &frame);
+    handleLock.unlock();
     if (rlen < 1){
       continue;
     }
