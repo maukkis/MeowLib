@@ -1,4 +1,5 @@
 #include "../meowHttp/src/includes/websocket.h"
+#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
@@ -27,6 +28,7 @@ void NyaBot::listen(){
     size_t rlen = handle.wsRecv(buf, &frame);
     handleLock.unlock();
     if (rlen < 1){
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
     else {
@@ -37,6 +39,9 @@ void NyaBot::listen(){
         memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
         std::cout << "code = " <<  arf << "\nbuf = " << buf.substr(2) << std::endl;
+          handleLock.lock();
+          handle.wsClose(arf, buf.substr(2));
+          handleLock.unlock();
         switch(arf){
           case 4000:
           case 4001:
@@ -74,36 +79,42 @@ void NyaBot::listen(){
             reconnect(sesId, resumeUrl, true);
           break; 
           case Dispatch:
-            std::string meow = meowJson["t"];
-            if (meow == "READY"){
-              sequence = meowJson["s"];
-              meowJson = meowJson["d"];
-              sesId = meowJson["session_id"];
-              resumeUrl = meowJson["resume_gateway_url"];
-              meowJson = meowJson["user"];
-              appId = meowJson["id"];
-              std::thread meow{onReadyF};
-              meow.detach();
+            {
+              std::string meow = meowJson["t"];
+              if (meow == "READY"){
+                sequence = meowJson["s"];
+                meowJson = meowJson["d"];
+                sesId = meowJson["session_id"];
+                resumeUrl = meowJson["resume_gateway_url"];
+                meowJson = meowJson["user"];
+                appId = meowJson["id"];
+                std::thread meow{onReadyF};
+                meow.detach();
+              }
+              else if(meow == "GUILD_CREATE"){
+                sequence = meowJson["s"];
+                std::cout << "[*] got guild info!\n";
+              }
+              else if(meow == "INTERACTION_CREATE"){
+                sequence = meowJson["s"];
+                std::cout << "[*] got interaction\n";
+                std::thread meowT{&NyaBot::interaction, this, meowJson};
+                meowT.detach();
+              }
+              else if(meow == "MESSAGE_CREATE"){
+                sequence = meowJson["s"];
+                std::cout << "[*] new message got created\n";
+              }
+              else {
+                std::cout << "[!] got unknown request printing to log\n";
+                meowlog << buf << std::endl;
+                sequence = meowJson["s"];
             }
-            else if(meow == "GUILD_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] got guild info!\n";
             }
-            else if(meow == "INTERACTION_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] got interaction\n";
-              std::thread meowT{&NyaBot::interaction, this, meowJson};
-              meowT.detach();
-            }
-            else if(meow == "MESSAGE_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] new message got created\n";
-            }
-            else {
-              std::cout << "[!] got unknown request printing to log\n";
-              meowlog << buf << std::endl;
-              sequence = meowJson["s"];
-            }
+          break;
+          default:
+            std::cout << "barks?\n";
+            meowlog << buf << std::endl;
           break;
         }
       }

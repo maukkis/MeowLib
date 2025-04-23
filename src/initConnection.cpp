@@ -102,12 +102,12 @@ void NyaBot::sendHeartbeat(){
   while (!stop.load()) {
     const std::string heartbeat{R"({"op": 1,"d": )" + std::to_string(sequence) + R"(})"};
     handleLock.lock();
+    std::cout << "sending heartbeat :3\n";
     if (handle.wsSend(heartbeat, meowWs::meowWS_TEXT) > 0){
       std::cout << "[*] hearbeat sent succesfully!\n";
     }
     else{
       std::cerr << "[!] HBT something went wrong\n";
-      return;
     }
     handleLock.unlock();
     std::this_thread::sleep_for(std::chrono::milliseconds(interval));
