@@ -20,11 +20,13 @@ NyaBot::NyaBot(){
 meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume){
   pthread_cancel(hbT.native_handle());
   hbT.detach();
+  handleLock.lock();
   if(handle.wsClose(1000, "arf") != OK){
     std::cout << "woof?\n"; 
   }
   reconnectUrl.replace(0, 3, "https");
   handle.setUrl(reconnectUrl);
+  handleLock.unlock();
   connect();
   getHeartbeatInterval();
   nlohmann::json j;
