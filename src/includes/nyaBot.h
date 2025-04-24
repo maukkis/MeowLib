@@ -41,13 +41,13 @@ private:
   void interaction(nlohmann::json j);
   meow reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume);
   static void signalHandler(int){
-    a->stop.store(true);
+    a->stop = true;
   }
   inline static NyaBot *a = nullptr;
   std::function<void(SlashCommandInt)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
-  std::atomic<bool> stop{false};
+  bool stop{false};
   std::string token;
   meowWs::Websocket handle;
   

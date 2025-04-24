@@ -22,7 +22,7 @@ void NyaBot::listen(){
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
   std::cout << "starting to heartbeat with jitter of: " << random << std::endl;
-  while (!stop.load()){
+  while (!stop){
     std::string buf;
     if(std::chrono::steady_clock::now() - lastHB >= 60s){
       std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
@@ -72,7 +72,7 @@ void NyaBot::listen(){
             reconnect(sesId, resumeUrl, false);
           break;
           default:
-            stop.store(true);
+            stop = true;
             std::cout << "[!] something went horribly wrong" << std::endl;
             return;
         }
@@ -136,6 +136,9 @@ void NyaBot::listen(){
       catch(nlohmann::json::exception& e){
         std::cout << "[!] got parse error :( partial data?\n";
         meowlog << buf << std::endl;
+      }
+      catch(...){
+        std::cout << "????" << std::endl;
       }
     }
   }

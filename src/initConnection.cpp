@@ -49,13 +49,13 @@ void NyaBot::run(const std::string& token){
   sendIdent();
   std::thread listenT{&NyaBot::listen, this};
   listenT.detach();
-  while(!stop.load()){
+  while(!stop){
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 
 NyaBot::~NyaBot(){
-  stop.store(true);
+  stop = true;
   handle.wsClose(1000, "going away :3");
   std::cout << "[*] closed!\n"; 
 }
