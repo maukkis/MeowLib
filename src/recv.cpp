@@ -13,22 +13,35 @@
 #include <thread>
 
 void NyaBot::listen(){
+  using namespace std::chrono_literals;
   std::ofstream meowlog{"meow.log"};
   std::string sesId;
   std::string resumeUrl;
-  std::time_t lastHB = std::time(nullptr);
+  auto sentHB = std::chrono::steady_clock::now();
+  auto lastHB = std::chrono::steady_clock::now();
+  srand(std::time(0));
+  float random = ((float) rand()) / (float) RAND_MAX;
+  std::cout << "starting to heartbeat with jitter of: " << random << std::endl;
   while (!stop.load()){
     std::string buf;
-    if(std::time(nullptr) - lastHB >= 60){
+    if(std::chrono::steady_clock::now() - lastHB >= 60s){
       std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
       reconnect(sesId, resumeUrl, false);
     }
+    if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(interval*random))){
+      std::cout << "sending heartbeat :3\n";
+      nlohmann::json j;
+      j["op"] = Heartbeat;
+      j["d"] = sequence;
+      if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
+        std::cout << "sent heartbeat :3\n";
+        sentHB = std::chrono::steady_clock::now();
+      }
+      random = 1;
+    }
     meowWs::meowWsFrame frame;
-    handleLock.lock();
     size_t rlen = handle.wsRecv(buf, &frame);
-    handleLock.unlock();
     if (rlen < 1){
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
     else {
@@ -39,10 +52,10 @@ void NyaBot::listen(){
         memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
         std::cout << "code = " <<  arf << "\nbuf = " << buf.substr(2) << std::endl;
-        handleLock.lock();
         handle.wsClose(arf, buf.substr(2));
-        handleLock.unlock();
         switch(arf){
+          case 1000:
+          case 1001:
           case 4000:
           case 4001:
           case 4002:
@@ -53,8 +66,6 @@ void NyaBot::listen(){
             reconnect(sesId, resumeUrl, true);
           break;
           case 4007:
-          case 1000:
-          case 1001:
           case 1005:
           case 1006:
           case 1011:
@@ -73,11 +84,10 @@ void NyaBot::listen(){
         switch(op){
           case HeartbeatACK:
             std::cout << "[*] server sent ACK\n";
-            lastHB = std::time(nullptr);
+            lastHB = std::chrono::steady_clock::now();
           break;
           case Reconnect:
-            std::cout << "got reconnectTwT\n";
-            reconnect(sesId, resumeUrl, true);
+            std::cout << "got reconnectTwT\nwaiting for close\n";
           break; 
           case Dispatch:
             {

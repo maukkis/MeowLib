@@ -1,6 +1,7 @@
 #ifndef nyaBot_H
 #define nyaBot_H
 #include "../../meowHttp/src/includes/websocket.h"
+#include "queue.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
 #include <algorithm>
@@ -33,7 +34,6 @@ public:
   void onAutocomplete(std::function<void()> f);
   void syncSlashCommands();
 private:
-  void sendHeartbeat();
   void listen();
   void connect();
   void sendIdent();
@@ -50,9 +50,8 @@ private:
   std::atomic<bool> stop{false};
   std::string token;
   meowWs::Websocket handle;
-  std::thread hbT;
   
-  std::mutex handleLock;
+  ThreadSafeQueue<std::string> queue;
   std::uint64_t interval;
   size_t sequence{0};
   std::string appId;
