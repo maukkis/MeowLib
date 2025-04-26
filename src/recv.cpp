@@ -138,8 +138,9 @@ void NyaBot::listen(){
         std::cout << "[!] got parse error :( partial data?\n";
         meowlog << buf << std::endl;
       }
-      catch(...){
-        std::cout << "????" << std::endl;
+      catch(meowHttp::Exception &e){
+        std::cout << e.what() << std::endl;
+        reconnect(sesId, resumeUrl, true);
       }
     }
   }
