@@ -1,9 +1,7 @@
 #include "../meowHttp/src/includes/websocket.h"
-#include <chrono>
 #include <csignal>
 #include <pthread.h>
 #include <string>
-#include <thread>
 #include <unistd.h>
 #include <iostream>
 #include "includes/eventCodes.h"
@@ -47,11 +45,7 @@ void NyaBot::run(const std::string& token){
   getHeartbeatInterval();
   std::cout << "[*] interval is " << interval << '\n';
   sendIdent();
-  std::thread listenT{&NyaBot::listen, this};
-  listenT.detach();
-  while(!stop){
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+  listen();
 }
 
 NyaBot::~NyaBot(){

@@ -26,6 +26,7 @@ void NyaBot::listen(){
     std::string buf;
     if(std::chrono::steady_clock::now() - lastHB >= 60s){
       std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
+      handle.wsClose();
       reconnect(sesId, resumeUrl, false);
     }
     if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(interval*random))){
