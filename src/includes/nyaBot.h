@@ -5,6 +5,7 @@
 #include "slashCommandInt.h"
 #include "slashCommands.h"
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <mutex>
 #include <string>
@@ -12,6 +13,22 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <iostream>
+#include <unordered_map>
+
+struct ImportantApiStuff {
+  std::string token;
+  uint64_t interval;
+  size_t sequence{0};
+  std::string appId;
+  std::string sesId;
+  std::string resumeUrl;
+};
+
+struct Funs {
+  std::function<void(SlashCommandInt)> onSlashF = {};
+  std::function<void()> onReadyF = {};
+  std::function<void()> onAutocompleteF = {};
+};
 
 template<typename F, typename... Args>
 auto runOnce(F&& f, Args&&... a) {
@@ -38,23 +55,25 @@ private:
   void connect();
   void sendIdent();
   void getHeartbeatInterval();
+  void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
-  meow reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume);
+  meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
   }
   inline static NyaBot *a = nullptr;
-  std::function<void(SlashCommandInt)> onSlashF = {};
-  std::function<void()> onReadyF = {};
-  std::function<void()> onAutocompleteF = {};
-  bool stop{false};
-  std::string token;
+  std::atomic<bool> stop;
   meowWs::Websocket handle;
-  
+ 
+  std::unordered_map<std::string, std::function<void(nlohmann::json)>> dispatchHandlers {
+    {"INTERACTION_CREATE", std::bind(&NyaBot::interaction, this, std::placeholders::_1)},
+    {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
+  };
+  Funs funs;
+  ImportantApiStuff api;
+
   ThreadSafeQueue<std::string> queue;
-  std::uint64_t interval;
-  size_t sequence{0};
-  std::string appId;
+
   std::vector<SlashCommand> slashs;
 };
 #endif

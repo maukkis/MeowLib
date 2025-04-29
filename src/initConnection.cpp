@@ -15,21 +15,20 @@ NyaBot::NyaBot(){
   std::signal(SIGINT, NyaBot::signalHandler);
 }
 
-meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool resume){
+meow NyaBot::reconnect(bool resume){
   if(handle.wsClose(1000, "arf") != OK){
     std::cout << "woof?\n"; 
   }
-  if(reconnectUrl.find("wss") != std::string::npos) reconnectUrl.replace(0, 3, "https");
-  std::cout << reconnectUrl << std::endl;
-  handle.setUrl(reconnectUrl);
+  if(api.resumeUrl.find("wss") != std::string::npos) api.resumeUrl.replace(0, 3, "https");
+  handle.setUrl(api.resumeUrl);
   connect();
   getHeartbeatInterval();
   if(resume){
     nlohmann::json j;
     j["op"] = Resume;
-    j["d"]["token"] = token;
-    j["d"]["session_id"] = sesId;
-    j["d"]["seq"] = sequence;
+    j["d"]["token"] = api.token;
+    j["d"]["session_id"] = api.sesId;
+    j["d"]["seq"] = api.sequence;
     if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
       std::cout << "sent resume!\n";
     }
@@ -40,10 +39,10 @@ meow NyaBot::reconnect(const std::string& sesId, std::string& reconnectUrl, bool
 }
 
 void NyaBot::run(const std::string& token){
-  this->token = token;
+  this->api.token = token;
   connect();
   getHeartbeatInterval();
-  std::cout << "[*] interval is " << interval << '\n';
+  std::cout << "[*] interval is " << api.interval << '\n';
   sendIdent();
   listen();
 }
@@ -68,7 +67,7 @@ void NyaBot::connect(){
 
 void NyaBot::sendIdent(){
   std::cout << "[*] sending ident\n";
-  std::string ident {R"({"op": 2, "d": {"token": ")" + token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     std::cout << "[*] ident sent!\n";
   }
@@ -77,6 +76,14 @@ void NyaBot::sendIdent(){
   }
 }
 
+void NyaBot::ready(nlohmann::json j){
+  j = j["d"];
+  api.sesId = j["session_id"];
+  api.resumeUrl = j["resume_gateway_url"];
+  j = j["user"];
+  api.appId = j["id"];
+  std::thread{funs.onReadyF}.detach();
+}
 
 
 void NyaBot::getHeartbeatInterval(){
@@ -88,7 +95,7 @@ void NyaBot::getHeartbeatInterval(){
     // initialize a json object with the data of buffer
     auto meowJson = nlohmann::json::parse(buf);
     // parse the data of heartbeat_interval into uint64_t and return it
-    interval = meowJson["d"]["heartbeat_interval"];
+    api.interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
     std::cout << "[!] failed to parse buffer\n";

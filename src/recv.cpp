@@ -11,11 +11,10 @@
 #include <stdio.h>
 #include <nlohmann/json.hpp>
 
+
 void NyaBot::listen(){
   using namespace std::chrono_literals;
   std::ofstream meowlog{"meow.log"};
-  std::string sesId;
-  std::string resumeUrl;
   auto sentHB = std::chrono::steady_clock::now();
   auto lastHB = std::chrono::steady_clock::now();
   srand(std::time(0));
@@ -28,13 +27,13 @@ void NyaBot::listen(){
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
         std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
         handle.wsClose();
-        reconnect(sesId, resumeUrl, false);
+        reconnect(false);
       }
-      if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(interval*random))){
+      if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(api.interval*random))){
         std::cout << "sending heartbeat :3\n";
         nlohmann::json j;
         j["op"] = Heartbeat;
-        j["d"] = sequence;
+        j["d"] = api.sequence;
         if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
           std::cout << "sent heartbeat :3\n";
           sentHB = std::chrono::steady_clock::now();
@@ -64,13 +63,13 @@ void NyaBot::listen(){
           case 4005:
           case 4008:
           case 4009:
-            reconnect(sesId, resumeUrl, true);
+            reconnect(true);
           break;
           case 4007:
           case 1005:
           case 1006:
           case 1011:
-            reconnect(sesId, resumeUrl, false);
+            reconnect(false);
           break;
           default:
             stop = true;
@@ -92,40 +91,19 @@ void NyaBot::listen(){
         case Dispatch:
           {
             std::string meow = meowJson["t"];
-            if (meow == "READY"){
-              sequence = meowJson["s"];
-              meowJson = meowJson["d"];
-              sesId = meowJson["session_id"];
-              resumeUrl = meowJson["resume_gateway_url"];
-              meowJson = meowJson["user"];
-              appId = meowJson["id"];
-              std::thread meow{onReadyF};
-              meow.detach();
-            }
-            else if(meow == "GUILD_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] got guild info!\n";
-            }
-            else if(meow == "INTERACTION_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] got interaction\n";
-              std::thread meowT{&NyaBot::interaction, this, meowJson};
-              meowT.detach();
-            }
-            else if(meow == "MESSAGE_CREATE"){
-              sequence = meowJson["s"];
-              std::cout << "[*] new message got created\n";
+            api.sequence = meowJson["s"];
+            if(dispatchHandlers.contains(meow)){
+              std::thread{dispatchHandlers[meow], meowJson}.detach();
             }
             else {
-              std::cout << "[!] got unknown request printing to log\n";
+              std::cout << "unknown dispatch printing to log" << std::endl;
               meowlog << buf << std::endl;
-              sequence = meowJson["s"];
-          }
+            }
           }
         break;
         case InvalidSession:
           std::cout << "invalid session owo reconnecting without resuming :3\n";
-          reconnect(sesId, resumeUrl, false);
+          reconnect(false);
         break;
         default:
           std::cout << "barks?\n";
@@ -140,7 +118,7 @@ void NyaBot::listen(){
     catch(meowHttp::Exception &e){
       std::cout << e.what() << std::endl;
       if(e.closed())
-        reconnect(sesId, resumeUrl, true);
+        reconnect(true);
       else {
         std::cout << "fatal error exiting :3\n";
         return;
