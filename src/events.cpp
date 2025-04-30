@@ -35,7 +35,14 @@ void NyaBot::interaction(nlohmann::json j){
   int type = j["type"];
   switch(type){
     case APPLICATION_COMMAND:
-      funs.onSlashF(constructSlash(j));    
+      auto slash = constructSlash(j);
+      if(commands.contains(slash.commandName)){
+        commands[slash.commandName]->onCommand(slash);
+      }
+      else { // command doesnt have a command handler sending it to the default handler
+        funs.onSlashF(slash);
+      }
+    break;
   } 
 }
 

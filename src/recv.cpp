@@ -22,12 +22,15 @@ void NyaBot::listen(){
   std::cout << "starting to heartbeat with jitter of: " << random << std::endl;
   while (!stop){
     std::string buf;
-
     try {
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
         std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
         handle.wsClose();
         reconnect(false);
+        // we have to reset our times to avoid an edgecase causing us to always think we havent received a heartbeat
+        lastHB = std::chrono::steady_clock::now();
+        sentHB = std::chrono::steady_clock::now();
+        continue;
       }
       if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(api.interval*random))){
         std::cout << "sending heartbeat :3\n";

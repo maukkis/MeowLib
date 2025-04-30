@@ -13,7 +13,9 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <iostream>
+#include <type_traits>
 #include <unordered_map>
+#include "commandHandling.h"
 
 struct ImportantApiStuff {
   std::string token;
@@ -38,6 +40,9 @@ auto runOnce(F&& f, Args&&... a) {
   std::invoke(std::forward<F>(f), std::forward<Args>(a)...);
 }
 
+template<typename T>
+concept CommandHandler = std::is_base_of_v<Command, T>;
+
 
 class NyaBot {
 public:
@@ -46,6 +51,17 @@ public:
 
   void run(const std::string& token);
   void addSlash(const SlashCommand& slash);
+
+  void addCommandHandler(const std::string& commandName, std::unique_ptr<Command> p){
+    commands[commandName] = std::move(p);
+  }
+
+
+  template<CommandHandler Command, typename... Args>
+  void addCommandHandler(const std::string& commandName, Args&&... args){
+    commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
+  }
+
   void onReady(std::function<void()> f);
   void onSlash(std::function<void(SlashCommandInt)> f);
   void onAutocomplete(std::function<void()> f);
@@ -69,6 +85,8 @@ private:
     {"INTERACTION_CREATE", std::bind(&NyaBot::interaction, this, std::placeholders::_1)},
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
   };
+  
+  std::unordered_map<std::string, std::unique_ptr<Command>> commands;
   Funs funs;
   ImportantApiStuff api;
 
