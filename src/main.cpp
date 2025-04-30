@@ -1,8 +1,3 @@
-#include <csignal>
-#include <cstdlib>
-#include <memory>
-#include <pthread.h>
-#include <unistd.h>
 #include "includes/commandHandling.h"
 #include "includes/nyaBot.h"
 #include "includes/slashCommands.h"
@@ -68,7 +63,8 @@ int main(){
   auto a = std::make_unique<Meow>();
   bot.addCommandHandler("meow", std::move(a)); // or just move an unique ptr to it
   bot.addCommandHandler<Aix>("aix");
-/*
+
+  /* we dont need this anymore
   bot.onSlash([](auto slash) {
     if(slash.commandName == "woof"){
       std::string dogSound = slash.parameters["puppy"];
@@ -88,7 +84,7 @@ int main(){
       slash.respond(AIX);
     }
   });
-*/
+  */
   bot.run(std::getenv("TOKEN"));
   return 0;
 }
