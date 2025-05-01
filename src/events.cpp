@@ -20,7 +20,9 @@ void NyaBot::onAutocomplete(std::function<void ()> f) {
 static SlashCommandInt constructSlash(nlohmann::json& json){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
-  const std::string& userId = json["user"]["id"];
+  std::string userId; 
+  if(json.contains("member")) userId = json["member"]["user"]["id"];
+  else userId = json["user"]["id"];
   json = json["data"];
   const std::string commandName = json["name"];
   SlashCommandInt slash(id, interactionToken, commandName, std::stoull(userId));
