@@ -1,5 +1,6 @@
 #include "includes/nyaBot.h"
 #include <nlohmann/json.hpp>
+#include <string>
 #include "includes/slashCommandInt.h"
 
 void NyaBot::onReady(std::function<void ()> f) {
@@ -19,9 +20,10 @@ void NyaBot::onAutocomplete(std::function<void ()> f) {
 static SlashCommandInt constructSlash(nlohmann::json& json){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
+  const std::string& userId = json["user"]["id"];
   json = json["data"];
   const std::string commandName = json["name"];
-  SlashCommandInt slash(id, interactionToken, commandName);
+  SlashCommandInt slash(id, interactionToken, commandName, std::stoull(userId));
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});

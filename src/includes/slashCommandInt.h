@@ -1,6 +1,8 @@
 #ifndef _SLASHCOMMAND_H
 #define _SLASHCOMMAND_H
+#include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <map>
 
@@ -15,11 +17,12 @@ enum types{
 
 class SlashCommandInt {
 public:
-  SlashCommandInt(const std::string& id, const std::string& token, const std::string& commandName);
-  void respond(const std::string& response);
+  SlashCommandInt(const std::string& id, const std::string& token, const std::string& commandName, uint64_t userId);
+  void respond(const std::string& response, bool epheramal = false);
 
-  std::map<std::string, std::string> parameters;
+  std::unordered_map<std::string, std::string> parameters;
   const std::string commandName;
+  const uint64_t userId;
 private:
   const std::string interactionId;
   const std::string interactionToken;

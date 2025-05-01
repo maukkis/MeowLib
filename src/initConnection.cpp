@@ -85,6 +85,9 @@ void NyaBot::ready(nlohmann::json j){
   std::thread{funs.onReadyF}.detach();
 }
 
+void NyaBot::resumed(nlohmann::json j){
+  std::cout << "connection resumed! with sequence " << j["s"] << std::endl;
+}
 
 void NyaBot::getHeartbeatInterval(){
   std::string buf;

@@ -73,6 +73,7 @@ private:
   void getHeartbeatInterval();
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
+  void resumed(nlohmann::json j);
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -84,6 +85,7 @@ private:
   std::unordered_map<std::string, std::function<void(nlohmann::json)>> dispatchHandlers {
     {"INTERACTION_CREATE", std::bind(&NyaBot::interaction, this, std::placeholders::_1)},
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
+    {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
   };
   
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
