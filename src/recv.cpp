@@ -120,8 +120,7 @@ void NyaBot::listen(){
     }
     catch(meowHttp::Exception &e){
       std::cout << e.what() << std::endl;
-      if(e.closed())
-        reconnect(true);
+      if(e.closed()) reconnect(true);
       else {
         std::cout << "fatal error exiting :3\n";
         return;

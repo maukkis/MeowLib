@@ -23,7 +23,7 @@ void SlashCommandInt::respond(const std::string& response, bool ephemeral) {
   if(ephemeral) j["data"]["flags"] = 1 << 6;
   j["data"]["content"] = response;
   auto handle = meowHttp::Https()
-    .setUrl("https://discord.com/api/interactions/" + interactionId + '/' + interactionToken + "/callback")
+    .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
     std::cout << "aaaaaaaaaaa\n";

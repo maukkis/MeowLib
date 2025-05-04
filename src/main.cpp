@@ -19,8 +19,7 @@ public:
     const std::string& bark = i.parameters["input"];
     if(i.userId == 991406354810015867){
       i.respond(bark);
-    }
-    else {
+    } else {
       i.respond("you are not authorized to use this command owo\n*wags tail*", true);
     }
   } 
@@ -79,15 +78,18 @@ int main(){
 
   // add command handlers
   bot.addCommandHandler<Woof>("woof"); // you can either pass the class to the template and the command name and optional constructor args
+  
   auto a = std::make_unique<Meow>();
   bot.addCommandHandler("meow", std::move(a)); // or just move an unique ptr to it
+
   bot.addCommandHandler<Aix>("aix");
   bot.addCommandHandler<Say>("say");
 
   // we should still keep this
   bot.onSlash([](auto slash){
-    slash.respond("you forgot to add an command handler idiot");
+    slash.respond("you forgot to add a command handler idiot");
   });
+
   bot.run(std::getenv("TOKEN"));
   return 0;
 }
