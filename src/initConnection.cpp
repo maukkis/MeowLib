@@ -76,18 +76,6 @@ void NyaBot::sendIdent(){
   }
 }
 
-void NyaBot::ready(nlohmann::json j){
-  j = j["d"];
-  api.sesId = j["session_id"];
-  api.resumeUrl = j["resume_gateway_url"];
-  j = j["user"];
-  api.appId = j["id"];
-  std::thread{funs.onReadyF}.detach();
-}
-
-void NyaBot::resumed(nlohmann::json j){
-  std::cout << "connection resumed! with sequence " << j["s"] << std::endl;
-}
 
 void NyaBot::getHeartbeatInterval(){
   std::string buf;
