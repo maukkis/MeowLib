@@ -33,11 +33,12 @@ struct Funs {
 };
 
 template<typename F, typename... Args>
-auto runOnce(F&& f, Args&&... a) {
-  static bool ran = false;
-  if(ran) return;
-  ran = true;
-  std::invoke(std::forward<F>(f), std::forward<Args>(a)...);
+void runOnce(F&& f, Args&&... a) {
+  [[maybe_unused]]
+  static bool ran = [&](){
+    std::invoke(std::forward<F>(f), std::forward<Args>(a)...);
+    return true;
+  }();
 }
 
 template<typename T>
