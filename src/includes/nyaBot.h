@@ -32,6 +32,8 @@ struct Funs {
   std::function<void()> onAutocompleteF = {};
 };
 
+
+// this function has a few edgecases where it doesnt work but its fine <3
 template<typename F, typename... Args>
 void runOnce(F&& f, Args&&... a) {
   [[maybe_unused]]

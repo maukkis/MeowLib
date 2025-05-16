@@ -16,7 +16,7 @@ void NyaBot::resumed(nlohmann::json j){
 
 
 
-static SlashCommandInt constructSlash(nlohmann::json& json){
+static SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
   std::string userId; 
@@ -24,7 +24,7 @@ static SlashCommandInt constructSlash(nlohmann::json& json){
   else userId = json["user"]["id"];
   json = json["data"];
   const std::string commandName = json["name"];
-  SlashCommandInt slash(id, interactionToken, commandName, std::stoull(userId));
+  SlashCommandInt slash(id, interactionToken, commandName, std::stoull(userId), appId);
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
@@ -40,7 +40,7 @@ void NyaBot::interaction(nlohmann::json j){
   int type = j["type"];
   switch(type){
     case APPLICATION_COMMAND:
-      auto slash = constructSlash(j);
+      auto slash = constructSlash(j, api.appId);
       if(commands.contains(slash.commandName)){
         commands[slash.commandName]->onCommand(slash);
       }

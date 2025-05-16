@@ -1,5 +1,6 @@
 #include "includes/commandHandling.h"
 #include "includes/nyaBot.h"
+#include "includes/slashCommandInt.h"
 #include "includes/slashCommands.h"
 #include <iostream>
 #include <string>
@@ -20,7 +21,7 @@ public:
     if(i.userId == 991406354810015867){
       i.respond(bark);
     } else {
-      i.respond("you are not authorized to use this command owo\n*wags tail*", true);
+      i.respond("you are not authorized to use this command owo\n*wags tail*", EPHEMERAL);
     }
   } 
 };

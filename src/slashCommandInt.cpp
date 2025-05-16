@@ -5,22 +5,23 @@
 #include <iostream>
 #include <nlohmann/json_fwd.hpp>
 
-
 SlashCommandInt::SlashCommandInt(
   const std::string& id,
   const std::string& token,
   const std::string& commandNamee,
-  uint64_t userId
+  uint64_t userId,
+  const std::string& applicationId
 ) : commandName{commandNamee},
     userId{userId},
     interactionId{id},
-    interactionToken{token} {}
+    interactionToken{token},
+    applicationId(applicationId){}
 
-void SlashCommandInt::respond(const std::string& response, bool ephemeral) {
+void SlashCommandInt::respond(const std::string& response, int flags) {
   nlohmann::json j;
   j["type"] = 4;
   j["data"] = nlohmann::json::object();
-  if(ephemeral) j["data"]["flags"] = 1 << 6;
+  if(flags != 0) j["data"]["flags"] = flags;
   j["data"]["content"] = response;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
@@ -29,4 +30,33 @@ void SlashCommandInt::respond(const std::string& response, bool ephemeral) {
     std::cout << "aaaaaaaaaaa\n";
   }
 }
+
+void SlashCommandInt::respond(){
+  nlohmann::json j;
+  j["type"] = 5;
+  auto handle = meowHttp::Https()
+    .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
+    .setPostfields(j.dump());
+  if(handle.perform() != OK) {
+    std::cout << "VITTU!\n";
+  }
+}
+
+
+void SlashCommandInt::edit(const std::string& response, int flags){
+  nlohmann::json j;
+  if(flags != 0) j["flags"] = flags;
+  j["content"] = response;
+  std::string a;
+  auto handle = meowHttp::Https()
+    .setUrl("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original")
+    .setCustomMethod("PATCH")
+    .setHeader("content-type: application/json")
+    .setWriteData(&a)
+    .setPostfields(j.dump());
+  if(handle.perform() != OK) {
+    std::cout << "aaaaaaaaaaa\n" << a << std::endl;
+  }
+}
+
 
