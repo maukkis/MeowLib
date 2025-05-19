@@ -24,7 +24,7 @@ public:
   const std::string desc;
   const int type;
   const bool required;
-  std::vector<std::string_view> choices;
+  std::vector<std::string> choices;
 };
 
 
