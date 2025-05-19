@@ -4,8 +4,8 @@
 #include <string>
 #include <unistd.h>
 #include <iostream>
-#include "includes/eventCodes.h"
-#include "includes/nyaBot.h"
+#include "../include/eventCodes.h"
+#include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
 
 NyaBot::NyaBot(){

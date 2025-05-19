@@ -1,4 +1,4 @@
-#include "includes/nyaBot.h"
+#include "../include/nyaBot.h"
 
 
 void NyaBot::ready(nlohmann::json j){

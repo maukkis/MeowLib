@@ -1,5 +1,5 @@
-#include "includes/slashCommands.h"
-#include "includes/nyaBot.h"
+#include "../include/slashCommands.h"
+#include "../include/nyaBot.h"
 #include <iostream>
 #include <nlohmann/json_fwd.hpp>
 #include "../meowHttp/src/includes/https.h"

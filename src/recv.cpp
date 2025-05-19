@@ -5,8 +5,8 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
-#include "includes/nyaBot.h"
-#include "includes/eventCodes.h"
+#include "../include/nyaBot.h"
+#include "../include/eventCodes.h"
 #include <netinet/in.h>
 #include <stdio.h>
 #include <nlohmann/json.hpp>

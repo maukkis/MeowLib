@@ -1,6 +1,6 @@
 #ifndef nyaBot_H
 #define nyaBot_H
-#include "../../meowHttp/src/includes/websocket.h"
+#include "../meowHttp/src/includes/websocket.h"
 #include "queue.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"

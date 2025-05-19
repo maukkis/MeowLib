@@ -1,6 +1,6 @@
-#include "includes/nyaBot.h"
+#include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
-#include "includes/slashCommandInt.h"
+#include "../include/slashCommandInt.h"
 
 void NyaBot::onReady(std::function<void ()> f) {
   funs.onReadyF = f;

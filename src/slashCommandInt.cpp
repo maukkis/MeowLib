@@ -1,4 +1,4 @@
-#include "includes/slashCommandInt.h"
+#include "../include/slashCommandInt.h"
 #include "../meowHttp/src/includes/https.h"
 #include <cstdint>
 #include <nlohmann/json.hpp>
