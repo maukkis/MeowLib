@@ -9,9 +9,8 @@ SlashCommand::SlashCommand(const std::string_view name, const std::string_view d
     desc{desc},
     types{type} {}
 
-SlashCommandParameter& SlashCommand::addParam(SlashCommandParameter a){
+void SlashCommand::addParam(SlashCommandParameter a){
   params.emplace_back(a);
-  return params.back();
 }
 
 SlashCommandParameter& SlashCommandParameter::addChoice(const std::string_view choice){
