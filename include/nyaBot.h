@@ -52,16 +52,16 @@ public:
   NyaBot();
   ~NyaBot();
 
-  void run(const std::string& token);
+  void run(const std::string_view token);
   void addSlash(const SlashCommand& slash);
 
-  void addCommandHandler(const std::string& commandName, std::unique_ptr<Command> p){
+  void addCommandHandler(const std::string_view commandName, std::unique_ptr<Command> p){
     commands[commandName] = std::move(p);
   }
 
 
   template<CommandHandler Command, typename... Args>
-  void addCommandHandler(const std::string& commandName, Args&&... args){
+  void addCommandHandler(const std::string_view commandName, Args&&... args){
     commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
   }
 
@@ -85,13 +85,13 @@ private:
   std::atomic<bool> stop;
   meowWs::Websocket handle;
  
-  std::unordered_map<std::string, std::function<void(nlohmann::json)>> dispatchHandlers {
+  std::unordered_map<std::string_view, std::function<void(nlohmann::json)>> dispatchHandlers {
     {"INTERACTION_CREATE", std::bind(&NyaBot::interaction, this, std::placeholders::_1)},
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
     {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
   };
   
-  std::unordered_map<std::string, std::unique_ptr<Command>> commands;
+  std::unordered_map<std::string_view, std::unique_ptr<Command>> commands;
   Funs funs;
   ImportantApiStuff api;
 

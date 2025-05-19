@@ -38,7 +38,7 @@ meow NyaBot::reconnect(bool resume){
   return OK;
 }
 
-void NyaBot::run(const std::string& token){
+void NyaBot::run(const std::string_view token){
   this->api.token = token;
   connect();
   getHeartbeatInterval();

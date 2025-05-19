@@ -24,10 +24,10 @@ enum types{
 
 class SlashCommandInt {
 public:
-  SlashCommandInt(const std::string& id, const std::string& token, const std::string& commandName, uint64_t userId, const std::string& applicationId);
-  void respond(const std::string& response, int flags = 0);
+  SlashCommandInt(const std::string_view id, const std::string_view token, const std::string_view commandName, uint64_t userId, const std::string& applicationId);
+  void respond(const std::string_view response, int flags = 0);
   void respond();
-  void edit(const std::string& response, int flags = 0);
+  void edit(std::string_view response, int flags = 0);
   std::unordered_map<std::string, std::string> parameters;
   const std::string commandName;
   const uint64_t userId;

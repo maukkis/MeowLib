@@ -6,9 +6,9 @@
 #include <nlohmann/json_fwd.hpp>
 
 SlashCommandInt::SlashCommandInt(
-  const std::string& id,
-  const std::string& token,
-  const std::string& commandNamee,
+  const std::string_view id,
+  const std::string_view token,
+  const std::string_view commandNamee,
   uint64_t userId,
   const std::string& applicationId
 ) : commandName{commandNamee},
@@ -17,7 +17,7 @@ SlashCommandInt::SlashCommandInt(
     interactionToken{token},
     applicationId(applicationId){}
 
-void SlashCommandInt::respond(const std::string& response, int flags) {
+void SlashCommandInt::respond(const std::string_view response, int flags) {
   nlohmann::json j;
   j["type"] = 4;
   j["data"] = nlohmann::json::object();
@@ -43,7 +43,7 @@ void SlashCommandInt::respond(){
 }
 
 
-void SlashCommandInt::edit(const std::string& response, int flags){
+void SlashCommandInt::edit(const std::string_view response, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
   j["content"] = response;

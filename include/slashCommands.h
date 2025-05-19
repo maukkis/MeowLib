@@ -18,20 +18,20 @@ enum IntegrationTypes {
 
 class SlashCommandParameter{
 public:
-  SlashCommandParameter(const std::string& name, const std::string& desc, Types type, bool required);
-  SlashCommandParameter& addChoice(const std::string& choice);
+  SlashCommandParameter(const std::string_view name, const std::string_view desc, Types type, bool required);
+  SlashCommandParameter& addChoice(const std::string_view choice);
   const std::string name;
   const std::string desc;
   const int type;
   const bool required;
-  std::vector<std::string> choices;
+  std::vector<std::string_view> choices;
 };
 
 
 class SlashCommand {
 public:
-  SlashCommand(const std::string& name, const std::string& desc, IntegrationTypes type);
-  SlashCommandParameter& addParam(const std::string& name, const std::string& value, Types type, bool required);
+  SlashCommand(const std::string_view name, const std::string_view desc, IntegrationTypes type);
+  SlashCommandParameter& addParam(SlashCommandParameter a);
   const std::string name;
   const std::string desc;
   std::vector<SlashCommandParameter> params;

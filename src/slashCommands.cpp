@@ -4,22 +4,22 @@
 #include <nlohmann/json_fwd.hpp>
 #include "../meowHttp/src/includes/https.h"
 
-SlashCommand::SlashCommand(const std::string& name, const std::string& desc, enum IntegrationTypes type) 
+SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 
   : name{name},
     desc{desc},
     types{type} {}
 
-SlashCommandParameter& SlashCommand::addParam(const std::string& name, const std::string& value, Types type, bool required){
-  params.emplace_back(name, value, type, required);
+SlashCommandParameter& SlashCommand::addParam(SlashCommandParameter a){
+  params.emplace_back(a);
   return params.back();
 }
 
-SlashCommandParameter& SlashCommandParameter::addChoice(const std::string& choice){
+SlashCommandParameter& SlashCommandParameter::addChoice(const std::string_view choice){
   choices.emplace_back(choice);
   return *this;
 }
 
-SlashCommandParameter::SlashCommandParameter(const std::string& name, const std::string& desc, Types type, bool required) 
+SlashCommandParameter::SlashCommandParameter(const std::string_view name, const std::string_view desc, Types type, bool required) 
   : name{name},
     desc{desc},
     type{type},
