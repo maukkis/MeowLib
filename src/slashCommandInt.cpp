@@ -25,6 +25,7 @@ void SlashCommandInt::respond(const std::string_view response, int flags) {
   j["data"]["content"] = response;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
+    .setHeader("content-type: application/json")
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
     std::cout << "aaaaaaaaaaa\n";
@@ -36,6 +37,7 @@ void SlashCommandInt::respond(){
   j["type"] = 5;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
+    .setHeader("content-type: application/json")
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
     std::cout << "VITTU!\n";
