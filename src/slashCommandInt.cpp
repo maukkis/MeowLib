@@ -45,6 +45,19 @@ void SlashCommandInt::respond(){
 }
 
 
+void SlashCommandInt::respond(const nlohmann::json& j){
+  std::string a;
+  auto handle = meowHttp::Https()
+    .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
+    .setHeader("content-type: application/json")
+    .setWriteData(&a)
+    .setPostfields(j.dump());
+  if(handle.perform() != OK || handle.getLastStatusCode() != HTTP_OK){
+    std::cout << a << std::endl;
+  }
+}
+
+
 void SlashCommandInt::edit(const std::string_view response, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
@@ -62,3 +75,15 @@ void SlashCommandInt::edit(const std::string_view response, int flags){
 }
 
 
+void SlashCommandInt::edit(const nlohmann::json& j){
+  std::string a;
+  auto handle = meowHttp::Https()
+    .setUrl("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original")
+    .setCustomMethod("PATCH")
+    .setHeader("content-type: application/json")
+    .setWriteData(&a)
+    .setPostfields(j.dump());
+  if(handle.perform() != OK || handle.getLastStatusCode() != HTTP_OK){
+    std::cout << a << std::endl;
+  }
+}
