@@ -53,7 +53,7 @@ void SlashCommandInt::manualResponse(const nlohmann::json& j, const std::string&
     .setCustomMethod(method)
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK || handle.getLastStatusCode() != HTTP_OK){
+  if(handle.perform() != OK || handle.getLastStatusCode() != HTTP_OK || handle.getLastStatusCode() != 204){
     std::cout << a << std::endl;
   }
 }
