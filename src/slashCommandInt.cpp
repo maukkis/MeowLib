@@ -71,7 +71,6 @@ void SlashCommandInt::manualEdit(const nlohmann::json& j){
   if(handle.perform() != OK && handle.getLastStatusCode() != 204){
     Log::Log("failed to respond" + a);
   }
-
 }
 
 
