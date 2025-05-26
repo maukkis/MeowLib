@@ -47,14 +47,16 @@ void SlashCommandInt::respond(){
 
 void SlashCommandInt::manualResponse(const nlohmann::json& j){
   std::string a;
+  std::cout << j.dump() << std::endl;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
     .setHeader("content-type: application/json")
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK && handle.getLastStatusCode() != 204){
+  if(handle.perform() != OK || handle.getLastStatusCode() != 204){
     std::cout << a << std::endl;
   }
+  std::cout << a << std::endl;
 }
 
 
@@ -66,10 +68,9 @@ void SlashCommandInt::manualEdit(const nlohmann::json& j){
     .setCustomMethod("PATCH")
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK && handle.getLastStatusCode() != 204){
+  if(handle.perform() != OK || handle.getLastStatusCode() != 204){
     std::cout << a << std::endl;
   }
-
 }
 
 
