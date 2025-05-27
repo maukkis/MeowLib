@@ -1,49 +1,20 @@
-#ifndef COMPONENTS_V2_H
-#define COMPONENTS_V2_H
+#ifndef _ACTION_ROW_COMPONENT_H
+#define _ACTION_ROW_COMPONENT_H
+
 #include <cstdint>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 #include <memory>
+#include "componentsv2.h"
+#include "buttonComponent.h"
 #include <optional>
 // im sorry for whoever is having to edit this --Luna
 
 
-enum ComponentTypes {
-  ACTION_ROW = 1,
-  BUTTON,
-  STRING_SELECT,
-  TEXT_INPUT,
-  USER_SELECT,
-  ROLE_SELECT,
-  MENTIONABLE_SELECT,
-  CHANNEL_SELECT,
-  SECTION,
-  TEXT_DISPLAY,
-  THUMBNAIL,
-  MEDIA_GALLERY,
-  FILE_TYPE,
-  SEPERATOR,
-  CONTAINER = 17,
-};
-
-
-
-class Component {
-public:
-  virtual nlohmann::json generate() = 0;
-  virtual ~Component() = default;
-protected:
-  ComponentTypes type;
-};
-
-class ButtonComponent : public Component {
-public:
-  nlohmann::json generate() override{ return nlohmann::json();}
-
-};
 
 class SelectComponent : public Component {
   nlohmann::json generate() override{ return nlohmann::json();}
@@ -54,7 +25,7 @@ class ActionRowComponent : public Component{
 public:
   nlohmann::json generate() override{return nlohmann::json();};
   int bark(){ return components.size();}
-
+  ActionRowComponent() = default;
   template<typename... E>
   requires (std::conjunction<std::is_same<E, ButtonComponent>...>::value)
   ActionRowComponent<true> addComponent(E&&... comps){
