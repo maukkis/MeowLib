@@ -28,6 +28,10 @@ protected:
   ComponentTypes type;
 };
 
+class ContainerComponent : public Component{
+public:
+  nlohmann::json generate() override{ return nlohmann::json();}
+};
 
 #endif
 
