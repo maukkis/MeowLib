@@ -11,14 +11,13 @@
 #include <memory>
 #include "componentsv2.h"
 #include "buttonComponent.h"
+#include "selectcomponents.h"
 #include <optional>
 // im sorry for whoever is having to edit this --Luna
 
 
 
-class SelectComponent : public Component {
-  nlohmann::json generate() override{ return nlohmann::json();}
-};
+
 
 template<bool state = false>
 class ActionRowComponent : public Component{
@@ -37,14 +36,18 @@ public:
   }
 
 
-  template<typename... E>
-  requires (std::conjunction<std::is_same<E, SelectComponent>...>::value)
-  ActionRowComponent<true> addComponent(E&&... comps){
-    static_assert(sizeof...(comps) <= 1, "cannot have more than 1 SelectComponent");
+  template<typename E>
+  requires (std::is_base_of<SelectComponent, E>::value)
+  ActionRowComponent<true> addComponent(E&& comps){
     static_assert(state != true, "this component can only have 1 type of component");
     ActionRowComponent<true> arf;
-    (arf.components.push_back(std::make_unique<SelectComponent>(std::forward<E>(comps))), ...);
+    arf.components.push_back(std::make_unique<SelectComponent>(std::forward<E>(comps)));
     return arf;
+  }
+  
+  template<typename E>
+  void addComponent([[maybe_unused]]E&& a){
+    static_assert(false, "action row can only have buttons or a select component");
   }
 
   std::vector<std::unique_ptr<Component>> components;
