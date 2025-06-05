@@ -1,6 +1,5 @@
 #include "../include/slashCommands.h"
 #include "../include/nyaBot.h"
-#include <iostream>
 #include <nlohmann/json_fwd.hpp>
 #include "../meowHttp/src/includes/https.h"
 
@@ -76,6 +75,6 @@ void NyaBot::syncSlashCommands(){
     .setCustomMethod("PUT")
     .setPostfields(json.dump())
     .setWriteData(&write);
-  if(meow.perform() != OK || meow.getLastStatusCode() != HTTPCODES::HTTP_OK) 
-    std::cout << "wooof!\n" << write << std::endl;
+  if(meow.perform() != OK || meow.getLastStatusCode() != HTTPCODES::HTTP_OK)
+    Log::Log("failed to update slashcommands\n" + write);
 }

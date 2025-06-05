@@ -1,8 +1,9 @@
 #include "../include/slashCommandInt.h"
 #include "../meowHttp/src/includes/https.h"
+#include "../include/log.h"
 #include <cstdint>
 #include <nlohmann/json.hpp>
-#include <iostream>
+#include <print>
 #include <nlohmann/json_fwd.hpp>
 
 SlashCommandInt::SlashCommandInt(
@@ -28,7 +29,7 @@ void SlashCommandInt::respond(const std::string_view response, int flags) {
     .setHeader("content-type: application/json")
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
-    std::cout << "aaaaaaaaaaa\n";
+    Log::Log("failed to respond to an interaction\n");
   }
 }
 
@@ -40,7 +41,7 @@ void SlashCommandInt::respond(){
     .setHeader("content-type: application/json")
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
-    std::cout << "VITTU!\n";
+    Log::Log("failed to respond to an interaction");
   }
 }
 
@@ -53,7 +54,8 @@ void SlashCommandInt::manualResponse(const nlohmann::json& j){
     .setWriteData(&a)
     .setPostfields(j.dump());
   if(handle.perform() != OK && handle.getLastStatusCode() != 204){
-    std::cout << a << std::endl;
+    Log::Log("failed to respond to an interaction");
+    std::println("{}", a);
   }
 }
 
@@ -67,7 +69,7 @@ void SlashCommandInt::manualEdit(const nlohmann::json& j){
     .setWriteData(&a)
     .setPostfields(j.dump());
   if(handle.perform() != OK && handle.getLastStatusCode() != 204){
-    std::cout << a << std::endl;
+    Log::Log("failed to respond" + a);
   }
 
 }
@@ -85,7 +87,7 @@ void SlashCommandInt::edit(const std::string_view response, int flags){
     .setWriteData(&a)
     .setPostfields(j.dump());
   if(handle.perform() != OK) {
-    std::cout << "aaaaaaaaaaa\n" << a << std::endl;
+    Log::Log("something went wrong while responding\n" + a);
   }
 }
 

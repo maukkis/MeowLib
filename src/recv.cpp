@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <nlohmann/json.hpp>
+#include <string>
 
 
 void NyaBot::listen(){
@@ -19,12 +20,12 @@ void NyaBot::listen(){
   auto lastHB = std::chrono::steady_clock::now();
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
-  std::cout << "starting to heartbeat with jitter of: " << random << std::endl;
+  Log::Log("starting to heartbeat with jitter of: " + std::to_string(random)); 
   while (!stop){
     std::string buf;
     try {
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
-        std::cout << "[!] havent received heartbeat in over 60 secs reconnecting" << std::endl;
+        Log::Log("havent received heartbeat in over 60 secs reconnecting");
         handle.wsClose();
         reconnect(false);
         // we have to reset our times to avoid an edgecase causing us to always think we havent received a heartbeat
@@ -33,12 +34,12 @@ void NyaBot::listen(){
         continue;
       }
       if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(api.interval*random))){
-        std::cout << "sending heartbeat :3\n";
+        Log::Log("sending heartbeat :3");
         nlohmann::json j;
         j["op"] = Heartbeat;
         j["d"] = api.sequence;
         if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
-          std::cout << "sent heartbeat :3\n";
+          Log::Log("sent heartbeat :3");
           sentHB = std::chrono::steady_clock::now();
         }
         random = 1;
@@ -48,13 +49,13 @@ void NyaBot::listen(){
       if (rlen < 1){
         continue;
       }
-      std::cout << "[*] received: " << rlen << " bytes\n";
+      Log::Log("received: " + std::to_string(rlen) + " bytes");
       if(frame.opcode == meowWs::meowWS_CLOSE) {
-        std::cout << "[!] connection closed\n";
+        Log::Log("connection closed");
         uint16_t arf;
         memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
-        std::cout << "code = " <<  arf << "\nbuf = " << buf.substr(2) << std::endl;
+        Log::Log("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));
         switch(arf){
           case 1000:
@@ -76,7 +77,7 @@ void NyaBot::listen(){
           break;
           default:
             stop = true;
-            std::cout << "[!] something went horribly wrong" << std::endl;
+            Log::Log("something went horribly wrong");
             return;
         }
         continue;
@@ -85,11 +86,11 @@ void NyaBot::listen(){
       size_t op = meowJson["op"];
       switch(op){
         case HeartbeatACK:
-          std::cout << "[*] server sent ACK\n";
+          Log::Log("server sent ACK");
           lastHB = std::chrono::steady_clock::now();
         break;
         case Reconnect:
-          std::cout << "got reconnectTwT\nwaiting for close\n";
+          Log::Log("got reconnectTwT waiting for close");
         break; 
         case Dispatch:
           {
@@ -99,30 +100,30 @@ void NyaBot::listen(){
               std::thread{dispatchHandlers[meow], meowJson}.detach();
             }
             else {
-              std::cout << "unknown dispatch printing to log" << std::endl;
+              Log::Log("unknown dispatch printing to log");
               meowlog << buf << std::endl;
             }
           }
         break;
         case InvalidSession:
-          std::cout << "invalid session owo reconnecting without resuming :3\n";
+          Log::Log("invalid session owo reconnecting without resuming :3");
           reconnect(false);
         break;
         default:
-          std::cout << "barks?\n";
+          Log::Log("barks?");
           meowlog << buf << std::endl;
         break;
       }
     }
     catch(nlohmann::json::exception& e){
-      std::cout << "[!] got parse error :( partial data?\n";
+      Log::Log("got parse error :( partial data?");
       meowlog << buf << std::endl;
     }
     catch(meowHttp::Exception &e){
-      std::cout << e.what() << std::endl;
+      Log::Log(e.what());
       if(e.closed()) reconnect(true);
       else {
-        std::cout << "fatal error exiting :3\n";
+        Log::Log("fatal error exiting :3");
         return;
       }
     }

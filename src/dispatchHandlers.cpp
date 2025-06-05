@@ -1,4 +1,5 @@
 #include "../include/nyaBot.h"
+#include <string>
 
 
 void NyaBot::ready(nlohmann::json j){
@@ -11,9 +12,8 @@ void NyaBot::ready(nlohmann::json j){
 }
 
 void NyaBot::resumed(nlohmann::json j){
-  std::cout << "connection resumed! with sequence " << j["s"] << std::endl;
+  Log::Log("connection resumed! with sequence " + std::to_string(j["s"].get<long>()));
 }
-
 
 
 static SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){

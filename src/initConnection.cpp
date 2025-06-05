@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include <string>
 #include <unistd.h>
-#include <iostream>
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
@@ -17,7 +16,7 @@ NyaBot::NyaBot(){
 
 meow NyaBot::reconnect(bool resume){
   if(handle.wsClose(1003, "arf") != OK){
-    std::cout << "woof?\n"; 
+    Log::Log("woof?"); 
   }
   if(api.resumeUrl.find("wss") != std::string::npos) api.resumeUrl.replace(0, 3, "https");
   handle.setUrl(api.resumeUrl);
@@ -30,7 +29,7 @@ meow NyaBot::reconnect(bool resume){
     j["d"]["session_id"] = api.sesId;
     j["d"]["seq"] = api.sequence;
     if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
-      std::cout << "sent resume!\n";
+      Log::Log("sent resume!");
     }
   } else {
     sendIdent();
@@ -42,7 +41,7 @@ void NyaBot::run(const std::string_view token){
   this->api.token = token;
   connect();
   getHeartbeatInterval();
-  std::cout << "[*] interval is " << api.interval << '\n';
+  Log::Log("interval is " + std::to_string(api.interval));
   sendIdent();
   listen();
 }
@@ -50,29 +49,29 @@ void NyaBot::run(const std::string_view token){
 NyaBot::~NyaBot(){
   stop = true;
   handle.wsClose(1000, "going away :3");
-  std::cout << "[*] closed!\n"; 
+  Log::Log("closed!"); 
 }
 
 
 void NyaBot::connect(){
   if(handle.perform() == OK){
-    std::cout << "[*] connected to the websocket succesfully!\n";
+    Log::Log("connected to the websocket succesfully!");
   }
   else {
-    std::cerr << "[!] something went wrong\n";
+    Log::Log("something went wrong");
     std::exit(1);
   }
   
 }
 
 void NyaBot::sendIdent(){
-  std::cout << "[*] sending ident\n";
+  Log::Log("sending ident");
   std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
-    std::cout << "[*] ident sent!\n";
+    Log::Log("ident sent!");
   }
   else {
-    std::cout << "[!] something went wrong\n";
+    Log::Log("something went wrong");
   }
 }
 
@@ -89,8 +88,8 @@ void NyaBot::getHeartbeatInterval(){
     api.interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
-    std::cout << "[!] failed to parse buffer\n";
-    std::cout << "[!] buffer is " << buf << '\n';
+    Log::Log("failed to parse buffer");
+    Log::Log("buffer is " + buf);
     std::exit(1);
   }
 

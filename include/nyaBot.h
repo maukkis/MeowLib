@@ -10,6 +10,7 @@
 #include <mutex>
 #include <string>
 #include <atomic>
+#include "log.h"
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <iostream>
@@ -58,7 +59,10 @@ public:
   void addCommandHandler(const std::string& commandName, std::unique_ptr<Command> p){
     commands[commandName] = std::move(p);
   }
-
+  
+  void enableDebugLogging(){
+    Log::enabled = true;
+  }
 
   template<CommandHandler Command, typename... Args>
   void addCommandHandler(const std::string& commandName, Args&&... args){
