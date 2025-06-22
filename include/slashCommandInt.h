@@ -6,6 +6,8 @@
 #include <utility>
 #include <map>
 #include <nlohmann/json.hpp>
+#include "message.h"
+
 
 
 enum MsgFlags {
@@ -29,6 +31,7 @@ public:
   SlashCommandInt(const std::string_view id, const std::string_view token, const std::string_view commandName, uint64_t userId, const std::string& applicationId);
   void respond(const std::string_view response, int flags = 0);
   void respond();
+  void respond(const Message& a);
   void manualResponse(const nlohmann::json& j);
   void manualEdit(const nlohmann::json& j);
   void edit(std::string_view response, int flags = 0);

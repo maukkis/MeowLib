@@ -33,6 +33,13 @@ void SlashCommandInt::respond(const std::string_view response, int flags) {
   }
 }
 
+void SlashCommandInt::respond(const Message& a){
+  nlohmann::json b;
+  b["type"] = 6;
+  this->manualResponse(b);
+  this->manualEdit(a.generate());
+}
+
 void SlashCommandInt::respond(){
   nlohmann::json j;
   j["type"] = 5;

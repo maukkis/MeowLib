@@ -45,11 +45,6 @@ public:
     return arf;
   }
   
-  template<typename E>
-  void addComponent([[maybe_unused]]E&& a){
-    static_assert(false, "action row can only have buttons or a select component");
-  }
-
   std::vector<std::unique_ptr<Component>> components;
 private:
   ComponentTypes type = ACTION_ROW;
