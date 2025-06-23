@@ -2,6 +2,7 @@
 #include "../meowHttp/src/includes/https.h"
 #include "../include/log.h"
 #include <cstdint>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <nlohmann/json_fwd.hpp>
@@ -33,12 +34,14 @@ void SlashCommandInt::respond(const std::string_view response, int flags) {
   }
 }
 
+
 void SlashCommandInt::respond(const Message& a){
   nlohmann::json b;
-  b["type"] = 6;
+  b["type"] = 4;
+  b["data"] = a.generate();
   this->manualResponse(b);
-  this->manualEdit(a.generate());
 }
+
 
 void SlashCommandInt::respond(){
   nlohmann::json j;
@@ -60,9 +63,10 @@ void SlashCommandInt::manualResponse(const nlohmann::json& j){
     .setHeader("content-type: application/json")
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK && handle.getLastStatusCode() != 204){
+  if(handle.perform() != OK || handle.getLastStatusCode() != 204){
     Log::Log("failed to respond to an interaction");
     std::println("{}", a);
+    std::fflush(stdout);
   }
 }
 
@@ -75,7 +79,7 @@ void SlashCommandInt::manualEdit(const nlohmann::json& j){
     .setCustomMethod("PATCH")
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK && handle.getLastStatusCode() != 204){
+  if(handle.perform() != OK || handle.getLastStatusCode() != 204){
     Log::Log("failed to respond" + a);
   }
 }
