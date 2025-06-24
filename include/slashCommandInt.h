@@ -26,22 +26,27 @@ enum types{
 };
 
 
-class SlashCommandInt {
+class Interaction {
 public:
-  SlashCommandInt(const std::string_view id, const std::string_view token, const std::string_view commandName, uint64_t userId, const std::string& applicationId);
+  Interaction(const std::string_view id, const std::string_view token, const std::string_view commandName, uint64_t userId, const std::string& applicationId);
   void respond(const std::string_view response, int flags = 0);
   void respond();
   void respond(const Message& a);
   void manualResponse(const nlohmann::json& j);
   void manualEdit(const nlohmann::json& j);
   void edit(std::string_view response, int flags = 0);
-  std::unordered_map<std::string, std::string> parameters;
   const std::string commandName;
   const uint64_t userId;
-private:
+protected:
   const std::string interactionId;
   const std::string interactionToken;
   const std::string& applicationId;
+};
+
+class SlashCommandInt : public Interaction {
+public:
+  using Interaction::Interaction;
+  std::unordered_map<std::string, std::string> parameters;
 };
 
 #endif 

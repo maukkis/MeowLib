@@ -15,18 +15,18 @@
 #include <optional>
 // im sorry for whoever is having to edit this --Luna
 
-
+template<typename T>
+using buttons = std::is_same<std::remove_reference_t<T>, ButtonComponent>;
 
 
 
 template<bool state = false>
 class ActionRowComponent : public Component{
 public:
-  nlohmann::json generate() override{return nlohmann::json();};
-  int bark(){ return components.size();}
+  nlohmann::json generate() override;
   ActionRowComponent() = default;
   template<typename... E>
-  requires (std::conjunction<std::is_same<E, ButtonComponent>...>::value)
+  requires (std::conjunction<buttons<E>...>::value)
   ActionRowComponent<true> addComponent(E&&... comps){
     static_assert(state != true, "this component can only have 1 type of component");
     static_assert(sizeof...(comps) <= 5, "cannot have more than 5 buttons");

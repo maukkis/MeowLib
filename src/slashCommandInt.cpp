@@ -2,12 +2,12 @@
 #include "../meowHttp/src/includes/https.h"
 #include "../include/log.h"
 #include <cstdint>
-#include <iostream>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <nlohmann/json_fwd.hpp>
 
-SlashCommandInt::SlashCommandInt(
+
+Interaction::Interaction(
   const std::string_view id,
   const std::string_view token,
   const std::string_view commandNamee,
@@ -19,7 +19,7 @@ SlashCommandInt::SlashCommandInt(
     interactionToken{token},
     applicationId(applicationId){}
 
-void SlashCommandInt::respond(const std::string_view response, int flags) {
+void Interaction::respond(const std::string_view response, int flags) {
   nlohmann::json j;
   j["type"] = 4;
   j["data"] = nlohmann::json::object();
@@ -35,7 +35,7 @@ void SlashCommandInt::respond(const std::string_view response, int flags) {
 }
 
 
-void SlashCommandInt::respond(const Message& a){
+void Interaction::respond(const Message& a){
   nlohmann::json b;
   b["type"] = 4;
   b["data"] = a.generate();
@@ -43,7 +43,7 @@ void SlashCommandInt::respond(const Message& a){
 }
 
 
-void SlashCommandInt::respond(){
+void Interaction::respond(){
   nlohmann::json j;
   j["type"] = 5;
   auto handle = meowHttp::Https()
@@ -56,7 +56,7 @@ void SlashCommandInt::respond(){
 }
 
 
-void SlashCommandInt::manualResponse(const nlohmann::json& j){
+void Interaction::manualResponse(const nlohmann::json& j){
   std::string a;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback")
@@ -71,7 +71,7 @@ void SlashCommandInt::manualResponse(const nlohmann::json& j){
 }
 
 
-void SlashCommandInt::manualEdit(const nlohmann::json& j){
+void Interaction::manualEdit(const nlohmann::json& j){
   std::string a;
   auto handle = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original")
@@ -85,7 +85,7 @@ void SlashCommandInt::manualEdit(const nlohmann::json& j){
 }
 
 
-void SlashCommandInt::edit(const std::string_view response, int flags){
+void Interaction::edit(const std::string_view response, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
   j["content"] = response;

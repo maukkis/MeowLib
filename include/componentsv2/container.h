@@ -16,7 +16,7 @@ template<>
 struct allowedInContainer<TextDisplayComponent> : std::true_type {};
 
 template<>
-struct allowedInContainer<ActionRowComponent<>> : std::true_type {};
+struct allowedInContainer<ActionRowComponent<true>> : std::true_type {};
 
 template<>
 struct allowedInContainer<SeperatorComponent> : std::true_type {};

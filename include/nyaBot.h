@@ -1,6 +1,7 @@
 #ifndef nyaBot_H
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
+#include "buttonInteraction.h"
 #include "queue.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
@@ -31,6 +32,7 @@ struct Funs {
   std::function<void(SlashCommandInt)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
+  std::function<void(ButtonInteraction)> onButtonF = {};
 };
 
 
@@ -72,6 +74,7 @@ public:
   void onReady(std::function<void()> f);
   void onSlash(std::function<void(SlashCommandInt)> f);
   void onAutocomplete(std::function<void()> f);
+  void onButtonPress(std::function<void(ButtonInteraction)> f);
   void syncSlashCommands();
 private:
   void listen();

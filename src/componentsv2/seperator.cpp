@@ -2,7 +2,7 @@
 
 nlohmann::json SeperatorComponent::generate() {
   nlohmann::json j;
-  j["type"] = 14;
+  j["type"] = type;
   j["divider"] = divider ? "true" : "false";
   j["spacing"] = spacing;
   return j;

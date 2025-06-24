@@ -49,7 +49,7 @@ void NyaBot::listen(){
       if (rlen < 1){
         continue;
       }
-      Log::Log("received: " + std::to_string(rlen) + " bytes");
+      Log::Log("received: " + std::to_string(frame.payloadLen) + " bytes");
       if(frame.opcode == meowWs::meowWS_CLOSE) {
         Log::Log("connection closed");
         uint16_t arf;
