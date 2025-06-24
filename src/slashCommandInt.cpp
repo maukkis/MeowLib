@@ -79,7 +79,7 @@ void Interaction::manualEdit(const nlohmann::json& j){
     .setCustomMethod("PATCH")
     .setWriteData(&a)
     .setPostfields(j.dump());
-  if(handle.perform() != OK || handle.getLastStatusCode() != 204){
+  if(handle.perform() != OK || handle.getLastStatusCode() != 200){
     Log::Log("failed to respond" + a);
   }
 }
