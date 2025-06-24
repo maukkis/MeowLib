@@ -35,6 +35,7 @@ public:
   void manualResponse(const nlohmann::json& j);
   void manualEdit(const nlohmann::json& j);
   void edit(std::string_view response, int flags = 0);
+  void edit(const Message& a);
   const std::string commandName;
   const uint64_t userId;
 protected:

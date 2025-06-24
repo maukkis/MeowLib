@@ -101,3 +101,7 @@ void Interaction::edit(const std::string_view response, int flags){
   }
 }
 
+
+void Interaction::edit(const Message& a){
+  this->manualEdit(a.generate());
+}
