@@ -21,6 +21,8 @@ Interaction::Interaction(
 
 
 namespace {
+
+
 std::pair<std::string, HTTPCODES> sendRawData(const std::string& endpoint,
                  const std::string& method,
                  const std::vector<std::string> headers,
@@ -38,6 +40,7 @@ std::pair<std::string, HTTPCODES> sendRawData(const std::string& endpoint,
   }
   return std::make_pair(a, meow.getLastStatusCode());
 }
+
 
 std::string makeFormData(const nlohmann::json j, const std::string_view boundary, std::vector<Attachment> a){
   std::string data = std::format("--{}\r\n", boundary);
@@ -84,8 +87,7 @@ void Interaction::respond(const Message& a){
     if(res.second != 204){
       std::println("{}\n{}", static_cast<int>(res.second), res.first);
     }
-  }
-  else {
+  } else {
     nlohmann::json b;
     b["type"] = 4;
     b["data"] = a.generate();
