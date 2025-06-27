@@ -5,6 +5,7 @@
 
 struct Attachment {
   Attachment(const std::string& file);
+  Attachment() = default;
   std::string data;
   std::string name;
 };
