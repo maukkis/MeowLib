@@ -1,10 +1,12 @@
 #ifndef _INCLUDE_MESSAGE_H
 #define _INCLUDE_MESSAGE_H
 #include "componentsv2/componentsv2.h"
+#include "attachment.h"
 #include <nlohmann/json.hpp>
 #include <type_traits>
 #include <vector>
 #include <memory>
+#include <print>
 
 
 class Message {
@@ -18,7 +20,11 @@ public:
     components.emplace_back(std::make_unique<std::remove_cvref_t<T>>(std::forward<T>(comp)));
     return *this;
   }
+  Message& addAttachment(const Attachment& a);
+  Message& setContent(const std::string_view a);
+  std::vector<Attachment> attachments;
 private:
+  std::string content;
   std::vector<std::unique_ptr<Component>> components;
 };
 

@@ -10,25 +10,27 @@
 
 
 template<typename T>
-struct allowedInContainer : std::false_type {};
+struct AllowedInContainer : std::false_type {};
 
 template<>
-struct allowedInContainer<TextDisplayComponent> : std::true_type {};
+struct AllowedInContainer<TextDisplayComponent> : std::true_type {};
 
 template<>
-struct allowedInContainer<ActionRowComponent<true>> : std::true_type {};
+struct AllowedInContainer<ActionRowComponent<true>> : std::true_type {};
 
 template<>
-struct allowedInContainer<SeperatorComponent> : std::true_type {};
+struct AllowedInContainer<SeperatorComponent> : std::true_type {};
 
 
+template<typename... T>
+concept allowedInContainer = std::conjunction<AllowedInContainer<std::remove_reference_t<T>>...>::value; 
 
 
 class ContainerComponent : public Component {
 public:
   nlohmann::json generate() override;
   template<typename... T>
-  requires(std::conjunction<allowedInContainer<std::remove_reference_t<T>>...>::value)
+  requires allowedInContainer<T...>
   ContainerComponent& addComponents(T&&... comps){
     (components.emplace_back(std::make_shared<std::remove_cvref_t<T>>(std::forward<T>(comps))), ...);
     return *this;
