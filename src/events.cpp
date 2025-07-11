@@ -6,7 +6,7 @@ void NyaBot::onReady(std::function<void ()> f) {
   funs.onReadyF = f;
 }
 
-void NyaBot::onSlash(std::function<void (SlashCommandInt)> f) {
+void NyaBot::onSlash(std::function<void (SlashCommandInt&)> f) {
   funs.onSlashF = f;
 }
 
@@ -15,7 +15,7 @@ void NyaBot::onAutocomplete(std::function<void ()> f) {
 }
 
 
-void NyaBot::onButtonPress(std::function<void(ButtonInteraction)> f){
+void NyaBot::onButtonPress(std::function<void(ButtonInteraction&)> f){
   funs.onButtonF = f;
 }
 

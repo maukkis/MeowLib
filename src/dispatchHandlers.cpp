@@ -48,7 +48,7 @@ ButtonInteraction constructButton(nlohmann::json& j){
   return button;
 }
 
-auto parseCompInteraction(nlohmann::json& j){
+auto deserializeCompInteraction(nlohmann::json& j){
   int type = j["data"]["component_type"];
   switch(type){
     case BUTTON:
@@ -83,7 +83,10 @@ void NyaBot::interaction(nlohmann::json j){
         break;
       }
     case MESSAGE_COMPONENT:
-      funs.onButtonF(parseCompInteraction(j));
+      {
+        auto interaction = deserializeCompInteraction(j);
+        routeInteraction(interaction);
+      }
     break;
     default:
       Log::Log("unknown interaction\n" + j.dump());
