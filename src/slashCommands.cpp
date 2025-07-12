@@ -70,8 +70,8 @@ void NyaBot::syncSlashCommands(){
   std::string write;
   auto meow = meowHttp::Https()
     .setUrl("https://discord.com/api/v10/applications/" + api.appId + "/commands")
-    .setHeader("Content-Type: application/json")
-    .setHeader("Authorization: Bot " + api.token)
+    .setHeader("content-type: application/json")
+    .setHeader("authorization: Bot " + api.token)
     .setCustomMethod("PUT")
     .setPostfields(json.dump())
     .setWriteData(&write);
