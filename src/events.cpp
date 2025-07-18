@@ -19,3 +19,7 @@ void NyaBot::onButtonPress(std::function<void(ButtonInteraction&)> f){
   funs.onButtonF = f;
 }
 
+void NyaBot::onSelectInteraction(std::function<void(SelectInteraction&)> f){
+  funs.onSelectF = f;
+}
+

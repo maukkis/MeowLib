@@ -1,7 +1,7 @@
 #include "../include/nyaBot.h"
 #include <string>
-#include <utility>
 #include "../include/buttonInteraction.h"
+#include "../include/selectInteraction.h"
 
 
 void NyaBot::ready(nlohmann::json j){
@@ -48,19 +48,21 @@ ButtonInteraction constructButton(nlohmann::json& j){
   return button;
 }
 
-auto deserializeCompInteraction(nlohmann::json& j){
-  int type = j["data"]["component_type"];
-  switch(type){
-    case BUTTON:
-      {
-        return constructButton(j);
-      }
-    default:
-      Log::Log("not implemented yet\n" + j.dump());
-  }
-  std::unreachable();
-}
 
+SelectInteraction constructSelect(nlohmann::json& j){
+  const std::string& id = j["id"];
+  const std::string& token = j["token"];
+  std::string userId;
+  if(j.contains("member")) userId = j["member"]["user"]["id"];
+  else userId = j["user"]["id"];
+  const std::string& name = j["data"]["custom_id"];
+  SelectInteraction select(id, token, name, std::stoull(userId), j["application_id"]);
+  select.type = j["data"]["component_type"];
+  for(const auto& a : j["data"]["values"]){
+    select.values.emplace_back(a);
+  }
+  return select;
+}
 
 }
 
@@ -84,8 +86,23 @@ void NyaBot::interaction(nlohmann::json j){
       }
     case MESSAGE_COMPONENT:
       {
-        auto interaction = deserializeCompInteraction(j);
-        routeInteraction(interaction);
+        int type = j["data"]["component_type"];
+        switch(type){
+          case BUTTON:
+            {
+              auto i = constructButton(j);
+              routeInteraction(i);
+              break;
+            }
+          case STRING_SELECT:
+            {
+              auto i = constructSelect(j);
+              routeInteraction(i);
+              break;
+            }
+          default:
+            Log::Log("not implemented yet\n" + j.dump());
+        }
       }
     break;
     default:

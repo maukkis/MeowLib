@@ -3,6 +3,7 @@
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
 #include "queue.h"
+#include "selectInteraction.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
 #include <algorithm>
@@ -32,6 +33,7 @@ struct Funs {
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
   std::function<void(ButtonInteraction&)> onButtonF = {};
+  std::function<void(SelectInteraction&)> onSelectF = {};
 };
 
 
@@ -47,6 +49,7 @@ void runOnce(F&& f, Args&&... a) {
 
 struct InteractionCallbacks {
   std::unordered_map<std::string, std::function<void(ButtonInteraction&)>> buttonInteractionTable;
+  std::unordered_map<std::string, std::function<void(SelectInteraction&)>> selectInteractionTable;
 };
 
 
@@ -79,7 +82,9 @@ public:
   void onSlash(std::function<void(SlashCommandInt&)> f);
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
+  void onSelectInteraction(std::function<void(SelectInteraction&)> f);
   void addInteractionCallback(const std::string_view s, std::function<void(ButtonInteraction&)> f);
+  void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   void syncSlashCommands();
 private:
   void listen();
@@ -87,6 +92,7 @@ private:
   void sendIdent();
   void getHeartbeatInterval();
   void routeInteraction(ButtonInteraction& interaction);
+  void routeInteraction(SelectInteraction& interaction);
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
   void resumed(nlohmann::json j);
