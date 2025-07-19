@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <nlohmann/json.hpp>
 #include <print>
+#include <format>
 #include <nlohmann/json_fwd.hpp>
 
 

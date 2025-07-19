@@ -6,7 +6,7 @@
 SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 
   : name{name},
     desc{desc},
-    types{type} {}
+    types{static_cast<int>(type)} {}
 
 SlashCommand& SlashCommand::addParam(SlashCommandParameter a){
   params.emplace_back(a);
@@ -21,7 +21,7 @@ SlashCommandParameter& SlashCommandParameter::addChoice(const std::string_view c
 SlashCommandParameter::SlashCommandParameter(const std::string_view name, const std::string_view desc, Types type, bool required) 
   : name{name},
     desc{desc},
-    type{type},
+    type{static_cast<int>(type)},
     required{required} {} 
 
 
@@ -37,12 +37,12 @@ void NyaBot::syncSlashCommands(){
     a["name"] = it.name;
     a["type"] = 1;
     a["description"] = it.desc;
-    if(it.types == BOTH){
+    if(it.types == IntegrationTypes::BOTH){
       a["integration_types"] = {0,1};
       a["contexts"] = {0,1,2};
     } else {
       a["integration_types"] = {it.types};
-      if(it.types == USER_INSTALL){
+      if(it.types == IntegrationTypes::USER_INSTALL){
         a["contexts"] = {2};
       }
       else{

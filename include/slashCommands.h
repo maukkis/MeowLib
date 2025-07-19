@@ -3,14 +3,14 @@
 #include <string>
 #include <vector>
 
-enum Types {
+enum class Types {
   STRING = 3,
   INTEGER,
   BOOLEAN,
   USER,
 };
 
-enum IntegrationTypes {
+enum class IntegrationTypes {
   GUILD_INSTALL,
   USER_INSTALL,
   BOTH
@@ -35,6 +35,6 @@ public:
   const std::string name;
   const std::string desc;
   std::vector<SlashCommandParameter> params;
-  enum IntegrationTypes types;
+  IntegrationTypes types;
 };
 #endif

@@ -10,7 +10,7 @@ nlohmann::json SeperatorComponent::generate() {
 
 
 SeperatorComponent& SeperatorComponent::setSpacing(int spacing){
-  assert(spacing != 2 || spacing != 1 && "spacing must be 1 or 2");
+  assert(spacing != 2 || (spacing != 1 && "spacing must be 1 or 2"));
   this->spacing = spacing;
   return *this;
 }
