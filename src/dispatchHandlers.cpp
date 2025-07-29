@@ -1,4 +1,5 @@
 #include "../include/nyaBot.h"
+#include <print>
 #include <string>
 #include "../include/buttonInteraction.h"
 #include "../include/selectInteraction.h"
@@ -21,12 +22,15 @@ namespace {
 SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
-  std::string userId; 
-  if(json.contains("member")) userId = json["member"]["user"]["id"];
-  else userId = json["user"]["id"];
+  User user;
+  if(json.contains("member")) user = serializeUser(json["member"]["user"]);
+  else user = serializeUser(json["user"]);
   json = json["data"];
   const std::string commandName = json["name"];
-  SlashCommandInt slash(id, interactionToken, commandName, std::stoull(userId), appId);
+  SlashCommandInt slash(id, interactionToken, commandName, user, appId);
+  for(auto& a : json["resolved"]["users"]){
+    slash.resolvedUsers[a["id"]] = serializeUser(a); 
+  }
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
@@ -40,10 +44,11 @@ ButtonInteraction constructButton(nlohmann::json& j){
   const std::string& id = j["id"];
   const std::string& interactionToken = j["token"];
   std::string userId; 
-  if(j.contains("member")) userId = j["member"]["user"]["id"];
-  else userId = j["user"]["id"];
+  User user;
+  if(j.contains("member")) user = serializeUser(j["member"]["user"]);
+  else user = serializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  ButtonInteraction button(id, interactionToken, name, std::stoull(userId), j["application_id"]);
+  ButtonInteraction button(id, interactionToken, name, user, j["application_id"]);
   button.id = j["data"]["id"].get<int>();
   return button;
 }
@@ -52,11 +57,11 @@ ButtonInteraction constructButton(nlohmann::json& j){
 SelectInteraction constructSelect(nlohmann::json& j){
   const std::string& id = j["id"];
   const std::string& token = j["token"];
-  std::string userId;
-  if(j.contains("member")) userId = j["member"]["user"]["id"];
-  else userId = j["user"]["id"];
+  User user;
+  if(j.contains("member")) user = serializeUser(j["member"]["user"]);
+  else user = serializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  SelectInteraction select(id, token, name, std::stoull(userId), j["application_id"]);
+  SelectInteraction select(id, token, name, user, j["application_id"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){
     select.values.emplace_back(a);

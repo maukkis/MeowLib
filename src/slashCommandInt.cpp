@@ -1,7 +1,6 @@
 #include "../include/slashCommandInt.h"
 #include "../meowHttp/src/includes/https.h"
 #include "../include/log.h"
-#include <cstdint>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <format>
@@ -12,10 +11,10 @@ Interaction::Interaction(
   const std::string_view id,
   const std::string_view token,
   const std::string_view commandNamee,
-  uint64_t userId,
+  User user,
   const std::string& applicationId
 ) : commandName{commandNamee},
-    userId{userId},
+    user{user},
     interactionId{id},
     interactionToken{token},
     applicationId(applicationId){}
