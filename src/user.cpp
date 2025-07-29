@@ -1,7 +1,7 @@
 #include "../include/user.h"
 
 
-User serializeUser(nlohmann::json& j){
+User deserializeUser(nlohmann::json& j){
   return {
     .id = j["id"],
     .avatar = j["avatar"].is_null() ? "" : j["avatar"],

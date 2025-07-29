@@ -1,5 +1,4 @@
 #include "../include/nyaBot.h"
-#include <print>
 #include <string>
 #include "../include/buttonInteraction.h"
 #include "../include/selectInteraction.h"
@@ -23,13 +22,13 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
   User user;
-  if(json.contains("member")) user = serializeUser(json["member"]["user"]);
-  else user = serializeUser(json["user"]);
+  if(json.contains("member")) user = deserializeUser(json["member"]["user"]);
+  else user = deserializeUser(json["user"]);
   json = json["data"];
   const std::string commandName = json["name"];
   SlashCommandInt slash(id, interactionToken, commandName, user, appId);
   for(auto& a : json["resolved"]["users"]){
-    slash.resolvedUsers[a["id"]] = serializeUser(a); 
+    slash.resolvedUsers[a["id"]] = deserializeUser(a); 
   }
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
@@ -45,8 +44,8 @@ ButtonInteraction constructButton(nlohmann::json& j){
   const std::string& interactionToken = j["token"];
   std::string userId; 
   User user;
-  if(j.contains("member")) user = serializeUser(j["member"]["user"]);
-  else user = serializeUser(j["user"]);
+  if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
+  else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"]);
   button.id = j["data"]["id"].get<int>();
@@ -58,8 +57,8 @@ SelectInteraction constructSelect(nlohmann::json& j){
   const std::string& id = j["id"];
   const std::string& token = j["token"];
   User user;
-  if(j.contains("member")) user = serializeUser(j["member"]["user"]);
-  else user = serializeUser(j["user"]);
+  if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
+  else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"]);
   select.type = j["data"]["component_type"];

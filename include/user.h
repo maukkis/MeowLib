@@ -11,5 +11,5 @@ struct User {
   std::string username;
 };
 
-User serializeUser(nlohmann::json& j);
+User deserializeUser(nlohmann::json& j);
 #endif
