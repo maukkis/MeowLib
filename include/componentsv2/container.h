@@ -4,6 +4,7 @@
 #include "actionRowComponent.h"
 #include "mediagallery.h"
 #include "seperator.h"
+#include "section.h"
 #include "textDisplay.h"
 #include <memory>
 #include <optional>
@@ -24,6 +25,9 @@ struct AllowedInContainer<SeperatorComponent> : std::true_type {};
 
 template<>
 struct AllowedInContainer<MediaGalleryComponent> : std::true_type {};
+
+template<>
+struct AllowedInContainer<SectionComponent> : std::true_type {};
 
 
 template<typename... T>

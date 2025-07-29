@@ -12,12 +12,12 @@ nlohmann::json MediaGalleryComponent::generate() {
 }
 
 
-Item::Item(std::string a, std::optional<std::string> d) {
+MediaItem::MediaItem(std::string a, std::optional<std::string> d) {
   url = std::move(a);
   if(d) desc = std::move(d);
 }
 
-nlohmann::json Item::generate() const {
+nlohmann::json MediaItem::generate() const {
   nlohmann::json j;
   j["media"]["url"] = url;
   if(desc) j["description"] = *desc;

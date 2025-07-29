@@ -6,10 +6,10 @@
 #include <type_traits>
 
 
-class Item {
+class MediaItem {
 public:
-  Item(std::string, std::optional<std::string> = std::nullopt);
-  Item& setSpoiler(){
+  MediaItem(std::string, std::optional<std::string> = std::nullopt);
+  MediaItem& setSpoiler(){
     spoiler = true;
     return *this;
   }
@@ -21,7 +21,7 @@ private:
 };
 
 template<typename... T>
-concept areItems = std::conjunction<std::is_same<std::remove_reference_t<T>, Item>...>::value;
+concept areItems = std::conjunction<std::is_same<std::remove_reference_t<T>, MediaItem>...>::value;
 
 class MediaGalleryComponent : public Component {
 public:
@@ -34,7 +34,7 @@ public:
     return *this;
   }
 private:
-  std::vector<Item> mediaItems;
+  std::vector<MediaItem> mediaItems;
   ComponentTypes type = MEDIA_GALLERY;
 };
 
