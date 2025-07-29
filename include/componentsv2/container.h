@@ -6,6 +6,7 @@
 #include "seperator.h"
 #include "section.h"
 #include "textDisplay.h"
+#include "file.h"
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -28,6 +29,9 @@ struct AllowedInContainer<MediaGalleryComponent> : std::true_type {};
 
 template<>
 struct AllowedInContainer<SectionComponent> : std::true_type {};
+
+template<>
+struct AllowedInContainer<FileComponent> : std::true_type {};
 
 
 template<typename... T>
