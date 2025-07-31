@@ -1,8 +1,8 @@
 #ifndef _INCLUDE_COMPONENTSV2_SELECTCOMPONENTS
 #define _INCLUDE_COMPONENTSV2_SELECTCOMPONENTS
 #include "componentsv2.h"
-#include <functional>
-#include <string_view>
+#include <string>
+
 
 struct SelectDefaultValue{
   std::string id;

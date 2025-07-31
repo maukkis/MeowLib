@@ -1,18 +1,13 @@
 #ifndef _ACTION_ROW_COMPONENT_H
 #define _ACTION_ROW_COMPONENT_H
 
-#include <cstdint>
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <string>
-#include <string_view>
 #include <type_traits>
 #include <vector>
 #include <memory>
 #include "componentsv2.h"
 #include "buttonComponent.h"
 #include "selectcomponents.h"
-#include <optional>
 // im sorry for whoever is having to edit this --Luna
 
 template<typename T>
