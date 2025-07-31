@@ -1,4 +1,4 @@
-#include "../../include/componentsv2/StringSelectComponent.h"
+#include "../../include/componentsv2/stringSelect.h"
 
 
 StringSelectComponent& StringSelectComponent::setCustomId(const std::string_view a){

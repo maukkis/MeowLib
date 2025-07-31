@@ -1,4 +1,4 @@
-- [ ] implement cv2 with comptime component layout checking via templates
+- [x] implement cv2 with comptime component layout checking via templates
 - [ ] automod api functions
 - [ ] user api functions
 - [ ] moderation api functions

@@ -4,6 +4,17 @@
 #include <functional>
 #include <string_view>
 
+struct SelectDefaultValue{
+  std::string id;
+  //will be filled in by library
+  std::string type = "";
+  nlohmann::json serialize(){
+    nlohmann::json j;
+    j["type"] = type;
+    j["id"] = id;
+    return j;
+  }
+};
 
 struct SelectComponent{ 
   std::string customId;

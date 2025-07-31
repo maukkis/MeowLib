@@ -1,5 +1,7 @@
 #include "../include/nyaBot.h"
 #include <string>
+#include <type_traits>
+#include <unordered_map>
 #include "../include/buttonInteraction.h"
 #include "../include/selectInteraction.h"
 
@@ -18,6 +20,18 @@ void NyaBot::resumed(nlohmann::json j){
 }
 
 namespace {
+
+template<typename T>
+std::unordered_map<std::string, T> deserializeResolved(nlohmann::json& d){
+  std::unordered_map<std::string, T> map;
+  if(std::is_same_v<T, User>){
+    for(auto& a : d["resolved"]["users"]){
+      map[a["id"]] = deserializeUser(a);
+    }
+  }
+  return map;
+}
+
 SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
@@ -27,9 +41,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   json = json["data"];
   const std::string commandName = json["name"];
   SlashCommandInt slash(id, interactionToken, commandName, user, appId);
-  for(auto& a : json["resolved"]["users"]){
-    slash.resolvedUsers[a["id"]] = deserializeUser(a); 
-  }
+  slash.resolvedUsers = deserializeResolved<User>(json);
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
@@ -61,6 +73,7 @@ SelectInteraction constructSelect(nlohmann::json& j){
   else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"]);
+  select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){
     select.values.emplace_back(a);
@@ -99,6 +112,10 @@ void NyaBot::interaction(nlohmann::json j){
               break;
             }
           case STRING_SELECT:
+          case USER_SELECT:
+          case CHANNEL_SELECT:
+          case MENTIONABLE_SELECT:
+          case ROLE_SELECT:
             {
               auto i = constructSelect(j);
               routeInteraction(i);
