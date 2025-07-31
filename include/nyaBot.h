@@ -1,13 +1,14 @@
 #ifndef nyaBot_H
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
+#include "buttonInteraction.h"
 #include "queue.h"
+#include "selectInteraction.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <mutex>
 #include <string>
 #include <atomic>
 #include "log.h"
@@ -28,9 +29,11 @@ struct ImportantApiStuff {
 };
 
 struct Funs {
-  std::function<void(SlashCommandInt)> onSlashF = {};
+  std::function<void(SlashCommandInt&)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
+  std::function<void(ButtonInteraction&)> onButtonF = {};
+  std::function<void(SelectInteraction&)> onSelectF = {};
 };
 
 
@@ -42,7 +45,13 @@ void runOnce(F&& f, Args&&... a) {
     std::invoke(std::forward<F>(f), std::forward<Args>(a)...);
     return true;
   }();
-}
+} 
+
+struct InteractionCallbacks {
+  std::unordered_map<std::string, std::function<void(ButtonInteraction&)>> buttonInteractionTable;
+  std::unordered_map<std::string, std::function<void(SelectInteraction&)>> selectInteractionTable;
+};
+
 
 template<typename T>
 concept CommandHandler = std::is_base_of_v<Command, T>;
@@ -70,14 +79,20 @@ public:
   }
 
   void onReady(std::function<void()> f);
-  void onSlash(std::function<void(SlashCommandInt)> f);
+  void onSlash(std::function<void(SlashCommandInt&)> f);
   void onAutocomplete(std::function<void()> f);
+  void onButtonPress(std::function<void(ButtonInteraction&)> f);
+  void onSelectInteraction(std::function<void(SelectInteraction&)> f);
+  void addInteractionCallback(const std::string_view s, std::function<void(ButtonInteraction&)> f);
+  void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   void syncSlashCommands();
 private:
   void listen();
   void connect();
   void sendIdent();
   void getHeartbeatInterval();
+  void routeInteraction(ButtonInteraction& interaction);
+  void routeInteraction(SelectInteraction& interaction);
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
   void resumed(nlohmann::json j);
@@ -98,7 +113,7 @@ private:
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
   Funs funs;
   ImportantApiStuff api;
-
+  InteractionCallbacks iCallbacks;
   ThreadSafeQueue<std::string> queue;
 
   std::vector<SlashCommand> slashs;

@@ -6,6 +6,9 @@
 #include <utility>
 #include <map>
 #include <nlohmann/json.hpp>
+#include "message.h"
+#include "user.h"
+
 
 
 enum MsgFlags {
@@ -24,21 +27,28 @@ enum types{
 };
 
 
-class SlashCommandInt {
+class Interaction {
 public:
-  SlashCommandInt(const std::string_view id, const std::string_view token, const std::string_view commandName, uint64_t userId, const std::string& applicationId);
+  Interaction(const std::string_view id, const std::string_view token, const std::string_view commandName, User user, const std::string& applicationId);
   void respond(const std::string_view response, int flags = 0);
   void respond();
+  void respond(const Message& a);
   void manualResponse(const nlohmann::json& j);
   void manualEdit(const nlohmann::json& j);
   void edit(std::string_view response, int flags = 0);
-  std::unordered_map<std::string, std::string> parameters;
+  void edit(const Message& a);
   const std::string commandName;
-  const uint64_t userId;
-private:
+  const User user;
+protected:
   const std::string interactionId;
   const std::string interactionToken;
   const std::string& applicationId;
+};
+
+struct SlashCommandInt : public Interaction {
+  using Interaction::Interaction;
+  std::unordered_map<std::string, std::string> parameters;
+  std::unordered_map<std::string, User> resolvedUsers;
 };
 
 #endif 
