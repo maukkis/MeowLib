@@ -25,8 +25,8 @@ void NyaBot::listen(){
     try {
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
         Log::Log("havent received heartbeat in over 60 secs reconnecting");
-        handle.wsClose();
-        reconnect(false);
+        // we should still try resuming and we dont have to close the connection manually due to reconnect automatically calling it with 1012
+        reconnect(true);
         // we have to reset our times to avoid an edgecase causing us to always think we havent received a heartbeat
         lastHB = std::chrono::steady_clock::now();
         sentHB = std::chrono::steady_clock::now();
