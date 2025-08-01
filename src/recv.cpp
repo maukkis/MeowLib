@@ -57,8 +57,6 @@ void NyaBot::listen(){
         Log::Log("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));
         switch(arf){
-          case 1000:
-          case 1001:
           case 4000:
           case 4001:
           case 4002:
@@ -68,6 +66,8 @@ void NyaBot::listen(){
           case 4009:
             reconnect(true);
           break;
+          case 1000:
+          case 1001:
           case 4007:
           case 1005:
           case 1006:
@@ -89,7 +89,8 @@ void NyaBot::listen(){
           lastHB = std::chrono::steady_clock::now();
         break;
         case Reconnect:
-          Log::Log("got reconnectTwT waiting for close");
+          Log::Log("got reconnectTwT closing and resuming");
+          reconnect(true);
         break; 
         case Dispatch:
           {

@@ -15,7 +15,7 @@ NyaBot::NyaBot(){
 }
 
 meow NyaBot::reconnect(bool resume){
-  if(handle.wsClose(1003, "arf") != OK){
+  if(handle.wsClose(1012, "arf") != OK){
     Log::Log("woof?"); 
   }
   if(api.resumeUrl.find("wss") != std::string::npos) api.resumeUrl.replace(0, 3, "https");
