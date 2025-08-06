@@ -43,11 +43,13 @@ public:
   /// or components.
   void respond(const Message& a);
   ///
-  /// @brief Responds to an interaction takes json data:
+  /// @brief Responds to an interaction with raw json data
+  /// @param j json data
   /// 
   void manualResponse(const nlohmann::json& j);
   ///
-  /// @brief Edits an interaction original response takes json data.
+  /// @brief Edits an interaction original response with raw json data
+  /// @param j json data
   ///
   void manualEdit(const nlohmann::json& j);
   ///
