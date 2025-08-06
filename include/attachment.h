@@ -8,6 +8,8 @@ struct Attachment {
   std::string name;
 };
 
-
+/// @brief Creates an Attachment object from a file
+/// @param a path to a file
+///
 Attachment readFile(const std::string& a);
 #endif

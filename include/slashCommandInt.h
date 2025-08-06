@@ -30,12 +30,33 @@ enum types{
 class Interaction {
 public:
   Interaction(const std::string_view id, const std::string_view token, const std::string_view commandName, User user, const std::string& applicationId);
+  ///
+  /// @brief Responds to an interaction with a simple message.
+  ///
   void respond(const std::string_view response, int flags = 0);
+  ///
+  /// @brief Responds to an interaction with a defer.
+  ///
   void respond();
+  /// @brief Responds to an interaction with a Message object.
+  /// Reason why you would do this is to be able to attach attachments
+  /// or components.
   void respond(const Message& a);
+  ///
+  /// @brief Responds to an interaction takes json data:
+  /// 
   void manualResponse(const nlohmann::json& j);
+  ///
+  /// @brief Edits an interaction original response takes json data.
+  ///
   void manualEdit(const nlohmann::json& j);
+  ///
+  /// @brief Edits interaction original response with a message.
+  ///
   void edit(std::string_view response, int flags = 0);
+  /// @brief Edits an interaction original response with a Message object
+  /// Reason why you would do this is to be able to attach attachments
+  /// or components.
   void edit(const Message& a);
   const std::string commandName;
   const User user;
@@ -47,6 +68,7 @@ protected:
 
 struct SlashCommandInt : public Interaction {
   using Interaction::Interaction;
+  /// A map of parameters key is custom_id value is the value.
   std::unordered_map<std::string, std::string> parameters;
   std::unordered_map<std::string, User> resolvedUsers;
 };

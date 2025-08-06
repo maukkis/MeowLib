@@ -61,14 +61,25 @@ class NyaBot {
 public:
   NyaBot();
   ~NyaBot();
-
+  ///
+  /// @brief Starts the bot.
+  /// @param token the bot token
+  ///
   void run(const std::string_view token);
+  ///
+  /// @brief Registers a slash command with the bot.
+  /// @param slash SlashCommand object
+  ///
   void addSlash(const SlashCommand& slash);
-
+  ///
+  /// @brief Registers a command handler with the library.
+  /// @param commandName commands custom_id to handle
+  /// @param p unique_ptr to the command object
+  ///
   void addCommandHandler(const std::string& commandName, std::unique_ptr<Command> p){
     commands[commandName] = std::move(p);
   }
-  
+
   void enableDebugLogging(){
     Log::enabled = true;
   }
@@ -83,7 +94,15 @@ public:
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);
+  ///
+  /// @brief Adds a callback when a certain interaction happens.
+  /// @param s interaction's custom_id
+  ///
   void addInteractionCallback(const std::string_view s, std::function<void(ButtonInteraction&)> f);
+  ///
+  /// @brief Adds a callback when a certain interaction happens.
+  /// @param s interaction's custom_id
+  ///
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   void syncSlashCommands();
 private:
