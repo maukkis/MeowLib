@@ -1,7 +1,7 @@
 #include "../include/slashCommands.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json_fwd.hpp>
-#include "../meowHttp/src/includes/https.h"
+
 
 SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 
   : name{name},
@@ -68,13 +68,10 @@ void NyaBot::syncSlashCommands(){
     json.emplace_back(a);
   }
   std::string write;
-  auto meow = meowHttp::Https()
-    .setUrl("https://discord.com/api/v10/applications/" + api.appId + "/commands")
-    .setHeader("content-type: application/json")
-    .setHeader("authorization: Bot " + api.token)
-    .setCustomMethod("PUT")
-    .setPostfields(json.dump())
-    .setWriteData(&write);
-  if(meow.perform() != OK || meow.getLastStatusCode() != HTTPCODES::HTTP_OK)
-    Log::Log("failed to update slashcommands\n" + write);
+  auto meow = rest.put(std::format("https://discord.com/api/v10/applications/{}/commands",
+                                   api.appId),
+                       json.dump());
+  if(!meow.has_value())
+    Log::Log("something went wrong while syncing slash commands " + 
+             std::to_string(static_cast<int>(meow.error())));
 }

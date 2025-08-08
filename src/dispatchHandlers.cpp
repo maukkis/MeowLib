@@ -32,7 +32,7 @@ std::unordered_map<std::string, T> deserializeResolved(nlohmann::json& d){
   return map;
 }
 
-SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
+SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, NyaBot *a){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
   User user;
@@ -40,7 +40,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
   else user = deserializeUser(json["user"]);
   json = json["data"];
   const std::string commandName = json["name"];
-  SlashCommandInt slash(id, interactionToken, commandName, user, appId);
+  SlashCommandInt slash(id, interactionToken, commandName, user, appId, a);
   slash.resolvedUsers = deserializeResolved<User>(json);
   if(json.find("options") != json.end()){
     for (const auto& it : json["options"]){
@@ -51,7 +51,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId){
 }
 
 
-ButtonInteraction constructButton(nlohmann::json& j){
+ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   const std::string& id = j["id"];
   const std::string& interactionToken = j["token"];
   std::string userId; 
@@ -59,20 +59,20 @@ ButtonInteraction constructButton(nlohmann::json& j){
   if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
   else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  ButtonInteraction button(id, interactionToken, name, user, j["application_id"]);
+  ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
   button.id = j["data"]["id"].get<int>();
   return button;
 }
 
 
-SelectInteraction constructSelect(nlohmann::json& j){
+SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   const std::string& id = j["id"];
   const std::string& token = j["token"];
   User user;
   if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
   else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  SelectInteraction select(id, token, name, user, j["application_id"]);
+  SelectInteraction select(id, token, name, user, j["application_id"], a);
   select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){
@@ -92,7 +92,7 @@ void NyaBot::interaction(nlohmann::json j){
   switch(type){
     case APPLICATION_COMMAND:
       {
-        auto slash = constructSlash(j, api.appId);
+        auto slash = constructSlash(j, api.appId, this);
         if(commands.contains(slash.commandName)){
           commands[slash.commandName]->onCommand(slash);
         }
@@ -107,7 +107,7 @@ void NyaBot::interaction(nlohmann::json j){
         switch(type){
           case BUTTON:
             {
-              auto i = constructButton(j);
+              auto i = constructButton(j, this);
               routeInteraction(i);
               break;
             }
@@ -117,7 +117,7 @@ void NyaBot::interaction(nlohmann::json j){
           case MENTIONABLE_SELECT:
           case ROLE_SELECT:
             {
-              auto i = constructSelect(j);
+              auto i = constructSelect(j, this);
               routeInteraction(i);
               break;
             }

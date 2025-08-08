@@ -9,7 +9,7 @@
 #include "message.h"
 #include "user.h"
 
-
+class NyaBot;
 
 enum MsgFlags {
   SUPPRESS_EMBEDS = 1 << 2,
@@ -29,7 +29,12 @@ enum types{
 
 class Interaction {
 public:
-  Interaction(const std::string_view id, const std::string_view token, const std::string_view commandName, User user, const std::string& applicationId);
+  Interaction(const std::string_view id,
+              const std::string_view token,
+              const std::string_view commandName,
+              User user,
+              const std::string& applicationId,
+              NyaBot *bot);
   ///
   /// @brief Responds to an interaction with a simple message.
   ///
@@ -62,10 +67,11 @@ public:
   void edit(const Message& a);
   const std::string commandName;
   const User user;
+  NyaBot *bot;
 protected:
   const std::string interactionId;
   const std::string interactionToken;
-  const std::string& applicationId;
+  const std::string applicationId;
 };
 
 struct SlashCommandInt : public Interaction {

@@ -3,6 +3,7 @@
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
 #include "queue.h"
+#include "restclient.h"
 #include "selectInteraction.h"
 #include "slashCommandInt.h"
 #include "slashCommands.h"
@@ -18,6 +19,8 @@
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
+
+
 
 struct ImportantApiStuff {
   std::string token;
@@ -105,6 +108,7 @@ public:
   ///
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   void syncSlashCommands();
+  RestClient rest {this};
 private:
   void listen();
   void connect();
@@ -136,5 +140,6 @@ private:
   ThreadSafeQueue<std::string> queue;
 
   std::vector<SlashCommand> slashs;
+  friend RestClient;
 };
 #endif
