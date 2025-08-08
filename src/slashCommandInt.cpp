@@ -96,7 +96,7 @@ void Interaction::manualResponse(const nlohmann::json& j){
 
 
 void Interaction::manualEdit(const nlohmann::json& j){
-    auto meow = bot->rest.post("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
+    auto meow = bot->rest.patch("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
   if(!meow.has_value()){
     Log::Log("failed to edit an interaction");
