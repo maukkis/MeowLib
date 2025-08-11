@@ -34,36 +34,36 @@ public:
   RestClient(NyaBot *bot);
   /// @brief send a get request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
-  std::expected<std::string, RestErrors> get(const std::string& endpoint);
+  std::expected<std::pair<std::string, int>, RestErrors> get(const std::string& endpoint);
 
   /// @brief send a post request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
-  std::expected<std::string, RestErrors> post(const std::string& endpoint,
+  std::expected<std::pair<std::string, int>, RestErrors> post(const std::string& endpoint,
                                               const std::string& data);
 
   /// @brief send a patch request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
-  std::expected<std::string, RestErrors> patch(const std::string& endpoint,
+  std::expected<std::pair<std::string, int>, RestErrors> patch(const std::string& endpoint,
                                                const std::string& data);
 
   /// @brief send a put request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
-  std::expected<std::string, RestErrors> put(const std::string& endpoint,
+  std::expected<std::pair<std::string, int>, RestErrors> put(const std::string& endpoint,
                                              const std::string& data);
 
   /// @brief send form data  to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
   /// @param method method to use
-  std::expected<std::string, RestErrors> sendFormData(const std::string& endpoint,
+  std::expected<std::pair<std::string, int>, RestErrors> sendFormData(const std::string& endpoint,
                                                       const std::string& data,
                                                       const std::string& boundary,
                                                       const std::string& method);
 private:
-  std::expected<std::string, RestErrors> sendRawData(const std::string& endpoint,
+  std::expected<std::pair<std::string, int>, RestErrors> sendRawData(const std::string& endpoint,
                                                      const std::string& method,
                                                      const std::vector<std::string>& headers,
                                                      const std::optional<std::string>& data = std::nullopt);

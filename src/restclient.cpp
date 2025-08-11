@@ -3,19 +3,20 @@
 #include "../meowHttp/src/includes/https.h"
 #include <string>
 #include <thread>
+#include <utility>
 
 
 RestClient::RestClient(NyaBot *bot) : bot{bot} {}
 
 
-std::expected<std::string, RestErrors> RestClient::get(const std::string& endpoint)
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::get(const std::string& endpoint)
 {
   return sendRawData(endpoint,
               "GET", 
               {"authorization: Bot " + bot->api.token, "content-type: application/json"});
 }
 
-std::expected<std::string, RestErrors> RestClient::post(const std::string& endpoint,
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::post(const std::string& endpoint,
                                                         const std::string& data)
 {
   return sendRawData(endpoint,
@@ -23,7 +24,7 @@ std::expected<std::string, RestErrors> RestClient::post(const std::string& endpo
               {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
 }
 
-std::expected<std::string, RestErrors> RestClient::patch(const std::string& endpoint,
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::patch(const std::string& endpoint,
                                                         const std::string& data)
 {
   return sendRawData(endpoint,
@@ -31,7 +32,7 @@ std::expected<std::string, RestErrors> RestClient::patch(const std::string& endp
               {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
 }
 
-std::expected<std::string, RestErrors> RestClient::put(const std::string& endpoint,
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::put(const std::string& endpoint,
                                                         const std::string& data)
 {
   return sendRawData(endpoint,
@@ -39,7 +40,7 @@ std::expected<std::string, RestErrors> RestClient::put(const std::string& endpoi
               {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
 }
 
-std::expected<std::string, RestErrors>
+std::expected<std::pair<std::string, int>, RestErrors>
 RestClient::sendFormData(const std::string& endpoint,
                          const std::string& data,
                          const std::string& boundary,
@@ -53,7 +54,7 @@ RestClient::sendFormData(const std::string& endpoint,
 }
 
 
-std::expected<std::string, RestErrors> 
+std::expected<std::pair<std::string, int>, RestErrors> 
 RestClient::sendRawData(const std::string& endpoint,
                         const std::string& method,
                         const std::vector<std::string>& headers,
@@ -120,6 +121,6 @@ RestClient::sendRawData(const std::string& endpoint,
       case 404:
         return std::unexpected(RestErrors::NotFound);
     }
-    return d;
+    return std::make_pair(d, meow.getLastStatusCode());
   }
 }

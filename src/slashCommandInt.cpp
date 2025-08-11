@@ -4,6 +4,7 @@
 #include "../include/nyaBot.h"
 #include <format>
 #include <nlohmann/json_fwd.hpp>
+#include <utility>
 
 
 Interaction::Interaction(
@@ -26,7 +27,7 @@ namespace {
 
 
 
-std::string makeFormData(const nlohmann::json j, const std::string_view boundary, std::vector<Attachment> a){
+std::string makeFormData(const nlohmann::json j, const std::string_view boundary, const std::vector<Attachment>& a){
   std::string data = std::format("--{}\r\n", boundary);
   data.append("Content-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n");
   data.append(j.dump());
@@ -67,8 +68,8 @@ void Interaction::respond(const Message& a){
                              "woof",
                              "POST"
                              );
-    if(!res.has_value()){
-      Log::Log("failed to respond to an interaction");
+    if(!res.has_value() || res->second != 204){
+      Log::Log("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
     }
   } else {
     nlohmann::json b;
@@ -89,8 +90,8 @@ void Interaction::respond(){
 void Interaction::manualResponse(const nlohmann::json& j){
   auto meow = bot->rest.post("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback",
                             j.dump());
-  if(!meow.has_value()){
-    Log::Log("failed to respond to an interaction");
+  if(!meow.has_value() || meow->second != 204){
+    Log::Log("failed to respond to an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
   }
 }
 
@@ -98,8 +99,8 @@ void Interaction::manualResponse(const nlohmann::json& j){
 void Interaction::manualEdit(const nlohmann::json& j){
     auto meow = bot->rest.patch("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
-  if(!meow.has_value()){
-    Log::Log("failed to edit an interaction");
+  if(!meow.has_value() || meow->second != 200){
+    Log::Log("failed to edit an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
   }
 }
 
@@ -113,5 +114,17 @@ void Interaction::edit(const std::string_view response, int flags){
 
 
 void Interaction::edit(const Message& a){
-  this->manualEdit(a.generate());
+  if(a.attachments.empty()){
+    manualResponse(a.generate());
+    return;
+  }
+  auto payload = makeFormData(a.generate(), "woof", a.attachments);
+  auto meow = bot->rest.sendFormData(std::format("https://discord.com/api/v10/webhooks/{}/{}/messages/@original",
+                                                 applicationId, interactionToken),
+                                     payload,
+                                     "woof",
+                                     "PATCH");
+  if(!meow.has_value() || meow->second != 200)
+    Log::Log("failed to edit an interaction\n" +
+             meow.value_or(std::make_pair("", 0)).first);
 }

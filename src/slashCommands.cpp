@@ -71,7 +71,7 @@ void NyaBot::syncSlashCommands(){
   auto meow = rest.put(std::format("https://discord.com/api/v10/applications/{}/commands",
                                    api.appId),
                        json.dump());
-  if(!meow.has_value())
+  if(!meow.has_value() || meow->second != 200)
     Log::Log("something went wrong while syncing slash commands " + 
-             std::to_string(static_cast<int>(meow.error())));
+             meow.value_or(std::make_pair("", 0)).first);
 }
