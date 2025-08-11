@@ -75,8 +75,8 @@ RestClient::sendRawData(const std::string& endpoint,
     auto meow = meowHttp::Https()
       .setUrl(endpoint)
       .setCustomMethod(method)
+      .setHeader("user-agent: " + std::string(UserAgent))
       .setWriteData(&d);
-
     if(data)
       meow.setPostfields(*data);
 
