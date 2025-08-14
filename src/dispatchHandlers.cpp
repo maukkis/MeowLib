@@ -21,6 +21,15 @@ void NyaBot::resumed(nlohmann::json j){
 
 namespace {
 
+InteractionData deserializeInteractionData(nlohmann::json& j){
+  return {
+    .id = j["message"]["interaction"]["id"],
+    .type = j["message"]["interaction"]["type"],
+    .name = j["message"]["interaction"]["name"]
+  };
+}
+
+
 template<typename T>
 std::unordered_map<std::string, T> deserializeResolved(nlohmann::json& d){
   std::unordered_map<std::string, T> map;
@@ -60,6 +69,7 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
+  button.interaction = deserializeInteractionData(j);
   button.id = j["data"]["id"].get<int>();
   return button;
 }
@@ -73,6 +83,7 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"], a);
+  select.interaction = deserializeInteractionData(j);
   select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){

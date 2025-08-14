@@ -20,10 +20,12 @@ public:
     return *this;
   }
   Message& addAttachment(const Attachment& a);
+  Message& setMessageFlags(int flags);
   Message& setContent(const std::string_view a);
   std::vector<Attachment> attachments;
 private:
   std::string content;
+  int msgflags = 0;
   std::vector<std::unique_ptr<Component>> components;
 };
 

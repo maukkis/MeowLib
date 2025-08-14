@@ -25,8 +25,6 @@ Interaction::Interaction(
 namespace {
 
 
-
-
 std::string makeFormData(const nlohmann::json j, const std::string_view boundary, const std::vector<Attachment>& a){
   std::string data = std::format("--{}\r\n", boundary);
   data.append("Content-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n");
@@ -62,8 +60,8 @@ void Interaction::respond(const Message& a){
     auto payload = makeFormData(j, "woof", a.attachments);
     auto res =
       bot->rest.sendFormData(std::format("https://discord.com/api/v10/interactions/{}/{}/callback",
-                                           interactionId,
-                                           interactionToken),
+                                         interactionId,
+                                         interactionToken),
                              payload,
                              "woof",
                              "POST"
@@ -79,6 +77,18 @@ void Interaction::respond(const Message& a){
   }
 }
 
+void Interaction::createFollowUpMessage(const std::string_view msg, int flags){
+  nlohmann::json j;
+  if(flags != 0) j["flags"] = flags;
+  j["content"] = msg;
+  auto ret = bot->rest.post(std::format("https://discord.com/api/v10/webhooks/{}/{}",
+                                        applicationId, interactionToken),
+                           j.dump());
+  if(!ret.has_value() || ret->second != 200){
+    Log::Log("failed to create a follow up message" +
+             ret.value_or(std::make_pair("", 0)).first);
+  }
+}
 
 void Interaction::respond(){
   nlohmann::json j;
