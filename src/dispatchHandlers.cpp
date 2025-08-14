@@ -19,6 +19,9 @@ void NyaBot::resumed(nlohmann::json j){
   Log::Log("connection resumed! with sequence " + std::to_string(j["s"].get<long>()));
 }
 
+// this is a placeholder do not mind this
+void NyaBot::messageCreate([[maybe_unused]]nlohmann::json j){}
+
 namespace {
 
 InteractionData deserializeInteractionData(nlohmann::json& j){
