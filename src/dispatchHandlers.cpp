@@ -21,7 +21,7 @@ void NyaBot::resumed(nlohmann::json j){
 
 // this is a placeholder do not mind this
 void NyaBot::messageCreate([[maybe_unused]]nlohmann::json j){}
-
+void NyaBot::messageUpdate([[maybe_unused]]nlohmann::json j){}
 namespace {
 
 InteractionData deserializeInteractionData(nlohmann::json& j){
