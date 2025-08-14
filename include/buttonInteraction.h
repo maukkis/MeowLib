@@ -1,16 +1,16 @@
 #ifndef _INCLUDE_BUTTONINTERACTION_H
 #define _INCLUDE_BUTTONINTERACTION_H
+#include "componentInteraction.h"
 #include "interaction.h"
 
 
 
 
 
-class ButtonInteraction : public Interaction {
+class ButtonInteraction : public ComponentInteraction {
 public:
-  using Interaction::Interaction;
+  using ComponentInteraction::ComponentInteraction;
   int id;
-  InteractionData interaction;
 };
 
 

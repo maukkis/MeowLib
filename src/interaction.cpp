@@ -125,7 +125,7 @@ void Interaction::edit(const std::string_view response, int flags){
 
 void Interaction::edit(const Message& a){
   if(a.attachments.empty()){
-    manualResponse(a.generate());
+    manualEdit(a.generate());
     return;
   }
   auto payload = makeFormData(a.generate(), "woof", a.attachments);
