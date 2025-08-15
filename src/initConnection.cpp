@@ -7,7 +7,8 @@
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
 
-NyaBot::NyaBot(){
+NyaBot::NyaBot(int intents){
+  api.intents = intents;
   a = this;
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
@@ -69,7 +70,7 @@ void NyaBot::connect(){
 
 void NyaBot::sendIdent(){
   Log::Log("sending ident");
-  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": 16, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     Log::Log("ident sent!");
   }
