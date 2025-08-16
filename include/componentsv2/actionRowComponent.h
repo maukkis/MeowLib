@@ -22,7 +22,7 @@ public:
   ActionRowComponent() = default;
   template<typename... E>
   requires (std::conjunction<buttons<E>...>::value)
-  ActionRowComponent<true> addComponent(E&&... comps){
+  ActionRowComponent<true> addComponents(E&&... comps){
     static_assert(state != true, "this component can only have 1 type of component");
     static_assert(sizeof...(comps) <= 5, "cannot have more than 5 buttons");
     ActionRowComponent<true> arf;
@@ -33,7 +33,7 @@ public:
 
   template<typename E>
   requires (std::is_base_of<SelectComponent, std::remove_reference_t<E>>::value)
-  ActionRowComponent<true> addComponent(E&& comps){
+  ActionRowComponent<true> addComponents(E&& comps){
     static_assert(state != true, "this component can only have 1 type of component");
     ActionRowComponent<true> arf;
     arf.components.push_back(std::make_unique<std::remove_cvref_t<E>>(std::forward<E>(comps)));
