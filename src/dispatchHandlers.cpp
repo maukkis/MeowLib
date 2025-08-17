@@ -40,6 +40,9 @@ std::unordered_map<std::string, T> deserializeResolved(nlohmann::json& d){
     for(auto& a : d["resolved"]["users"]){
       map[a["id"]] = deserializeUser(a);
     }
+    for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
+      map[it.key()].guild = deserializeGuildUser(d["resolved"]["members"][it.key()]);
+    }
   }
   return map;
 }
@@ -48,8 +51,10 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
   User user;
-  if(json.contains("member")) user = deserializeUser(json["member"]["user"]);
-  else user = deserializeUser(json["user"]);
+  if(json.contains("member")){
+    user = deserializeUser(json["member"]["user"]);
+    user.guild = deserializeGuildUser(json["member"]);
+  } else user = deserializeUser(json["user"]);
   json = json["data"];
   const std::string commandName = json["name"];
   SlashCommandInt slash(id, interactionToken, commandName, user, appId, a);
@@ -68,8 +73,10 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   const std::string& interactionToken = j["token"];
   std::string userId; 
   User user;
-  if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
-  else user = deserializeUser(j["user"]);
+  if(j.contains("member")){
+    user = deserializeUser(j["member"]["user"]);
+    user.guild = deserializeGuildUser(j);
+  } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
   button.interaction = deserializeInteractionData(j);
@@ -82,8 +89,10 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   const std::string& id = j["id"];
   const std::string& token = j["token"];
   User user;
-  if(j.contains("member")) user = deserializeUser(j["member"]["user"]);
-  else user = deserializeUser(j["user"]);
+  if(j.contains("member")){
+    user = deserializeUser(j["member"]["user"]);
+    user.guild = deserializeGuildUser(j);
+  } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"], a);
   select.interaction = deserializeInteractionData(j);
