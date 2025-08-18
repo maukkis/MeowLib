@@ -4,6 +4,9 @@
 #include <string>
 #include <nlohmann/json.hpp>
 #include <vector>
+class NyaBot;
+
+
 
 struct GuildUser {
   std::string nick;
@@ -20,6 +23,19 @@ struct User {
   std::string username;
   std::optional<GuildUser> guild = std::nullopt;
 };
+
+
+class UserApiRoutes {
+public:
+  UserApiRoutes(NyaBot *bot);
+  /// @brief fetches an user object
+  /// @param id user id to fetch
+  User getUser(const std::string_view id);
+private:
+  NyaBot *bot = nullptr;
+};
+
+
 GuildUser deserializeGuildUser(nlohmann::json& j);
 User deserializeUser(nlohmann::json& j);
 #endif

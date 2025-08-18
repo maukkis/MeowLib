@@ -1,4 +1,23 @@
 #include "../include/user.h"
+#include <nlohmann/json_fwd.hpp>
+#include <string_view>
+#include "../include/nyaBot.h"
+
+UserApiRoutes::UserApiRoutes(NyaBot *bot)
+  : bot{bot}{}
+
+User UserApiRoutes::getUser(const std::string_view id){
+  auto res = bot->rest.get(
+    std::format("https://discord.com/api/v10/users/{}", id)
+  );
+  if(!res.has_value() || res->second != 200){
+    Log::Log("failed to fetch user "
+             + res.value_or(std::make_pair("", 0)).first);
+    return User();
+  }
+  auto j = nlohmann::json::parse(res->first);
+  return deserializeUser(j);
+}
 
 GuildUser deserializeGuildUser(nlohmann::json &j){
   return {

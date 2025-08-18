@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
+#include "user.h"
 
 
 
@@ -135,6 +136,7 @@ public:
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   void syncSlashCommands();
   RestClient rest {this};
+  UserApiRoutes user{this};
 private:
   void listen();
   void connect();
