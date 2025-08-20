@@ -13,7 +13,7 @@ enum class ActivityTypes {
   Competing,
 };
 
-struct Activities{
+struct Activity{
   std::string name;
   ActivityTypes type;
   std::string state;
@@ -22,11 +22,11 @@ struct Activities{
 
 struct Presence {
   std::optional<int> since;
-  std::optional<Activities> activities = std::nullopt;
+  std::optional<Activity> activity = std::nullopt;
   std::string status;
   bool afk = false;
 };
 
-nlohmann::json serializeActivity(const Activities& a);
+nlohmann::json serializeActivity(const Activity& a);
 nlohmann::json serializePresence(const Presence& p);
 #endif

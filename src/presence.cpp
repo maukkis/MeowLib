@@ -8,14 +8,14 @@ nlohmann::json serializePresence(const Presence& p){
   if(p.since)
     j["since"] = *p.since;
   else j["since"] = nullptr;
-  if(p.activities)
-    j["activities"].emplace_back(serializeActivity(*p.activities));
+  if(p.activity)
+    j["activities"].emplace_back(serializeActivity(*p.activity));
   j["status"] = p.status;
   j["afk"] = p.afk;
   return j;
 }
 
-nlohmann::json serializeActivity(const Activities& a) {
+nlohmann::json serializeActivity(const Activity& a) {
   nlohmann::json j;
   j["name"] = a.name;
   j["type"] = static_cast<int>(a.type);
