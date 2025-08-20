@@ -97,12 +97,15 @@ RestClient::sendRawData(const std::string& endpoint,
       }
       if(meow.headers["x-ratelimit-scope"] == "user"){
         Log::Log("we are being user ratelimited!");
+        std::unique_lock<std::mutex> lock(rtl.rltmtx);
         rtl.userRateLimitTable[endpoint] = {
           .bucket = meow.headers["x-ratelimit-bucket"],
           .resetAfter = std::stoi(meow.headers["retry-after"], nullptr, 10),
           .reset = std::stoi(meow.headers["x-ratelimit-reset"], nullptr, 10)
         };
+        lock.unlock();
         std::this_thread::sleep_for(std::chrono::seconds(rtl.userRateLimitTable[endpoint].resetAfter));
+        lock.lock();
         rtl.userRateLimitTable.erase(endpoint);
         continue;
       }

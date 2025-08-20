@@ -1,8 +1,8 @@
 #ifndef _INCLUDE_RESTCLIENT_H
 #define _INCLUDE_RESTCLIENT_H
 #include <atomic>
-#include <cstdint>
 #include <string>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -27,6 +27,7 @@ struct RateLimit {
 
 struct RateLimitTables {
   std::unordered_map<std::string, RateLimit> userRateLimitTable;
+  std::mutex rltmtx;
   std::atomic<bool> globalLimit;
   std::atomic<int> globalResetAfter;
 };
