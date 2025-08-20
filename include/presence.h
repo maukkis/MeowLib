@@ -4,9 +4,18 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
+enum class ActivityTypes {
+  Playing = 0,
+  Streaming,
+  Listening,
+  Watching,
+  Custom,
+  Competing,
+};
+
 struct Activities{
   std::string name;
-  int type; // make enum later;
+  ActivityTypes type;
   std::string state;
   std::optional<std::string> url;
 };

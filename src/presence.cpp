@@ -1,7 +1,7 @@
 #include "../include/presence.h"
 #include <nlohmann/json.hpp>
 #include "../include/nyaBot.h"
-#include <print>
+
 
 nlohmann::json serializePresence(const Presence& p){
   nlohmann::json j;
@@ -18,10 +18,10 @@ nlohmann::json serializePresence(const Presence& p){
 nlohmann::json serializeActivity(const Activities& a) {
   nlohmann::json j;
   j["name"] = a.name;
-  j["type"] = a.type;
+  j["type"] = static_cast<int>(a.type);
   if(!a.state.empty())
     j["state"] = a.state;
-  if(a.url && a.type == 1)
+  if(a.url && static_cast<int>(a.type) == 1)
     j["url"] = *a.url;
   return j;
 }
