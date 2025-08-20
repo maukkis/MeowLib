@@ -1,6 +1,7 @@
 #include "../include/presence.h"
 #include <nlohmann/json.hpp>
 #include "../include/nyaBot.h"
+#include "../include/eventCodes.h"
 
 
 nlohmann::json serializePresence(const Presence& p){
@@ -28,7 +29,7 @@ nlohmann::json serializeActivity(const Activity& a) {
 
 void NyaBot::changePresence(const Presence& p){
   nlohmann::json j;
-  j["op"] = 3;
+  j["op"] = eventCodes::PresenceUpdate;
   j["d"] = serializePresence(p);
   queue.addToQueue(j.dump());
-;}
+}
