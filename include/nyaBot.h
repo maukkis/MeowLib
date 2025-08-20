@@ -6,8 +6,8 @@
 #include "restclient.h"
 #include "selectInteraction.h"
 #include "slashCommandInt.h"
+#include "presence.h"
 #include "slashCommands.h"
-#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <nlohmann/json_fwd.hpp>
@@ -15,8 +15,6 @@
 #include <atomic>
 #include "log.h"
 #include <nlohmann/json.hpp>
-#include <thread>
-#include <iostream>
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
@@ -118,7 +116,11 @@ public:
   void addCommandHandler(const std::string& commandName, Args&&... args){
     commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
   }
-
+  ///
+  /// @brief changes the presence of the bot user the gateway connection must be on ready state for this to be called
+  /// @param p presence object
+  ///
+  void changePresence(const Presence& p);
   void onReady(std::function<void()> f);
   void onSlash(std::function<void(SlashCommandInt&)> f);
   void onAutocomplete(std::function<void()> f);

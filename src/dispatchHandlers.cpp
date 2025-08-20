@@ -12,7 +12,7 @@ void NyaBot::ready(nlohmann::json j){
   api.resumeUrl = j["resume_gateway_url"];
   j = j["user"];
   api.appId = j["id"];
-  std::thread{funs.onReadyF}.detach();
+  funs.onReadyF();
 }
 
 void NyaBot::resumed(nlohmann::json j){

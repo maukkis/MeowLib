@@ -7,9 +7,11 @@
 #include <iostream>
 #include "../include/nyaBot.h"
 #include "../include/eventCodes.h"
+#include "../include/queue.h"
 #include <stdio.h>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <thread>
 
 
 void NyaBot::listen(){
@@ -43,6 +45,7 @@ void NyaBot::listen(){
         }
         random = 1;
       }
+      while(!queue.empty()) handle.wsSend(queue.pop(), meowWs::meowWS_TEXT);
       meowWs::meowWsFrame frame;
       size_t rlen = handle.wsRecv(buf, &frame);
       if (rlen < 1){
