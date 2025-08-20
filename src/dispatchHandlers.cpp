@@ -99,7 +99,7 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){
-    select.values.emplace_back(a);
+    select.values.emplace(a);
   }
   return select;
 }
