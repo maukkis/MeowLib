@@ -16,12 +16,12 @@ enum class ActivityTypes {
 struct Activity{
   std::string name;
   ActivityTypes type;
-  std::string state;
-  std::optional<std::string> url;
+  std::string state = "";
+  std::optional<std::string> url = std::nullopt;
 };
 
 struct Presence {
-  std::optional<int> since;
+  std::optional<int> since = std::nullopt;
   std::optional<Activity> activity = std::nullopt;
   std::string status;
   bool afk = false;
