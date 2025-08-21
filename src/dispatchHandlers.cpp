@@ -75,7 +75,7 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   User user;
   if(j.contains("member")){
     user = deserializeUser(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j);
+    user.guild = deserializeGuildUser(j["member"]);
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
@@ -91,7 +91,7 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   User user;
   if(j.contains("member")){
     user = deserializeUser(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j);
+    user.guild = deserializeGuildUser(j["member"]);
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"], a);
