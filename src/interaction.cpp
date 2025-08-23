@@ -96,6 +96,13 @@ void Interaction::respond(){
   manualResponse(j);
 }
 
+void Interaction::respond(const Modal& a){
+  nlohmann::json j;
+  j["type"] = 9;
+  j["data"] = a.generate();
+  manualResponse(j);
+}
+
 
 void Interaction::manualResponse(const nlohmann::json& j){
   auto meow = bot->rest.post("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback",

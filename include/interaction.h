@@ -7,6 +7,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include "message.h"
+#include "modal.h"
 #include "user.h"
 
 class NyaBot;
@@ -54,6 +55,11 @@ public:
   /// Reason why you would do this is to be able to attach attachments
   /// or components.
   void respond(const Message& a);
+  ///
+  /// @brief Responds to an interaction with a modal
+  /// @param a Modal object
+  ///
+  void respond(const Modal& a);
   ///
   /// @brief Responds to an interaction with raw json data
   /// @param j json data
