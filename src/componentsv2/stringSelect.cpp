@@ -24,6 +24,11 @@ StringSelectComponent& StringSelectComponent::setPlaceHolder(const std::string_v
   return *this;
 }
 
+StringSelectComponent& StringSelectComponent::setRequired(const bool a){
+  required = a;
+  return *this;
+}
+
 nlohmann::json StringSelectOption::serialize(){
   nlohmann::json j;
   j["label"] = label;
@@ -40,6 +45,8 @@ nlohmann::json StringSelectComponent::generate(){
   j["custom_id"] = customId;
   j["min_values"] = minValues;
   j["max_values"] = maxValues;
+  if(required)
+    j["required"] = *required;
   if(!placeholder.empty())
     j["placeholder"] = placeholder;
   j["options"] = nlohmann::json::array();

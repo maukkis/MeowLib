@@ -2,6 +2,7 @@
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
+#include "modalInteraction.h"
 #include "queue.h"
 #include "restclient.h"
 #include "selectInteraction.h"
@@ -38,6 +39,7 @@ struct Funs {
   std::function<void()> onAutocompleteF = {};
   std::function<void(ButtonInteraction&)> onButtonF = {};
   std::function<void(SelectInteraction&)> onSelectF = {};
+  std::function<void(ModalInteraction&)> onModalF = {};
 };
 
 
@@ -54,6 +56,7 @@ void runOnce(F&& f, Args&&... a) {
 struct InteractionCallbacks {
   std::unordered_map<std::string, std::function<void(ButtonInteraction&)>> buttonInteractionTable;
   std::unordered_map<std::string, std::function<void(SelectInteraction&)>> selectInteractionTable;
+  std::unordered_map<std::string, std::function<void(ModalInteraction&)>> modalInteractionTable;
 };
 
 namespace Intents{
@@ -126,6 +129,7 @@ public:
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);
+  void onModalSubmit(std::function<void(ModalInteraction&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -136,6 +140,8 @@ public:
   /// @param s interaction's custom_id
   ///
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
+  
+  void addInteractionCallback(const std::string_view s, std::function<void(ModalInteraction&)> f);
   void syncSlashCommands();
   RestClient rest {this};
   UserApiRoutes user{this};
@@ -146,6 +152,7 @@ private:
   void getHeartbeatInterval();
   void routeInteraction(ButtonInteraction& interaction);
   void routeInteraction(SelectInteraction& interaction);
+  void routeInteraction(ModalInteraction& interaction);
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
   void resumed(nlohmann::json j);

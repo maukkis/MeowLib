@@ -18,6 +18,7 @@ enum ComponentTypes {
   FILE_TYPE,
   SEPERATOR,
   CONTAINER = 17,
+  LABEL,
 };
 
 class Component {

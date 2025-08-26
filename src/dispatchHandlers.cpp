@@ -2,8 +2,10 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include "../include/buttonInteraction.h"
 #include "../include/selectInteraction.h"
+#include "../include/modalInteraction.h"
 
 
 void NyaBot::ready(nlohmann::json j){
@@ -71,7 +73,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
 ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   const std::string& id = j["id"];
   const std::string& interactionToken = j["token"];
-  std::string userId; 
+  std::string userId;
   User user;
   if(j.contains("member")){
     user = deserializeUser(j["member"]["user"]);
@@ -83,6 +85,45 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   button.id = j["data"]["id"].get<int>();
   return button;
 }
+
+ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
+  const std::string& id = j["id"];
+  const std::string& interactionToken = j["token"];
+  std::string userId; 
+  User user;
+  if(j.contains("member")){
+    user = deserializeUser(j["member"]["user"]);
+    user.guild = deserializeGuildUser(j["member"]);
+  } else user = deserializeUser(j["user"]);
+  const std::string& name = j["data"]["custom_id"];
+  ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
+  for(auto& a : j["data"]["components"]){
+    if(!a.contains("component")) continue;
+    switch(a["component"]["type"].get<int>()){
+      case STRING_SELECT:
+        {
+          const auto& vec = a["component"]["values"].get<std::vector<std::string>>();
+          modal.data.insert({a["component"]["custom_id"],
+            ModalData{
+              .type = STRING_SELECT,
+              .data = std::unordered_set<std::string>(vec.begin(), vec.end())}});
+          break;
+        }
+      case TEXT_INPUT:
+        modal.data.insert(
+          {
+            a["component"]["custom_id"],
+            ModalData{
+              .type = TEXT_INPUT,
+              .data = std::string(a["component"]["value"])
+            }
+          }
+        );
+    }
+  }
+  return modal;
+}
+
 
 
 SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
@@ -144,9 +185,15 @@ void NyaBot::interaction(nlohmann::json j){
               routeInteraction(i);
               break;
             }
+
           default:
             Log::Log("not implemented yet\n" + j.dump());
         }
+      }
+    case MODAL_SUBMIT:
+      {
+        auto i = constructModal(j, this);
+        routeInteraction(i);
       }
     break;
     default:

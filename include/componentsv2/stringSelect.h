@@ -22,6 +22,8 @@ public:
   StringSelectComponent& setMinValues(const int);
   StringSelectComponent& setMaxValues(const int);
   StringSelectComponent& setPlaceHolder(const std::string_view);
+  // ONLY FOR MODALS
+  StringSelectComponent& setRequired(const bool);
   nlohmann::json generate() override;
   template<typename... T>
   requires(std::conjunction<std::is_same<T, StringSelectOption>...>::value)
@@ -33,6 +35,7 @@ public:
 private:
   std::vector<StringSelectOption> options;
   ComponentTypes type = STRING_SELECT;
+  std::optional<bool> required;
 };
 
 #endif
