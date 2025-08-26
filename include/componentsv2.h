@@ -14,4 +14,6 @@
 #include "componentsv2/buttonComponent.h"
 #include "componentsv2/mentionableSelect.h"
 #include "componentsv2/actionRowComponent.h"
+#include "componentsv2/label.h"
+#include "componentsv2/textInput.h"
 #endif

@@ -4,7 +4,7 @@
 #include <string_view>
 
 enum class TextInputStyles {
-  SHORT,
+  SHORT = 1,
   PARAGRAPH,
 };
 
