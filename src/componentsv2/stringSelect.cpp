@@ -35,6 +35,8 @@ nlohmann::json StringSelectOption::serialize(){
   j["value"] = value;
   if(description)
     j["description"] = *description;
+  if(emoji)
+    j["emoji"] = serializeEmoji(*emoji);
   return j;
 }
 

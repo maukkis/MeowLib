@@ -2,6 +2,7 @@
 #define _INCLUDE_COMPONENTSV2_STRINGSELECTCOMPONENT
 #include "componentsv2.h"
 #include "selectcomponents.h"
+#include "../emoji.h"
 #include <optional>
 #include <string_view>
 #include <string>
@@ -13,6 +14,7 @@ struct StringSelectOption {
   std::string label;
   std::string value;
   std::optional<std::string> description = std::nullopt;
+  std::optional<Emoji> emoji = std::nullopt;
   nlohmann::json serialize();
 };
 

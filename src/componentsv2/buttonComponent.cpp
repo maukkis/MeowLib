@@ -8,6 +8,8 @@ nlohmann::json ButtonComponent::generate() {
   if(label) j["label"] = *label;
   j["style"] = style;
   j["custom_id"] = customId;
+  if(emoji)
+    j["emoji"] = serializeEmoji(*emoji);
   return j;
 }
 
@@ -25,5 +27,10 @@ ButtonComponent& ButtonComponent::setStyle(enum Style s) {
 
 ButtonComponent& ButtonComponent::setCustomId(const std::string_view a) {
   customId = a;
+  return *this;
+}
+
+ButtonComponent& ButtonComponent::addEmoji(const Emoji& e){
+  emoji = e;
   return *this;
 }
