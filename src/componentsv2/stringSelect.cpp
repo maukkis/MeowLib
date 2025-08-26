@@ -24,6 +24,11 @@ StringSelectComponent& StringSelectComponent::setPlaceHolder(const std::string_v
   return *this;
 }
 
+StringSelectComponent& StringSelectComponent::setRequired(const bool a){
+  required = a;
+  return *this;
+}
+
 nlohmann::json StringSelectOption::serialize(){
   nlohmann::json j;
   j["label"] = label;

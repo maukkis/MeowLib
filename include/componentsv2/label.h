@@ -2,6 +2,7 @@
 #define _INCLUDE_COMPONENTSV2_H
 #include "componentsv2.h"
 #include "stringSelect.h"
+#include "textInput.h"
 #include <type_traits>
 #include <memory>
 
@@ -11,6 +12,9 @@ struct AllowedInLabel : std::false_type {};
 
 template<>
 struct AllowedInLabel<StringSelectComponent> : std::true_type {};
+
+template<>
+struct AllowedInLabel<TextInputComponent> : std::true_type {};
 
 template<typename T>
 concept AllowedInLabel_t = AllowedInLabel<std::remove_reference_t<T>>::value;
