@@ -14,7 +14,7 @@ Modal& Modal::setCustomId(const std::string_view s){
 nlohmann::json Modal::generate() const {
   nlohmann::json j;
   j["custom_id"] = customId;
-  j["title"] = customId;
+  j["title"] = title;
   j["components"] = nlohmann::json::array();
   for(const auto& a : components){
     j["components"].emplace_back(a->generate());
