@@ -17,7 +17,7 @@ NyaBot::NyaBot(int intents){
 
 meow NyaBot::reconnect(bool resume){
   if(handle.wsClose(1012, "arf") != OK){
-    Log::Log("woof?"); 
+    Log::dbg("woof?");
   }
 
   if(api.resumeUrl.find("wss") != std::string::npos)
@@ -33,7 +33,7 @@ meow NyaBot::reconnect(bool resume){
     j["d"]["session_id"] = api.sesId;
     j["d"]["seq"] = api.sequence;
     if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
-      Log::Log("sent resume!");
+      Log::dbg("sent resume!");
     }
   } else {
     sendIdent();
@@ -45,7 +45,7 @@ void NyaBot::run(const std::string_view token){
   this->api.token = token;
   connect();
   getHeartbeatInterval();
-  Log::Log("interval is " + std::to_string(api.interval));
+  Log::dbg("interval is " + std::to_string(api.interval));
   sendIdent();
   listen();
 }
@@ -53,29 +53,29 @@ void NyaBot::run(const std::string_view token){
 NyaBot::~NyaBot(){
   stop = true;
   handle.wsClose(1000, "going away :3");
-  Log::Log("closed!"); 
+  Log::dbg("closed!"); 
 }
 
 
 void NyaBot::connect(){
   if(handle.perform() == OK){
-    Log::Log("connected to the websocket succesfully!");
+    Log::dbg("connected to the websocket succesfully!");
   }
   else {
-    Log::Log("something went wrong");
+    Log::error("something went wrong");
     std::exit(1);
   }
   
 }
 
 void NyaBot::sendIdent(){
-  Log::Log("sending ident");
+  Log::dbg("sending ident");
   std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
-    Log::Log("ident sent!");
+    Log::dbg("ident sent!");
   }
   else {
-    Log::Log("something went wrong");
+    Log::error("something went wrong");
   }
 }
 
@@ -92,8 +92,8 @@ void NyaBot::getHeartbeatInterval(){
     api.interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
-    Log::Log("failed to parse buffer");
-    Log::Log("buffer is " + buf);
+    Log::dbg("failed to parse buffer");
+    Log::dbg("buffer is " + buf);
     std::exit(1);
   }
 

@@ -72,6 +72,6 @@ void NyaBot::syncSlashCommands(){
                                    api.appId),
                        json.dump());
   if(!meow.has_value() || meow->second != 200)
-    Log::Log("something went wrong while syncing slash commands " + 
+    Log::error("something went wrong while syncing slash commands " + 
              meow.value_or(std::make_pair("", 0)).first);
 }

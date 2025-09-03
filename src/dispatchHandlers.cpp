@@ -18,7 +18,7 @@ void NyaBot::ready(nlohmann::json j){
 }
 
 void NyaBot::resumed(nlohmann::json j){
-  Log::Log("connection resumed! with sequence " + std::to_string(j["s"].get<long>()));
+  Log::info("connection resumed! with sequence " + std::to_string(j["s"].get<long>()));
 }
 
 // this is a placeholder do not mind this
@@ -187,7 +187,7 @@ void NyaBot::interaction(nlohmann::json j){
             }
 
           default:
-            Log::Log("not implemented yet\n" + j.dump());
+            Log::dbg("not implemented yet\n" + j.dump());
         }
       }
     case MODAL_SUBMIT:
@@ -197,7 +197,7 @@ void NyaBot::interaction(nlohmann::json j){
       }
     break;
     default:
-      Log::Log("unknown interaction\n" + j.dump());
+      Log::dbg("unknown interaction\n" + j.dump());
     break;
   } 
 }

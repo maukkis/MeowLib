@@ -43,7 +43,7 @@ void ComponentInteraction::updateMessage(Message& a){
                              "POST"
                              );
     if(!res.has_value() || res->second != 204){
-      Log::Log("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
+      Log::error("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
     }
   } else {
     nlohmann::json b;

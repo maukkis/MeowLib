@@ -11,7 +11,7 @@ User UserApiRoutes::getUser(const std::string_view id){
     std::format("https://discord.com/api/v10/users/{}", id)
   );
   if(!res.has_value() || res->second != 200){
-    Log::Log("failed to fetch user "
+    Log::error("failed to fetch user "
              + res.value_or(std::make_pair("", 0)).first);
     return User();
   }

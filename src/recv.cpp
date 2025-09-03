@@ -21,12 +21,12 @@ void NyaBot::listen(){
   auto lastHB = std::chrono::steady_clock::now();
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
-  Log::Log("starting to heartbeat with jitter of: " + std::to_string(random)); 
+  Log::info("starting to heartbeat with jitter of: " + std::to_string(random)); 
   while (!stop){
     std::string buf;
     try {
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
-        Log::Log("havent received heartbeat in over 60 secs reconnecting");
+        Log::warn("havent received heartbeat in over 60 secs reconnecting");
         // we should still try resuming and we dont have to close the connection manually due to reconnect automatically calling it with 1012
         reconnect(true);
         // we have to reset our times to avoid an edgecase causing us to always think we havent received a heartbeat
@@ -35,12 +35,12 @@ void NyaBot::listen(){
         continue;
       }
       if(std::chrono::steady_clock::now() - sentHB >= std::chrono::milliseconds(static_cast<int>(api.interval*random))){
-        Log::Log("sending heartbeat :3");
+        Log::dbg("sending heartbeat :3");
         nlohmann::json j;
         j["op"] = Heartbeat;
         j["d"] = api.sequence;
         if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
-          Log::Log("sent heartbeat :3");
+          Log::dbg("sent heartbeat :3");
           sentHB = std::chrono::steady_clock::now();
         }
         random = 1;
@@ -51,13 +51,13 @@ void NyaBot::listen(){
       if (rlen < 1){
         continue;
       }
-      Log::Log("received: " + std::to_string(frame.payloadLen) + " bytes");
+      Log::dbg("received: " + std::to_string(frame.payloadLen) + " bytes");
       if(frame.opcode == meowWs::meowWS_CLOSE) {
-        Log::Log("connection closed");
+        Log::warn("connection closed");
         uint16_t arf;
         memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
-        Log::Log("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
+        Log::dbg("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));
         switch(arf){
           case 4000:
@@ -79,7 +79,7 @@ void NyaBot::listen(){
           break;
           default:
             stop = true;
-            Log::Log("something went horribly wrong");
+            Log::error("something went horribly wrong");
             return;
         }
         continue;
@@ -88,11 +88,11 @@ void NyaBot::listen(){
       size_t op = meowJson["op"];
       switch(op){
         case HeartbeatACK:
-          Log::Log("server sent ACK");
+          Log::dbg("server sent ACK");
           lastHB = std::chrono::steady_clock::now();
         break;
         case Reconnect:
-          Log::Log("got reconnectTwT closing and resuming");
+          Log::dbg("got reconnectTwT closing and resuming");
           reconnect(true);
         break; 
         case Dispatch:
@@ -103,30 +103,30 @@ void NyaBot::listen(){
               std::thread{dispatchHandlers[meow], meowJson}.detach();
             }
             else {
-              Log::Log("unknown dispatch printing to log");
+              Log::warn("unknown dispatch printing to log");
               meowlog << buf << std::endl;
             }
           }
         break;
         case InvalidSession:
-          Log::Log("invalid session owo reconnecting without resuming :3");
+          Log::dbg("invalid session owo reconnecting without resuming :3");
           reconnect(false);
         break;
         default:
-          Log::Log("barks?");
+          Log::dbg("barks?");
           meowlog << buf << std::endl;
         break;
       }
     }
     catch(nlohmann::json::exception& e){
-      Log::Log("got parse error :( partial data?");
+      Log::warn("got parse error printing to log");
       meowlog << buf << std::endl;
     }
     catch(meowHttp::Exception &e){
-      Log::Log(e.what());
+      Log::error(e.what());
       if(e.closed()) reconnect(true);
       else {
-        Log::Log("fatal error exiting :3");
+        Log::error("fatal error exiting :3");
         return;
       }
     }

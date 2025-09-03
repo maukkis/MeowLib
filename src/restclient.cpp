@@ -62,11 +62,11 @@ RestClient::sendRawData(const std::string& endpoint,
 {
   while(true){
     if(rtl.globalLimit){
-      Log::Log("we are being globally ratelimited!");
+      Log::warn("we are being globally ratelimited!");
       std::this_thread::sleep_for(std::chrono::seconds(rtl.globalResetAfter.load()));
     }
     if(rtl.userRateLimitTable.contains(endpoint)){
-      Log::Log("we are being user ratelimited!");
+      Log::warn("we are being user ratelimited!");
       auto arf = rtl.userRateLimitTable[endpoint];
       std::this_thread::sleep_for(std::chrono::seconds(arf.resetAfter));
     }
@@ -87,7 +87,7 @@ RestClient::sendRawData(const std::string& endpoint,
     }
     if(meow.getLastStatusCode() == 429){
       if(meow.headers["x-ratelimit-global"] == "true"){
-        Log::Log("we are being globally ratelimited!");
+        Log::warn("we are being globally ratelimited!");
         rtl.globalLimit.store(true);
         rtl.globalResetAfter.store(std::stoul(meow.headers["retry-after"], nullptr, 10));
         std::this_thread::sleep_for(std::chrono::seconds(rtl.globalResetAfter.load()));
@@ -96,7 +96,7 @@ RestClient::sendRawData(const std::string& endpoint,
         continue;
       }
       if(meow.headers["x-ratelimit-scope"] == "user"){
-        Log::Log("we are being user ratelimited!");
+        Log::warn("we are being user ratelimited!");
         std::unique_lock<std::mutex> lock(rtl.rltmtx);
         rtl.userRateLimitTable[endpoint] = {
           .bucket = meow.headers["x-ratelimit-bucket"],
@@ -110,7 +110,7 @@ RestClient::sendRawData(const std::string& endpoint,
         continue;
       }
       else{
-        Log::Log("we are being ratelimited on a bucket!");
+        Log::warn("we are being ratelimited on a bucket!");
         std::this_thread::sleep_for(std::chrono::seconds(std::stoi(meow.headers["retry-after"], nullptr, 10)));
         continue;
       }

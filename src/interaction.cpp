@@ -67,7 +67,7 @@ void Interaction::respond(const Message& a){
                              "POST"
                              );
     if(!res.has_value() || res->second != 204){
-      Log::Log("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
+      Log::error("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
     }
   } else {
     nlohmann::json b;
@@ -85,7 +85,7 @@ void Interaction::createFollowUpMessage(const std::string_view msg, int flags){
                                         applicationId, interactionToken),
                            j.dump());
   if(!ret.has_value() || ret->second != 200){
-    Log::Log("failed to create a follow up message" +
+    Log::error("failed to create a follow up message" +
              ret.value_or(std::make_pair("", 0)).first);
   }
 }
@@ -108,7 +108,7 @@ void Interaction::manualResponse(const nlohmann::json& j){
   auto meow = bot->rest.post("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback",
                             j.dump());
   if(!meow.has_value() || meow->second != 204){
-    Log::Log("failed to respond to an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
+    Log::error("failed to respond to an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
   }
 }
 
@@ -117,7 +117,7 @@ void Interaction::manualEdit(const nlohmann::json& j){
     auto meow = bot->rest.patch("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
   if(!meow.has_value() || meow->second != 200){
-    Log::Log("failed to edit an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
+    Log::error("failed to edit an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
   }
 }
 
@@ -142,6 +142,6 @@ void Interaction::edit(const Message& a){
                                      "woof",
                                      "PATCH");
   if(!meow.has_value() || meow->second != 200)
-    Log::Log("failed to edit an interaction\n" +
+    Log::error("failed to edit an interaction\n" +
              meow.value_or(std::make_pair("", 0)).first);
 }
