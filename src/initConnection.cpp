@@ -70,7 +70,8 @@ void NyaBot::connect(){
 
 void NyaBot::sendIdent(){
   Log::dbg("sending ident");
-  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "meowLib", "device": "meowLib"}}})"};
+  // TODO: REWORK THIS IDENT PAYLOAD WHAT THE FUCK IS THIS
+  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "MeowLib", "device": "MeowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     Log::dbg("ident sent!");
   }
