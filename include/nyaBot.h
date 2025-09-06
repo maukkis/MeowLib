@@ -2,6 +2,7 @@
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
+#include "guild.h"
 #include "modalInteraction.h"
 #include "queue.h"
 #include "restclient.h"
@@ -145,6 +146,7 @@ public:
   void syncSlashCommands();
   RestClient rest {this};
   UserApiRoutes user{this};
+  GuildApiRoutes guild{this};
 private:
   void listen();
   void connect();
