@@ -97,15 +97,21 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
   ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
+  modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   for(auto& a : j["data"]["components"]){
     if(!a.contains("component")) continue;
     switch(a["component"]["type"].get<int>()){
+      case TEXT_DISPLAY: continue;
       case STRING_SELECT:
+      case USER_SELECT:
+      case ROLE_SELECT:
+      case CHANNEL_SELECT:
+      case MENTIONABLE_SELECT:
         {
           const auto& vec = a["component"]["values"].get<std::vector<std::string>>();
           modal.data.insert({a["component"]["custom_id"],
             ModalData{
-              .type = STRING_SELECT,
+              .type = static_cast<ComponentTypes>(a["component"]["type"].get<int>()),
               .data = std::unordered_set<std::string>(vec.begin(), vec.end())}});
           break;
         }
@@ -189,6 +195,7 @@ void NyaBot::interaction(nlohmann::json j){
           default:
             Log::dbg("not implemented yet\n" + j.dump());
         }
+        break;
       }
     case MODAL_SUBMIT:
       {

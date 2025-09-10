@@ -1,17 +1,18 @@
 #ifndef _INCLUDE_COMPONENTSV2_H
 #define _INCLUDE_COMPONENTSV2_H
 #include "componentsv2.h"
+#include "selectcomponents.h"
 #include "stringSelect.h"
 #include "textInput.h"
 #include <type_traits>
 #include <memory>
 
 
-template<typename T>
+template<typename T, typename = void>
 struct AllowedInLabel : std::false_type {};
 
-template<>
-struct AllowedInLabel<StringSelectComponent> : std::true_type {};
+template<typename T>
+struct AllowedInLabel<T, std::enable_if_t<std::is_base_of<SelectComponent, T>::value, void>> : std::true_type {};
 
 template<>
 struct AllowedInLabel<TextInputComponent> : std::true_type {};
