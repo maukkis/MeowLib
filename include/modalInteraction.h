@@ -2,7 +2,6 @@
 #define _INCLUDE_MODALINTERACTION_H
 #include "componentsv2/componentsv2.h"
 #include "interaction.h"
-#include "modal.h"
 #include <string>
 #include <unordered_set>
 

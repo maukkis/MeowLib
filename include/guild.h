@@ -18,7 +18,12 @@ Guild deserializeGuild(const nlohmann::json& j);
 class GuildApiRoutes {
 public:
   GuildApiRoutes(NyaBot *bot);
+  /// @brief fetches a guild by its id
+  /// @param id guild id
   Guild get(const std::string_view id);
+
+  /// @brief fetches a guild preview by its id
+  /// @param id guild id
   Guild getPreview(const std::string_view id);
 private:
   NyaBot* bot;
