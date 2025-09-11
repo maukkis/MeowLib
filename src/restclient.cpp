@@ -116,14 +116,6 @@ RestClient::sendRawData(const std::string& endpoint,
       }
     }
     
-    switch(static_cast<int>(meow.getLastStatusCode())){
-      case 403:
-        return std::unexpected(RestErrors::Forbidden);
-      case 413:
-        return std::unexpected(RestErrors::TooLarge);
-      case 404:
-        return std::unexpected(RestErrors::NotFound);
-    }
     return std::make_pair(d, meow.getLastStatusCode());
   }
 }
