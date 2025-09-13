@@ -2,6 +2,7 @@
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
+#include "emoji.h"
 #include "guild.h"
 #include "modalInteraction.h"
 #include "queue.h"
@@ -147,6 +148,7 @@ public:
   RestClient rest {this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
+  EmojiApiRoutes emoji{this};
 private:
   void listen();
   void connect();
@@ -184,5 +186,6 @@ private:
 
   std::vector<SlashCommand> slashs;
   friend RestClient;
+  friend EmojiApiRoutes;
 };
 #endif

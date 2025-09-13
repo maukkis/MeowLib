@@ -40,6 +40,14 @@ std::expected<std::pair<std::string, int>, RestErrors> RestClient::put(const std
               {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
 }
 
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::deletereq(const std::string& endpoint)
+{
+  return sendRawData(endpoint,
+              "DELETE", 
+              {"authorization: Bot " + bot->api.token, "content-type: application/json"});
+}
+
+
 std::expected<std::pair<std::string, int>, RestErrors>
 RestClient::sendFormData(const std::string& endpoint,
                          const std::string& data,

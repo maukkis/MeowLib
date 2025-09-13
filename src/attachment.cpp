@@ -8,8 +8,8 @@ Attachment readFile(const std::string& a){
   std::string name = a.substr(a.rfind("/")+1);
   if(!std::filesystem::exists(a) || std::filesystem::is_directory(a))
     return Attachment();
-  std::ifstream b{a}; 
-  std::stringstream c;
+  std::ifstream b(a, std::ios::binary); 
+  std::ostringstream c;
   c << b.rdbuf();
   return Attachment{
     .data = c.str(),

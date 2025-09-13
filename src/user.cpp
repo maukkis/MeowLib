@@ -19,7 +19,7 @@ User UserApiRoutes::getUser(const std::string_view id){
   return deserializeUser(j);
 }
 
-GuildUser deserializeGuildUser(nlohmann::json &j){
+GuildUser deserializeGuildUser(const nlohmann::json &j){
   return {
     .nick = j["nick"].is_null() ? "" : j["nick"],
     .avatar = j["avatar"].is_null() ? "" : j["avatar"],
@@ -28,7 +28,7 @@ GuildUser deserializeGuildUser(nlohmann::json &j){
   };
 }
 
-User deserializeUser(nlohmann::json& j){
+User deserializeUser(const nlohmann::json& j){
   return {
     .id = j["id"],
     .avatar = j["avatar"].is_null() ? "" : j["avatar"],

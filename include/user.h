@@ -36,6 +36,6 @@ private:
 };
 
 
-GuildUser deserializeGuildUser(nlohmann::json& j);
-User deserializeUser(nlohmann::json& j);
+GuildUser deserializeGuildUser(const nlohmann::json& j);
+User deserializeUser(const nlohmann::json& j);
 #endif
