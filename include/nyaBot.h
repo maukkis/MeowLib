@@ -4,6 +4,7 @@
 #include "buttonInteraction.h"
 #include "emoji.h"
 #include "guild.h"
+#include "message.h"
 #include "modalInteraction.h"
 #include "queue.h"
 #include "restclient.h"
@@ -149,6 +150,7 @@ public:
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
   EmojiApiRoutes emoji{this};
+  MessageApiRoutes message{this};
 private:
   void listen();
   void connect();

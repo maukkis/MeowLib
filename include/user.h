@@ -31,6 +31,8 @@ public:
   /// @brief fetches an user object
   /// @param id user id to fetch
   User getUser(const std::string_view id);
+  //TODO: add channel object
+  std::string createDM(const std::string_view id);
 private:
   NyaBot *bot = nullptr;
 };

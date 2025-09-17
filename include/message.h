@@ -2,10 +2,14 @@
 #define _INCLUDE_MESSAGE_H
 #include "componentsv2/componentsv2.h"
 #include "attachment.h"
+#include <expected>
 #include <nlohmann/json.hpp>
+#include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 #include <memory>
+class NyaBot;
 
 
 class Message {
@@ -27,6 +31,24 @@ private:
   std::string content;
   int msgflags = 0;
   std::vector<std::unique_ptr<Component>> components;
+};
+
+// TODO: create proper error parser and change the return values
+class MessageApiRoutes {
+public:
+  MessageApiRoutes(NyaBot* bot);
+  /// @brief creates a new message
+  /// @param id channel id to send message in
+  /// @param content message content
+  void create(const std::string_view id, const std::string_view content);
+  /// @brief creates a new message
+  /// @param id channel id to send message in
+  /// @param msg Message object
+  void create(const std::string_view id, const Message& msg);
+private:
+  void send(const std::string_view id, const std::string& content);
+  void send(const std::string_view id, const std::string& content, const std::string& boundary);
+  NyaBot *bot;
 };
 
 #endif

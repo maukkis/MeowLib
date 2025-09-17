@@ -19,6 +19,23 @@ User UserApiRoutes::getUser(const std::string_view id){
   return deserializeUser(j);
 }
 
+std::string UserApiRoutes::createDM(const std::string_view id){
+  nlohmann::json j;
+  j["recipient_id"] = id;
+  auto res = bot->rest.post(
+    std::format("https://discord.com/api/v10/users/@me/channels"),
+    j.dump()
+  );
+  if(!res.has_value() || res->second != 200){
+    Log::error("failed to create dm channel"
+             + res.value_or(std::make_pair("", 0)).first);
+    return std::string();
+  }
+  //hack hack
+  auto i = nlohmann::json::parse(res->first);
+  return i["id"];
+}
+
 GuildUser deserializeGuildUser(const nlohmann::json &j){
   return {
     .nick = j["nick"].is_null() ? "" : j["nick"],
