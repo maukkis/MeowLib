@@ -37,6 +37,9 @@ public:
   /// @param id emoji id to get
   /// @returns Emoji object on success nothing on error
   std::expected<Emoji, std::nullopt_t> getApplicationEmoji(const std::string_view id);
+  /// @brief lists all application emojis
+  /// @returns map of id's to emojis
+  std::expected<std::unordered_map<std::string, Emoji>, std::nullopt_t> listApplicationEmojis();
 private:
   const std::string_view appId;
   NyaBot *bot;

@@ -3,10 +3,10 @@
 #include "../include/nyaBot.h"
 #include "../include/base64.h"
 #include <nlohmann/json_fwd.hpp>
+#include <numeric>
 #include <optional>
 
 namespace {
-[[maybe_unused]]
 std::string& lower(std::string& a){
   std::transform(a.begin(), a.end(), a.begin(), [](char c){
     return std::tolower(c);
@@ -63,6 +63,23 @@ std::expected<Emoji, std::nullopt_t> EmojiApiRoutes::getApplicationEmoji(const s
     return std::unexpected(std::nullopt);
   }
   return deserializeEmoji(nlohmann::json::parse(res->first));
+}
+
+
+std::expected<std::unordered_map<std::string, Emoji>, std::nullopt_t> EmojiApiRoutes::listApplicationEmojis(){
+  auto res = bot->rest.get(std::format("https://discord.com/api/v10/applications/{}/emojis", bot->api.appId));
+  if(!res.has_value() || res->second != 200){
+    Log::error("failed to get an application emoji" + 
+               res.value_or(std::make_pair("meowHttp error", 0)).first);
+    return std::unexpected(std::nullopt);
+  }
+  auto j = nlohmann::json::parse(res->first);
+  std::unordered_map<std::string, Emoji> items;
+  for(const auto& a : j["items"]){
+    auto e = deserializeEmoji(a);
+    items.insert({e.id, std::move(e)});
+  }
+  return items;
 }
 
 nlohmann::json serializeEmoji(const Emoji& e){
