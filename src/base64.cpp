@@ -20,7 +20,7 @@ const std::unordered_map<uint8_t, char> base64_map = {
 };
 
 std::string encodeB64(const std::string_view a){
-  std::basic_string_view<uint8_t> str(reinterpret_cast<uint8_t const*>(a.data()), reinterpret_cast<uint8_t const*>(a.data() + a.size()));
+  std::basic_string_view<uint8_t> str(reinterpret_cast<uint8_t const*>(a.data()), a.size());
   std::string encoded;
   encoded.reserve(a.length());
   while(str.length() > 0){
