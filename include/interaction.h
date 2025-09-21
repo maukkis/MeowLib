@@ -9,6 +9,8 @@
 #include "message.h"
 #include "modal.h"
 #include "user.h"
+#include "error.h"
+#include <expected>
 
 class NyaBot;
 
@@ -46,43 +48,43 @@ public:
   ///
   /// @brief Responds to an interaction with a simple message.
   ///
-  void respond(const std::string_view response, int flags = 0);
+  std::expected<std::nullopt_t, Error> respond(const std::string_view response, int flags = 0);
   ///
   /// @brief Responds to an interaction with a defer.
   ///
-  void respond();
+  std::expected<std::nullopt_t, Error> respond();
   /// @brief Responds to an interaction with a Message object.
   /// Reason why you would do this is to be able to attach attachments
   /// or components.
-  void respond(const Message& a);
+  std::expected<std::nullopt_t, Error> respond(const Message& a);
   ///
   /// @brief Responds to an interaction with a modal
   /// @param a Modal object
   ///
-  void respond(const Modal& a);
+  std::expected<std::nullopt_t, Error> respond(const Modal& a);
   ///
   /// @brief Responds to an interaction with raw json data
   /// @param j json data
   /// 
-  void manualResponse(const nlohmann::json& j);
+  std::expected<std::nullopt_t, Error> manualResponse(const nlohmann::json& j);
   ///
   /// @brief Edits an interaction original response with raw json data
   /// @param j json data
   ///
-  void manualEdit(const nlohmann::json& j);
+  std::expected<std::nullopt_t, Error> manualEdit(const nlohmann::json& j);
   ///
   /// @brief Edits interaction original response with a message.
   ///
-  void edit(std::string_view response, int flags = 0);
+  std::expected<std::nullopt_t, Error> edit(std::string_view response, int flags = 0);
   /// @brief Edits an interaction original response with a Message object
   /// Reason why you would do this is to be able to attach attachments
   /// or components.
-  void edit(const Message& a);
+  std::expected<std::nullopt_t, Error> edit(const Message& a);
   
   /// @brief creates a follow up message to the interaction
   /// @param msg message to send
   /// @param flags optionally message flags
-  void createFollowUpMessage(const std::string_view msg, int flags = 0);
+  std::expected<std::nullopt_t, Error> createFollowUpMessage(const std::string_view msg, int flags = 0);
   const std::string commandName;
   const User user;
   NyaBot *bot;

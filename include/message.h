@@ -9,6 +9,10 @@
 #include <type_traits>
 #include <vector>
 #include <memory>
+#include <expected>
+#include "error.h"
+
+
 class NyaBot;
 
 
@@ -40,14 +44,14 @@ public:
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param content message content
-  void create(const std::string_view id, const std::string_view content);
+  std::expected<std::nullopt_t, Error> create(const std::string_view id, const std::string_view content);
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param msg Message object
-  void create(const std::string_view id, const Message& msg);
+  std::expected<std::nullopt_t, Error> create(const std::string_view id, const Message& msg);
 private:
-  void send(const std::string_view id, const std::string& content);
-  void send(const std::string_view id, const std::string& content, const std::string& boundary);
+  std::expected<std::nullopt_t, Error> send(const std::string_view id, const std::string& content);
+  std::expected<std::nullopt_t, Error> send(const std::string_view id, const std::string& content, const std::string& boundary);
   NyaBot *bot;
 };
 

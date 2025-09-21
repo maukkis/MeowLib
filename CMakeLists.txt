@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.25.1)
 
 project(nyaBot
-DESCRIPTION "simple discord bot library written in C++")
+DESCRIPTION "simple discord bot library written in C++"
+VERSION 0.2.0)
 find_package(nlohmann_json REQUIRED)
 find_package(Threads REQUIRED)
 set(CMAKE_CXX_STANDARD 23)

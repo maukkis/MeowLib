@@ -2,6 +2,8 @@
 #define _INCLUDE_GUILD_H
 #include <optional>
 #include <string>
+#include "error.h"
+#include <expected>
 #include <nlohmann/json.hpp>
 #include <string_view>
 class NyaBot;
@@ -20,11 +22,11 @@ public:
   GuildApiRoutes(NyaBot *bot);
   /// @brief fetches a guild by its id
   /// @param id guild id
-  Guild get(const std::string_view id);
+  std::expected<Guild, Error> get(const std::string_view id);
 
   /// @brief fetches a guild preview by its id
   /// @param id guild id
-  Guild getPreview(const std::string_view id);
+  std::expected<Guild, Error> getPreview(const std::string_view id);
 private:
   NyaBot* bot;
 };

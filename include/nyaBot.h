@@ -13,8 +13,10 @@
 #include "presence.h"
 #include "slashCommands.h"
 #include <cstdint>
+#include <expected>
 #include <functional>
 #include <nlohmann/json_fwd.hpp>
+#include "error.h"
 #include <string>
 #include <atomic>
 #include "log.h"
@@ -145,7 +147,7 @@ public:
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   
   void addInteractionCallback(const std::string_view s, std::function<void(ModalInteraction&)> f);
-  void syncSlashCommands();
+  std::expected<std::nullopt_t, Error> syncSlashCommands();
   RestClient rest {this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};

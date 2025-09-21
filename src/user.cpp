@@ -6,20 +6,20 @@
 UserApiRoutes::UserApiRoutes(NyaBot *bot)
   : bot{bot}{}
 
-User UserApiRoutes::getUser(const std::string_view id){
+std::expected<User, Error> UserApiRoutes::getUser(const std::string_view id){
   auto res = bot->rest.get(
     std::format("https://discord.com/api/v10/users/{}", id)
   );
   if(!res.has_value() || res->second != 200){
     Log::error("failed to fetch user "
              + res.value_or(std::make_pair("", 0)).first);
-    return User();
+    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
   }
   auto j = nlohmann::json::parse(res->first);
   return deserializeUser(j);
 }
 
-std::string UserApiRoutes::createDM(const std::string_view id){
+std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id){
   nlohmann::json j;
   j["recipient_id"] = id;
   auto res = bot->rest.post(
@@ -29,11 +29,10 @@ std::string UserApiRoutes::createDM(const std::string_view id){
   if(!res.has_value() || res->second != 200){
     Log::error("failed to create dm channel"
              + res.value_or(std::make_pair("", 0)).first);
-    return std::string();
+    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
   }
-  //hack hack
   auto i = nlohmann::json::parse(res->first);
-  return i["id"];
+  return deserializeChannel(i);
 }
 
 GuildUser deserializeGuildUser(const nlohmann::json &j){

@@ -16,7 +16,7 @@ GuildApiRoutes::GuildApiRoutes(NyaBot *bot){
   this->bot = bot;
 }
 
-Guild GuildApiRoutes::get(const std::string_view id){
+std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
   auto res = bot->rest.get(std::format("https://discord.com/api/v10/guilds/{}", id));
   if(!res.has_value() || res->second != 200){
     Log::error("failed to get guild\n" + res.value_or(std::make_pair("", 0)).first);
@@ -25,11 +25,11 @@ Guild GuildApiRoutes::get(const std::string_view id){
   return deserializeGuild(nlohmann::json::parse(res->first));
 }
 
-Guild GuildApiRoutes::getPreview(const std::string_view id){
+std::expected<Guild, Error> GuildApiRoutes::getPreview(const std::string_view id){
   auto res = bot->rest.get(std::format("https://discord.com/api/v10/guilds/{}/preview", id));
   if(!res.has_value() || res->second != 200){
     Log::error("failed to get guild preview\n" + res.value_or(std::make_pair("", 0)).first);
-    return {};
+    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
   }
   return deserializeGuild(nlohmann::json::parse(res->first));
 }

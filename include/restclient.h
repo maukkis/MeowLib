@@ -8,6 +8,9 @@
 #include <vector>
 #include <expected>
 #include <string_view>
+
+
+
 class NyaBot;
 
 constexpr std::string_view UserAgent {R"(DiscordBot (https://git.girlsmell.xyz/luna/MeowLib, 0.1.0))"};
