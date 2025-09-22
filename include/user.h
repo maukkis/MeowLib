@@ -9,6 +9,13 @@
 #include <vector>
 class NyaBot;
 
+struct PrimaryGuild {
+  std::string identityGuildId;
+  std::optional<bool> identityEnabled;
+  std::string tag;
+  std::string badge;
+};
+
 
 struct GuildUser {
   std::string nick;
@@ -24,6 +31,7 @@ struct User {
   std::string globalName;
   std::string username;
   std::optional<GuildUser> guild = std::nullopt;
+  std::optional<PrimaryGuild> primaryGuild = std::nullopt;
 };
 
 
@@ -41,4 +49,5 @@ private:
 
 GuildUser deserializeGuildUser(const nlohmann::json& j);
 User deserializeUser(const nlohmann::json& j);
+PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j);
 #endif

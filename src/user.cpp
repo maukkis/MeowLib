@@ -1,5 +1,6 @@
 #include "../include/user.h"
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <string_view>
 #include "../include/nyaBot.h"
 
@@ -50,6 +51,22 @@ User deserializeUser(const nlohmann::json& j){
     .avatar = j["avatar"].is_null() ? "" : j["avatar"],
     .discriminator = j["discriminator"],
     .globalName = j["global_name"].is_null() ? "" : j["global_name"],
-    .username = j["username"]
+    .username = j["username"],
+    .primaryGuild = j.contains("primary_guild") &&
+      !j["primary_guild"]["identity_guild_id"].is_null() ?
+        std::make_optional(deserializePrimaryGuild(j["primary_guild"]))
+      : std::nullopt
   };
 }
+
+PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j){
+  return {
+    .identityGuildId = j["identity_guild_id"],
+    .identityEnabled = j["identity_enabled"].is_null() ?
+        std::nullopt 
+      : std::make_optional(j["identity_enabled"].get<bool>()),
+    .tag = j["tag"],
+    .badge = j["badge"]
+  };
+}
+
