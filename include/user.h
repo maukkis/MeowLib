@@ -1,5 +1,6 @@
 #ifndef _INCLUDE_USER_H
 #define _INCLUDE_USER_H
+#include "attachment.h"
 #include "channel.h"
 #include "error.h"
 #include <expected>
@@ -41,8 +42,13 @@ public:
   /// @brief fetches an user object
   /// @param id user id to fetch
   std::expected<User, Error> getUser(const std::string_view id);
+  std::expected<User, Error> getCurrentUser();
   std::expected<Channel, Error> createDM(const std::string_view id);
+  std::expected<User, Error> modifyCurrentUser(std::optional<std::string> username = std::nullopt,
+                                               std::optional<Attachment> avatar = std::nullopt,
+                                               std::optional<Attachment> banner = std::nullopt);
 private:
+  std::expected<std::string, Error> getReq(const std::string& endpoint);
   NyaBot *bot = nullptr;
 };
 

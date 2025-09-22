@@ -42,7 +42,7 @@ std::expected<std::nullopt_t, Error> Interaction::respond(const Message& a){
     j["data"] = a.generate();
     auto payload = makeFormData(j, "woof", a.attachments);
     auto res =
-      bot->rest.sendFormData(std::format("https://discord.com/api/v10/interactions/{}/{}/callback",
+      bot->rest.sendFormData(std::format(APIURL "/interactions/{}/{}/callback",
                                          interactionId,
                                          interactionToken),
                              payload,
@@ -66,7 +66,7 @@ std::expected<std::nullopt_t, Error> Interaction::createFollowUpMessage(const st
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
   j["content"] = msg;
-  auto ret = bot->rest.post(std::format("https://discord.com/api/v10/webhooks/{}/{}",
+  auto ret = bot->rest.post(std::format(APIURL "/webhooks/{}/{}",
                                         applicationId, interactionToken),
                            j.dump());
   if(!ret.has_value() || ret->second != 200){
@@ -92,7 +92,7 @@ std::expected<std::nullopt_t, Error> Interaction::respond(const Modal& a){
 
 
 std::expected<std::nullopt_t, Error> Interaction::manualResponse(const nlohmann::json& j){
-  auto meow = bot->rest.post("https://discord.com/api/v10/interactions/" + interactionId + '/' + interactionToken + "/callback",
+  auto meow = bot->rest.post(APIURL "/interactions/" + interactionId + '/' + interactionToken + "/callback",
                             j.dump());
   if(!meow.has_value() || meow->second != 204){
     Log::error("failed to respond to an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
@@ -103,7 +103,7 @@ std::expected<std::nullopt_t, Error> Interaction::manualResponse(const nlohmann:
 
 
 std::expected<std::nullopt_t, Error> Interaction::manualEdit(const nlohmann::json& j){
-    auto meow = bot->rest.patch("https://discord.com/api/v10/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
+    auto meow = bot->rest.patch(APIURL "/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
   if(!meow.has_value() || meow->second != 200){
     Log::error("failed to edit an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
@@ -126,7 +126,7 @@ std::expected<std::nullopt_t, Error> Interaction::edit(const Message& a){
     return manualEdit(a.generate());
   }
   auto payload = makeFormData(a.generate(), "woof", a.attachments);
-  auto meow = bot->rest.sendFormData(std::format("https://discord.com/api/v10/webhooks/{}/{}/messages/@original",
+  auto meow = bot->rest.sendFormData(std::format(APIURL "/webhooks/{}/{}/messages/@original",
                                                  applicationId, interactionToken),
                                      payload,
                                      "woof",

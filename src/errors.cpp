@@ -1,5 +1,6 @@
 #include "../include/error.h"
 
+
 Error::Error(const std::string& str){
   nlohmann::json j;
   try {

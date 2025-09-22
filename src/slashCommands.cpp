@@ -69,7 +69,7 @@ std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
     json.emplace_back(a);
   }
   std::string write;
-  auto meow = rest.put(std::format("https://discord.com/api/v10/applications/{}/commands",
+  auto meow = rest.put(std::format(APIURL "/applications/{}/commands",
                                    api.appId),
                        json.dump());
   if(!meow.has_value() || meow->second != 200){

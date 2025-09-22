@@ -58,7 +58,7 @@ std::expected<std::nullopt_t, Error> MessageApiRoutes::create(const std::string_
 }
 
 std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content){
-  auto meow = bot->rest.post(std::format("https://discord.com/api/v10/channels/{}/messages", id),
+  auto meow = bot->rest.post(std::format(APIURL "/channels/{}/messages", id),
                              content);
   if(!meow.has_value() || meow->second != 200){
     Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
@@ -68,7 +68,7 @@ std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_vi
 }
 
 std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content, const std::string& boundary){
-  auto meow = bot->rest.sendFormData(std::format("https://discord.com/api/v10/channels/{}/messages", id),
+  auto meow = bot->rest.sendFormData(std::format(APIURL "/channels/{}/messages", id),
                              content,
                              boundary,
                              "POST");

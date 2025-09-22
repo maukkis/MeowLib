@@ -8,7 +8,7 @@
 #include <vector>
 #include <expected>
 #include <string_view>
-
+#define APIURL "https://discord.com/api/v10"
 
 
 class NyaBot;

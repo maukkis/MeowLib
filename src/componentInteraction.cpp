@@ -17,7 +17,7 @@ std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(Message
     j["data"] = a.generate();
     auto payload = makeFormData(j, "woof", a.attachments);
     auto res =
-      bot->rest.sendFormData(std::format("https://discord.com/api/v10/interactions/{}/{}/callback",
+      bot->rest.sendFormData(std::format(APIURL "/interactions/{}/{}/callback",
                                          interactionId,
                                          interactionToken),
                              payload,
