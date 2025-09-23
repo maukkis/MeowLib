@@ -183,7 +183,6 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
 
 void NyaBot::interaction(nlohmann::json j){
   j = j["d"];
-  Log::dbg(j.dump());
   int type = j["type"];
   switch(type){
     case APPLICATION_COMMAND:
