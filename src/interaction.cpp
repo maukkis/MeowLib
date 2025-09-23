@@ -14,10 +14,12 @@ Interaction::Interaction(
   const std::string_view token,
   const std::string_view commandNamee,
   User user,
+  const std::string& guildId,
   const std::string& applicationId,
   NyaBot *bot
 ) : commandName{commandNamee},
     user{user},
+    guildId{guildId},
     bot(bot),
     interactionId{id},
     interactionToken{token},

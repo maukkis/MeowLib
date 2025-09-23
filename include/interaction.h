@@ -6,6 +6,7 @@
 #include <utility>
 #include <map>
 #include <nlohmann/json.hpp>
+#include "guild.h"
 #include "message.h"
 #include "modal.h"
 #include "user.h"
@@ -43,6 +44,7 @@ public:
               const std::string_view token,
               const std::string_view commandName,
               User user,
+              const std::string& guildId,
               const std::string& applicationId,
               NyaBot *bot);
   ///
@@ -87,6 +89,7 @@ public:
   std::expected<std::nullopt_t, Error> createFollowUpMessage(const std::string_view msg, int flags = 0);
   const std::string commandName;
   const User user;
+  const std::string guildId;
   NyaBot *bot;
   const std::string interactionId;
 protected:
