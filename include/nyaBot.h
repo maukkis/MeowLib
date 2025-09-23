@@ -45,6 +45,9 @@ struct Funs {
   std::function<void(ButtonInteraction&)> onButtonF = {};
   std::function<void(SelectInteraction&)> onSelectF = {};
   std::function<void(ModalInteraction&)> onModalF = {};
+  std::function<void(Message&)> onMessageCreateF = {};
+  std::function<void(Message&)> onMessageUpdateF = {};
+  std::function<void(MessageDelete&)> onMessageDeleteF = {};
 };
 
 
@@ -135,6 +138,9 @@ public:
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);
   void onModalSubmit(std::function<void(ModalInteraction&)> f);
+  void onMessageCreate(std::function<void(Message&)> f);
+  void onMessageUpdate(std::function<void(Message&)> f);
+  void onMessageDelete(std::function<void(MessageDelete&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -166,6 +172,7 @@ private:
   void resumed(nlohmann::json j);
   void messageCreate(nlohmann::json j);
   void messageUpdate(nlohmann::json j);
+  void messageDelete(nlohmann::json j);
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -179,7 +186,8 @@ private:
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
     {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
     {"MESSAGE_CREATE", std::bind(&NyaBot::messageCreate, this, std::placeholders::_1)},
-    {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)}
+    {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
+    {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)}
   };
   
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;

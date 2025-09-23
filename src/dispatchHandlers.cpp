@@ -14,16 +14,40 @@ void NyaBot::ready(nlohmann::json j){
   api.resumeUrl = j["resume_gateway_url"];
   j = j["user"];
   api.appId = j["id"];
-  funs.onReadyF();
+  if(funs.onReadyF)
+    funs.onReadyF();
 }
 
 void NyaBot::resumed(nlohmann::json j){
-  Log::info("connection resumed! with sequence " + std::to_string(j["s"].get<long>()));
+  Log::info("connection resumed with sequence " + std::to_string(j["s"].get<long>()));
 }
 
-// this is a placeholder do not mind this
-void NyaBot::messageCreate([[maybe_unused]]nlohmann::json j){}
-void NyaBot::messageUpdate([[maybe_unused]]nlohmann::json j){}
+
+void NyaBot::messageCreate(nlohmann::json j){
+  Message msg(j["d"]);
+  if(funs.onMessageCreateF)
+    funs.onMessageCreateF(msg);
+}
+
+
+void NyaBot::messageUpdate(nlohmann::json j){
+  Message msg(j["d"]);
+  if(funs.onMessageUpdateF)
+    funs.onMessageUpdateF(msg);
+}
+
+void NyaBot::messageDelete(nlohmann::json j){
+  j = j["d"];
+  MessageDelete a
+    {
+      .id = j["id"],
+      .channelId = j["channel_id"],
+      .guildId = j.contains("guild_id") ? std::make_optional(j["guild_id"]) : std::nullopt
+    };
+  if(funs.onMessageDeleteF)
+    funs.onMessageDeleteF(a);
+}
+
 namespace {
 
 InteractionData deserializeInteractionData(nlohmann::json& j){
@@ -166,7 +190,8 @@ void NyaBot::interaction(nlohmann::json j){
         if(commands.contains(slash.commandName)){
           commands[slash.commandName]->onCommand(slash);
         }
-        else { // command doesnt have a command handler sending it to the default handler
+        else if(funs.onSlashF) { // command doesnt have a command handler sending it to the default handler
+
           funs.onSlashF(slash);
         }
         break;

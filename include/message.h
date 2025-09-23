@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include "user.h"
 #include <vector>
 #include <memory>
 #include <expected>
@@ -16,10 +17,18 @@
 class NyaBot;
 
 
+struct MessageDelete {
+  std::string id;
+  std::string channelId;
+  std::optional<std::string> guildId;
+};
+
+
 class Message {
 public:
   nlohmann::json generate() const;
   Message() = default;
+  Message(const nlohmann::json& j);
   Message(Message&&) = default;
   template<typename T>
   requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
@@ -31,9 +40,16 @@ public:
   Message& setMessageFlags(int flags);
   Message& setContent(const std::string_view a);
   std::vector<Attachment> attachments;
-private:
   std::string content;
+  std::string id;
   int msgflags = 0;
+  std::string timestamp;
+  bool mentionEveryone;
+  User author;
+  std::string channelId;
+  // ONLY FOR GATEWAY MESSAGE EVENTS
+  std::optional<std::string> guildId;
+private:
   std::vector<std::unique_ptr<Component>> components;
 };
 
@@ -44,14 +60,14 @@ public:
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param content message content
-  std::expected<std::nullopt_t, Error> create(const std::string_view id, const std::string_view content);
+  std::expected<Message, Error> create(const std::string_view id, const std::string_view content);
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param msg Message object
-  std::expected<std::nullopt_t, Error> create(const std::string_view id, const Message& msg);
+  std::expected<Message, Error> create(const std::string_view id, const Message& msg);
 private:
-  std::expected<std::nullopt_t, Error> send(const std::string_view id, const std::string& content);
-  std::expected<std::nullopt_t, Error> send(const std::string_view id, const std::string& content, const std::string& boundary);
+  std::expected<std::string, Error> send(const std::string_view id, const std::string& content);
+  std::expected<std::string, Error> send(const std::string_view id, const std::string& content, const std::string& boundary);
   NyaBot *bot;
 };
 

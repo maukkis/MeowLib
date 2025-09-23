@@ -7,6 +7,19 @@
 
 
 
+Message::Message(const nlohmann::json& j){
+  content = j["content"];
+  msgflags = j["flags"];
+  mentionEveryone = j["mention_everyone"];
+  channelId = j["channel_id"];
+  if(!j["author"].contains("webhook_id"))
+    author = deserializeUser(j["author"]);
+  if(j.contains("member"))
+    author.guild = deserializeGuildUser(j["member"]);
+  if(j.contains("guild_id"))
+    guildId = j["guild_id"];
+  id = j["id"];
+}
 
 nlohmann::json Message::generate() const {
   nlohmann::json j;
@@ -42,32 +55,43 @@ Message& Message::setMessageFlags(int msgflags){
 MessageApiRoutes::MessageApiRoutes(NyaBot *bot) : bot{bot}{}
 
 
-std::expected<std::nullopt_t, Error> MessageApiRoutes::create(const std::string_view id, const std::string_view content){
+std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id, const std::string_view content){
   nlohmann::json j;
   j["content"] = content;
-  return send(id, j.dump()); 
+
+  return send(id, j.dump()).and_then([](std::expected<std::string, Error> a){
+    return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+  });
+
 }
 
-std::expected<std::nullopt_t, Error> MessageApiRoutes::create(const std::string_view id, const Message& a){
+std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id, const Message& a){
   if(!a.attachments.empty()){
     auto payload = makeFormData(a.generate(), "woof", a.attachments);
-    return send(id, payload, "woof");
+
+    return send(id, payload, "woof").and_then([](std::expected<std::string, Error> a){
+      return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+    });
+
   } else {
-    return send(id, a.generate().dump());
+    return send(id, a.generate().dump()).and_then([](std::expected<std::string, Error> a){
+      return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+    });
+
   }
 }
 
-std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content){
+std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content){
   auto meow = bot->rest.post(std::format(APIURL "/channels/{}/messages", id),
                              content);
   if(!meow.has_value() || meow->second != 200){
     Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
     return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
   }
-  return std::nullopt;
+  return meow->first;
 }
 
-std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content, const std::string& boundary){
+std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content, const std::string& boundary){
   auto meow = bot->rest.sendFormData(std::format(APIURL "/channels/{}/messages", id),
                              content,
                              boundary,
@@ -76,5 +100,5 @@ std::expected<std::nullopt_t, Error> MessageApiRoutes::send(const std::string_vi
     Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
     return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
   }
-  return std::nullopt;
+  return meow->first;
 }

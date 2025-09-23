@@ -27,3 +27,15 @@ void NyaBot::onSelectInteraction(std::function<void(SelectInteraction&)> f){
 void NyaBot::onModalSubmit(std::function<void(ModalInteraction&)> f){
   funs.onModalF = f;
 }
+
+void NyaBot::onMessageCreate(std::function<void(Message&)> f){
+  funs.onMessageCreateF = f;
+}
+
+void NyaBot::onMessageUpdate(std::function<void(Message&)> f){
+  funs.onMessageUpdateF = f;
+}
+
+void NyaBot::onMessageDelete(std::function<void(MessageDelete&)> f){
+  funs.onMessageDeleteF = f;
+}

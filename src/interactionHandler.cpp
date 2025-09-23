@@ -3,7 +3,7 @@
 void NyaBot::routeInteraction(ButtonInteraction& interaction){
   if(iCallbacks.buttonInteractionTable.contains(interaction.commandName))
     iCallbacks.buttonInteractionTable[interaction.commandName](interaction);
-  else
+  else if(funs.onButtonF)
     funs.onButtonF(interaction);
 }
 
@@ -11,7 +11,7 @@ void NyaBot::routeInteraction(ButtonInteraction& interaction){
 void NyaBot::routeInteraction(SelectInteraction& interaction){
   if(iCallbacks.selectInteractionTable.contains(interaction.commandName))
     iCallbacks.selectInteractionTable[interaction.commandName](interaction);
-  else
+  else if(funs.onSelectF)
     funs.onSelectF(interaction);
 }
 
@@ -19,7 +19,7 @@ void NyaBot::routeInteraction(SelectInteraction& interaction){
 void NyaBot::routeInteraction(ModalInteraction& interaction){
   if(iCallbacks.modalInteractionTable.contains(interaction.commandName))
     iCallbacks.modalInteractionTable[interaction.commandName](interaction);
-  else
+  else if(funs.onModalF)
     funs.onModalF(interaction);
 }
 
