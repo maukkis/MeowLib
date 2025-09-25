@@ -46,6 +46,7 @@ public:
   std::string timestamp;
   bool mentionEveryone;
   User author;
+  std::optional<std::string> webhookId;
   std::string channelId;
   // ONLY FOR GATEWAY MESSAGE EVENTS
   std::optional<std::string> guildId;

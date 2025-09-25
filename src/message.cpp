@@ -12,8 +12,9 @@ Message::Message(const nlohmann::json& j){
   msgflags = j["flags"];
   mentionEveryone = j["mention_everyone"];
   channelId = j["channel_id"];
-  if(!j["author"].contains("webhook_id"))
-    author = deserializeUser(j["author"]);
+  if(j.contains("webhook_id"))
+    webhookId = j["webhook_id"];
+  author = deserializeUser(j["author"]);
   if(j.contains("member"))
     author.guild = deserializeGuildUser(j["member"]);
   if(j.contains("guild_id"))
