@@ -5,6 +5,24 @@
 #include "../include/nyaBot.h"
 
 
+MessageReaction::MessageReaction(const nlohmann::json& j){
+  userId = j["user_id"];
+  channelId = j["channel_id"];
+  messageId = j["message_id"];
+  if(j.contains("guild_id"))
+    guildId = j["guild_id"];
+  if(j.contains("member")){
+    member = deserializeUser(j["member"]["user"]);
+    member->guild = deserializeGuildUser(j["member"]);
+  }
+  emoji = deserializeEmoji(j["emoji"]);
+  if(j.contains("message_author_id"))
+    messageAuthorId = j["message_author_id"];
+  burst = j["burst"];
+  if(burst)
+    burst_colors = j["burst_colors"].get<std::vector<std::string>>();
+  type = static_cast<MessageReactionTypes>(j["type"].get<int>());
+}
 
 
 Message::Message(const nlohmann::json& j){

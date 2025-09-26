@@ -24,29 +24,48 @@ void NyaBot::resumed(nlohmann::json j){
 
 
 void NyaBot::messageCreate(nlohmann::json j){
-  Message msg(j["d"]);
-  if(funs.onMessageCreateF)
+  if(funs.onMessageCreateF){
+    Message msg(j["d"]);
     funs.onMessageCreateF(msg);
+  }
 }
 
 
 void NyaBot::messageUpdate(nlohmann::json j){
-  Message msg(j["d"]);
-  if(funs.onMessageUpdateF)
+  if(funs.onMessageUpdateF){
+    Message msg(j["d"]);
     funs.onMessageUpdateF(msg);
+  }
 }
 
 void NyaBot::messageDelete(nlohmann::json j){
-  j = j["d"];
-  MessageDelete a
-    {
-      .id = j["id"],
-      .channelId = j["channel_id"],
-      .guildId = j.contains("guild_id") ? std::make_optional(j["guild_id"]) : std::nullopt
-    };
-  if(funs.onMessageDeleteF)
+  if(funs.onMessageDeleteF){
+    j = j["d"];
+    MessageDelete a
+      {
+        .id = j["id"],
+        .channelId = j["channel_id"],
+        .guildId = j.contains("guild_id") ? std::make_optional(j["guild_id"]) : std::nullopt
+      };
     funs.onMessageDeleteF(a);
+  }
 }
+
+
+void NyaBot::messageReactionAdd(nlohmann::json j){
+  if(funs.onMessageReactionAdd){
+    MessageReaction a(j["d"]);
+    funs.onMessageReactionAdd(a);
+  }
+}
+
+void NyaBot::guildCreate(nlohmann::json j){
+  if(funs.onGuildCreate){
+    Guild a = deserializeGuild(j["d"]);
+    funs.onGuildCreate(a);;
+  }
+}
+
 
 namespace {
 

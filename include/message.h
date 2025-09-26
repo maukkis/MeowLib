@@ -10,6 +10,7 @@
 #include "user.h"
 #include <vector>
 #include <memory>
+#include "emoji.h"
 #include <expected>
 #include "error.h"
 
@@ -21,6 +22,25 @@ struct MessageDelete {
   std::string id;
   std::string channelId;
   std::optional<std::string> guildId;
+};
+
+enum class MessageReactionTypes {
+  NORMAL,
+  BURST
+};
+
+struct MessageReaction {
+  MessageReaction(const nlohmann::json& j);
+  std::string userId;
+  std::string channelId;
+  std::string messageId;
+  std::optional<std::string> guildId = std::nullopt;
+  std::optional<User> member = std::nullopt;
+  Emoji emoji;
+  std::optional<std::string> messageAuthorId = std::nullopt;
+  bool burst;
+  std::optional<std::vector<std::string>> burst_colors = std::nullopt;
+  MessageReactionTypes type;
 };
 
 

@@ -48,6 +48,8 @@ struct Funs {
   std::function<void(Message&)> onMessageCreateF = {};
   std::function<void(Message&)> onMessageUpdateF = {};
   std::function<void(MessageDelete&)> onMessageDeleteF = {};
+  std::function<void(MessageReaction&)> onMessageReactionAdd = {};
+  std::function<void(Guild&)> onGuildCreate = {};
 };
 
 
@@ -141,6 +143,8 @@ public:
   void onMessageCreate(std::function<void(Message&)> f);
   void onMessageUpdate(std::function<void(Message&)> f);
   void onMessageDelete(std::function<void(MessageDelete&)> f);
+  void onMessageReactionAdd(std::function<void(MessageReaction&)> f);
+  void onGuildCreate(std::function<void(Guild&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -173,6 +177,8 @@ private:
   void messageCreate(nlohmann::json j);
   void messageUpdate(nlohmann::json j);
   void messageDelete(nlohmann::json j);
+  void messageReactionAdd(nlohmann::json j);
+  void guildCreate(nlohmann::json j);
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -187,7 +193,9 @@ private:
     {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
     {"MESSAGE_CREATE", std::bind(&NyaBot::messageCreate, this, std::placeholders::_1)},
     {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
-    {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)}
+    {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)},
+    {"GUILD_CREATE", std::bind(&NyaBot::guildCreate, this, std::placeholders::_1)},
+    {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)}
   };
   
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;

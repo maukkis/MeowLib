@@ -39,3 +39,11 @@ void NyaBot::onMessageUpdate(std::function<void(Message&)> f){
 void NyaBot::onMessageDelete(std::function<void(MessageDelete&)> f){
   funs.onMessageDeleteF = f;
 }
+
+void NyaBot::onMessageReactionAdd(std::function<void(MessageReaction&)> f){
+  funs.onMessageReactionAdd = f;
+}
+
+void NyaBot::onGuildCreate(std::function<void(Guild&)> f){
+  funs.onGuildCreate = f;
+}
