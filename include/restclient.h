@@ -13,7 +13,7 @@
 
 class NyaBot;
 
-constexpr std::string_view UserAgent {R"(DiscordBot (https://git.girlsmell.xyz/luna/MeowLib, 0.1.0))"};
+constexpr std::string_view UserAgent {R"(DiscordBot (https://git.girlsmell.xyz/luna/MeowLib, 0.2.0))"};
 
 // TODO: add rest of the errors here
 enum class RestErrors {
