@@ -84,6 +84,7 @@ User deserializeUser(const nlohmann::json& j){
     .discriminator = j["discriminator"],
     .globalName = j["global_name"].is_null() ? "" : j["global_name"],
     .username = j["username"],
+    .bot = j.contains("bot") ? j["bot"].get<bool>() : false,
     .primaryGuild = j.contains("primary_guild") &&
       !j["primary_guild"].is_null() &&
       !j["primary_guild"]["identity_guild_id"].is_null() ?

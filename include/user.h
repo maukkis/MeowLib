@@ -31,6 +31,7 @@ struct User {
   std::string discriminator;
   std::string globalName;
   std::string username;
+  bool bot = false;
   std::optional<GuildUser> guild = std::nullopt;
   std::optional<PrimaryGuild> primaryGuild = std::nullopt;
 };
