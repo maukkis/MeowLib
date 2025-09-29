@@ -4,6 +4,19 @@
 #include "../include/nyaBot.h"
 
 
+UnavailableGuild deserializeUnavailableGuild(const nlohmann::json& j){
+  return {
+    .id = j["id"],
+    .unavailable = j["unavailable"]
+  };
+}
+
+GuildBan deserializeGuildBan(const nlohmann::json& j){
+  return {
+    .guildId = j["guild_id"],
+    .user = deserializeUser(j["user"])
+  };
+}
 
 Guild deserializeGuild(const nlohmann::json& j){
   Guild g;

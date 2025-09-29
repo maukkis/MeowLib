@@ -31,8 +31,8 @@ void NyaBot::messageDelete(nlohmann::json j){
 
 
 void NyaBot::messageReactionAdd(nlohmann::json j){
-  if(funs.onMessageReactionAdd){
+  if(funs.onMessageReactionAddF){
     MessageReaction a(j["d"]);
-    funs.onMessageReactionAdd(a);
+    funs.onMessageReactionAddF(a);
   }
 }

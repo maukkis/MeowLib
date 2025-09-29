@@ -1,14 +1,29 @@
 #ifndef _INCLUDE_GUILD_H
 #define _INCLUDE_GUILD_H
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
 #include "emoji.h"
 #include "error.h"
 #include <expected>
-#include <nlohmann/json.hpp>
 #include <string_view>
 #include "role.h"
 class NyaBot;
+
+
+struct GuildBan {
+  std::string guildId;
+  User user;
+};
+
+GuildBan deserializeGuildBan(const nlohmann::json& j);
+
+struct UnavailableGuild {
+  std::string id;
+  bool unavailable;
+};
+
+UnavailableGuild deserializeUnavailableGuild(const nlohmann::json& j);
 
 struct GuildPreview{
   std::string id;
