@@ -2,6 +2,7 @@
 #define nyaBot_H
 #include "../meowHttp/src/includes/websocket.h"
 #include "buttonInteraction.h"
+#include "channel.h"
 #include "emoji.h"
 #include "guild.h"
 #include "message.h"
@@ -45,11 +46,19 @@ struct Funs {
   std::function<void(ButtonInteraction&)> onButtonF = {};
   std::function<void(SelectInteraction&)> onSelectF = {};
   std::function<void(ModalInteraction&)> onModalF = {};
+
+
   std::function<void(Message&)> onMessageCreateF = {};
   std::function<void(Message&)> onMessageUpdateF = {};
   std::function<void(MessageDelete&)> onMessageDeleteF = {};
   std::function<void(MessageReaction&)> onMessageReactionAdd = {};
-  std::function<void(Guild&)> onGuildCreate = {};
+
+  std::function<void(Guild&)> onGuildCreateF = {};
+
+
+  std::function<void(Channel&)> onChannelCreateF = {};
+  std::function<void(Channel&)> onChannelUpdateF = {};
+  std::function<void(Channel&)> onChannelDeleteF = {};
 };
 
 
@@ -140,11 +149,17 @@ public:
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);
   void onModalSubmit(std::function<void(ModalInteraction&)> f);
+
   void onMessageCreate(std::function<void(Message&)> f);
   void onMessageUpdate(std::function<void(Message&)> f);
   void onMessageDelete(std::function<void(MessageDelete&)> f);
   void onMessageReactionAdd(std::function<void(MessageReaction&)> f);
+
   void onGuildCreate(std::function<void(Guild&)> f);
+
+  void onChannelCreate(std::function<void(Channel&)> f);
+  void onChannelUpdate(std::function<void(Channel&)> f);
+  void onChannelDelete(std::function<void(Channel&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -171,14 +186,22 @@ private:
   void routeInteraction(ButtonInteraction& interaction);
   void routeInteraction(SelectInteraction& interaction);
   void routeInteraction(ModalInteraction& interaction);
+
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
   void resumed(nlohmann::json j);
+
   void messageCreate(nlohmann::json j);
   void messageUpdate(nlohmann::json j);
   void messageDelete(nlohmann::json j);
   void messageReactionAdd(nlohmann::json j);
+
   void guildCreate(nlohmann::json j);
+
+  void channelCreate(nlohmann::json j);
+  void channelUpdate(nlohmann::json j);
+  void channelDelete(nlohmann::json j);
+
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -195,7 +218,10 @@ private:
     {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
     {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)},
     {"GUILD_CREATE", std::bind(&NyaBot::guildCreate, this, std::placeholders::_1)},
-    {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)}
+    {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
+    {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
+    {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
+    {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)}
   };
   
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;

@@ -1,70 +1,10 @@
-#include "../include/nyaBot.h"
-#include <string>
-#include <type_traits>
+#include "../../include/nyaBot.h"
+#include "../../include/buttonInteraction.h"
+#include "../../include/selectInteraction.h"
+#include "../../include/modalInteraction.h"
 #include <unordered_map>
 #include <unordered_set>
-#include "../include/buttonInteraction.h"
-#include "../include/selectInteraction.h"
-#include "../include/modalInteraction.h"
-
-
-void NyaBot::ready(nlohmann::json j){
-  j = j["d"];
-  api.sesId = j["session_id"];
-  api.resumeUrl = j["resume_gateway_url"];
-  j = j["user"];
-  api.appId = j["id"];
-  if(funs.onReadyF)
-    funs.onReadyF();
-}
-
-void NyaBot::resumed(nlohmann::json j){
-  Log::info("connection resumed with sequence " + std::to_string(j["s"].get<long>()));
-}
-
-
-void NyaBot::messageCreate(nlohmann::json j){
-  if(funs.onMessageCreateF){
-    Message msg(j["d"]);
-    funs.onMessageCreateF(msg);
-  }
-}
-
-
-void NyaBot::messageUpdate(nlohmann::json j){
-  if(funs.onMessageUpdateF){
-    Message msg(j["d"]);
-    funs.onMessageUpdateF(msg);
-  }
-}
-
-void NyaBot::messageDelete(nlohmann::json j){
-  if(funs.onMessageDeleteF){
-    j = j["d"];
-    MessageDelete a
-      {
-        .id = j["id"],
-        .channelId = j["channel_id"],
-        .guildId = j.contains("guild_id") ? std::make_optional(j["guild_id"]) : std::nullopt
-      };
-    funs.onMessageDeleteF(a);
-  }
-}
-
-
-void NyaBot::messageReactionAdd(nlohmann::json j){
-  if(funs.onMessageReactionAdd){
-    MessageReaction a(j["d"]);
-    funs.onMessageReactionAdd(a);
-  }
-}
-
-void NyaBot::guildCreate(nlohmann::json j){
-  if(funs.onGuildCreate){
-    Guild a = deserializeGuild(j["d"]);
-    funs.onGuildCreate(a);;
-  }
-}
+#include <string>
 
 
 namespace {
