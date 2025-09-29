@@ -60,12 +60,13 @@ NyaBot::~NyaBot(){
 
 void NyaBot::connect(){
   int timeToWait = 5;
-  for(int attempts = 0; attempts < 5; ++attempts, timeToWait *= 2){
+  for(int attempts = 0; attempts < retryAmount; ++attempts, timeToWait *= 2){
     if(handle.perform() == OK){
       Log::dbg("connected to the websocket succesfully!");
       return;
     }
     else {
+      if(timeToWait > 300) timeToWait = 300;
       Log::error("failed to connect to the gateway waiting " + std::to_string(timeToWait) + " seconds");
       std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
     }

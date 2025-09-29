@@ -68,6 +68,8 @@ RestClient::sendRawData(const std::string& endpoint,
                         const std::vector<std::string>& headers,
                         const std::optional<std::string>& data)
 {
+  int retryCount = 0;
+  int timeToWait = 5;
   while(true){
     if(rtl.globalLimit){
       Log::warn("we are being globally ratelimited!");
@@ -91,7 +93,15 @@ RestClient::sendRawData(const std::string& endpoint,
     for(const auto& a : headers)
       meow.setHeader(a);
     if(meow.perform() != OK){
-      return std::unexpected(RestErrors::IOERR);
+      if(retryCount > bot->retryAmount)
+        return std::unexpected(RestErrors::IOERR);
+      ++retryCount;
+      if(timeToWait > 300) timeToWait = 300;
+      Log::error("failed to send a http request to endpoint " + endpoint);
+      Log::error("waiting for " + std::to_string(timeToWait) + " seconds before retrying");
+      std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
+      timeToWait *= 2;
+      continue;
     }
     if(meow.getLastStatusCode() == 429){
       if(meow.headers["x-ratelimit-global"] == "true"){

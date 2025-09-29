@@ -133,6 +133,12 @@ public:
   void enableDebugLogging(){
     Log::enabled = true;
   }
+  
+  ///@brief sets the amount of times to retry a failed request due to an I/O error
+  ///@param amount amount to set
+  void setRetryAmount(int amount){
+    retryAmount = amount;
+  }
 
   template<CommandHandler Command, typename... Args>
   void addCommandHandler(const std::string& commandName, Args&&... args){
@@ -223,13 +229,13 @@ private:
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
     {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)}
   };
-  
+
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
   Funs funs;
   ImportantApiStuff api;
   InteractionCallbacks iCallbacks;
   ThreadSafeQueue<std::string> queue;
-
+  int retryAmount = 5;
   std::vector<SlashCommand> slashs;
   friend RestClient;
   friend EmojiApiRoutes;
