@@ -25,6 +25,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
+#include "typingstart.h"
 #include "user.h"
 
 
@@ -65,6 +66,8 @@ struct Funs {
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
   std::function<void(Channel&)> onChannelDeleteF = {};
+
+  std::function<void(TypingStart&)> onTypingStartF = {};
 };
 
 
@@ -179,6 +182,9 @@ public:
   void onChannelCreate(std::function<void(Channel&)> f);
   void onChannelUpdate(std::function<void(Channel&)> f);
   void onChannelDelete(std::function<void(Channel&)> f);
+
+
+  void onTypingStart(std::function<void(TypingStart&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -228,6 +234,8 @@ private:
   void channelUpdate(nlohmann::json j);
   void channelDelete(nlohmann::json j);
 
+  void typingStart(nlohmann::json j);
+
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -254,7 +262,8 @@ private:
     {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
-    {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)}
+    {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)},
+    {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;

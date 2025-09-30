@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _INCLUDE_CHANNEL_H
 #define _INCLUDE_CHANNEL_H
 #include <nlohmann/json.hpp>
@@ -28,6 +29,7 @@ struct Channel {
   std::optional<std::string> name;
   std::optional<std::string> topic;
 };
+
 
 Channel deserializeChannel(const nlohmann::json& j);
 

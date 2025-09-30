@@ -87,3 +87,7 @@ void NyaBot::onChannelUpdate(std::function<void(Channel&)> f){
 void NyaBot::onChannelDelete(std::function<void(Channel&)> f){
   funs.onChannelDeleteF = f;
 }
+
+void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
+  funs.onTypingStartF = f;
+}
