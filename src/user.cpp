@@ -2,6 +2,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string_view>
+#include <format>
 #include "../include/nyaBot.h"
 #include "../include/helpers.h"
 
@@ -26,7 +27,7 @@ std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id)
   nlohmann::json j;
   j["recipient_id"] = id;
   auto res = bot->rest.post(
-    std::format("https://discord.com/api/v10/users/@me/channels"),
+    std::format(APIURL "/users/@me/channels"),
     j.dump()
   );
   if(!res.has_value() || res->second != 200){

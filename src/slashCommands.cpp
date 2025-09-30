@@ -2,6 +2,7 @@
 #include "../include/nyaBot.h"
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
+#include <format>
 
 
 SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 

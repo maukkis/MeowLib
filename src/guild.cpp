@@ -1,6 +1,7 @@
 #include "../include/guild.h"
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
+#include <format>
 #include "../include/nyaBot.h"
 
 

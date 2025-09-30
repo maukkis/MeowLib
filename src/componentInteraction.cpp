@@ -1,6 +1,7 @@
 #include "../include/componentInteraction.h"
 #include "../include/nyaBot.h"
 #include "../include/helpers.h"
+#include <format>
 
 
 std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(){

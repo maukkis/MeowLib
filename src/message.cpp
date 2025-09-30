@@ -2,6 +2,7 @@
 #include "../include/helpers.h"
 #include <optional>
 #include <string_view>
+#include <format>
 #include "../include/nyaBot.h"
 
 
