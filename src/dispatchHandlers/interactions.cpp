@@ -40,13 +40,14 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
     user = deserializeUser(json["member"]["user"]);
     user.guild = deserializeGuildUser(json["member"]);
   } else user = deserializeUser(json["user"]);
-  std::string guildId = json["guild_id"];
-  json = json["data"];
-  const std::string commandName = json["name"];
-  SlashCommandInt slash(id, interactionToken, commandName, user, guildId, appId, a);
-  slash.resolvedUsers = deserializeResolved<User>(json);
-  if(json.find("options") != json.end()){
-    for (const auto& it : json["options"]){
+  
+  const std::string commandName = json["data"]["name"];
+  SlashCommandInt slash(id, interactionToken, commandName, user, appId, a);
+  if(json.contains("guild_id"))
+    slash.guildId = json["guild_id"];
+  slash.resolvedUsers = deserializeResolved<User>(json["data"]);
+  if(json["data"].contains("options")){
+    for (const auto& it : json["data"]["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
     }
   }
@@ -64,7 +65,9 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
     user.guild = deserializeGuildUser(j["member"]);
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  ButtonInteraction button(id, interactionToken, name, user, j["guild_id"], j["application_id"], a);
+  ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
+  if(j.contains("guild_id"))
+    button.guildId = j["guild_id"];
   button.interaction = deserializeInteractionData(j);
   button.id = j["data"]["id"].get<int>();
   return button;
@@ -80,7 +83,8 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
     user.guild = deserializeGuildUser(j["member"]);
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  ModalInteraction modal(id, interactionToken, name, user, j["guild_id"], j["application_id"], a);
+  ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
+  modal.guildId = j["guild_id"];
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   for(auto& a : j["data"]["components"]){
     if(!a.contains("component")) continue;
@@ -125,7 +129,9 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
     user.guild = deserializeGuildUser(j["member"]);
   } else user = deserializeUser(j["user"]);
   const std::string& name = j["data"]["custom_id"];
-  SelectInteraction select(id, token, name, user, j["guild_id"], j["application_id"], a);
+  SelectInteraction select(id, token, name, user, j["application_id"], a);
+  if(j.contains("guild_id"))
+    select.guildId = j["guild_id"];
   select.interaction = deserializeInteractionData(j);
   select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
