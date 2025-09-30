@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25.1)
 
-project(nyaBot
+project(MeowLib
 DESCRIPTION "simple discord bot library written in C++"
 VERSION 0.2.0)
 find_package(nlohmann_json REQUIRED)
@@ -15,7 +15,7 @@ else()
   add_compile_options(-Wall -Werror -O3)
 endif()
 
-file(GLOB_RECURSE nyaBot_src "src/*.cpp")
+file(GLOB_RECURSE MeowLib_src "src/*.cpp")
 add_subdirectory(${PROJECT_SOURCE_DIR}/meowHttp)
-add_library(nyaBot ${nyaBot_src})
-target_link_libraries(nyaBot PRIVATE nlohmann_json::nlohmann_json meowHttp Threads::Threads)
+add_library(MeowLib ${MeowLib_src})
+target_link_libraries(MeowLib PRIVATE nlohmann_json::nlohmann_json meowHttp Threads::Threads)
