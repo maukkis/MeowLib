@@ -3,6 +3,7 @@
 #include <cstdio>
 #if defined (_AIX)
 #include <format>
+#include <iostream>
 #else
 #include <print>
 #endif
