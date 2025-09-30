@@ -64,6 +64,18 @@ void NyaBot::onGuildBanRemove(std::function<void(GuildBan&)> f){
   funs.onGuildBanRemoveF = f;
 }
 
+void NyaBot::onGuildMemberRemove(std::function<void(User&)> f){
+  funs.onGuildMemberRemoveF = f;
+}
+
+void NyaBot::onGuildMemberAdd(std::function<void(User&)> f){
+  funs.onGuildMemberAddF = f;
+}
+
+void NyaBot::onGuildMemberUpdate(std::function<void(User&)> f){
+  funs.onGuildMemberUpdateF = f;
+}
+
 void NyaBot::onChannelCreate(std::function<void(Channel&)> f){
   funs.onChannelCreateF = f;
 }

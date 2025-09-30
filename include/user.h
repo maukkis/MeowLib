@@ -19,10 +19,12 @@ struct PrimaryGuild {
 
 
 struct GuildUser {
-  std::string nick;
-  std::string avatar;
-  std::string banner;
+  std::optional<std::string> nick = std::nullopt;
+  std::optional<std::string> avatar = std::nullopt;
+  std::optional<std::string> banner = std::nullopt;
   std::vector<std::string> roles;
+  // only for guild member gw events
+  std::optional<std::string> guildId = std::nullopt;
 };
 
 struct User {

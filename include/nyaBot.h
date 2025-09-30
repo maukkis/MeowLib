@@ -58,7 +58,9 @@ struct Funs {
   std::function<void(UnavailableGuild&)> onGuildDeleteF = {};
   std::function<void(GuildBan&)> onGuildBanAddF = {};
   std::function<void(GuildBan&)> onGuildBanRemoveF = {};
-
+  std::function<void(User&)> onGuildMemberRemoveF = {};
+  std::function<void(User&)> onGuildMemberAddF = {};
+  std::function<void(User&)> onGuildMemberUpdateF = {};
 
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
@@ -170,6 +172,9 @@ public:
   void onGuildDelete(std::function<void(UnavailableGuild&)> f);
   void onGuildBanAdd(std::function<void(GuildBan&)> f);
   void onGuildBanRemove(std::function<void(GuildBan&)> f);
+  void onGuildMemberRemove(std::function<void(User&)> f);
+  void onGuildMemberAdd(std::function<void(User&)> f);
+  void onGuildMemberUpdate(std::function<void(User&)> f);
 
   void onChannelCreate(std::function<void(Channel&)> f);
   void onChannelUpdate(std::function<void(Channel&)> f);
@@ -215,6 +220,9 @@ private:
   void guildDelete(nlohmann::json j);
   void guildBanAdd(nlohmann::json j);
   void guildBanRemove(nlohmann::json j);
+  void guildMemberRemove(nlohmann::json j);
+  void guildMemberAdd(nlohmann::json j);
+  void guildMemberUpdate(nlohmann::json j);
 
   void channelCreate(nlohmann::json j);
   void channelUpdate(nlohmann::json j);
@@ -240,6 +248,9 @@ private:
     {"GUILD_DELETE", std::bind(&NyaBot::guildDelete, this, std::placeholders::_1)},
     {"GUILD_BAN_ADD", std::bind(&NyaBot::guildBanAdd, this, std::placeholders::_1)},
     {"GUILD_BAN_REMOVE", std::bind(&NyaBot::guildBanRemove, this, std::placeholders::_1)},
+    {"GUILD_MEMBER_REMOVE", std::bind(&NyaBot::guildMemberRemove, this, std::placeholders::_1)},
+    {"GUILD_MEMBER_ADD", std::bind(&NyaBot::guildMemberAdd, this, std::placeholders::_1)},
+    {"GUILD_MEMBER_UPDATE", std::bind(&NyaBot::guildMemberUpdate, this, std::placeholders::_1)},
     {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},

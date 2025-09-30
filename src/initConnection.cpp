@@ -14,6 +14,9 @@ NyaBot::NyaBot(int intents){
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
   std::signal(SIGINT, NyaBot::signalHandler);
+  #ifndef NDEBUG
+    Log::info(std::string("MeowLib version: ") + MEOWLIB_VERSION + " with " + std::to_string(dispatchHandlers.size()) + " gw events implemented");
+  #endif
 }
 
 meow NyaBot::reconnect(bool resume){

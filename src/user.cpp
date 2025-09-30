@@ -70,9 +70,9 @@ std::expected<std::string, Error> UserApiRoutes::getReq(const std::string& endpo
 
 GuildUser deserializeGuildUser(const nlohmann::json &j){
   return {
-    .nick = j["nick"].is_null() ? "" : j["nick"],
-    .avatar = j["avatar"].is_null() ? "" : j["avatar"],
-    .banner = j["banner"].is_null() ? "" : j["banner"],
+    .nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]),
+    .avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]),
+    .banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]),
     .roles = j["roles"].get<std::vector<std::string>>()
   };
 }

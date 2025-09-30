@@ -37,3 +37,35 @@ void NyaBot::guildBanRemove(nlohmann::json j){
     funs.onGuildBanRemoveF(a);
   }
 }
+
+void NyaBot::guildMemberRemove(nlohmann::json j){
+  if(funs.onGuildMemberRemoveF){
+    User a = deserializeUser(j["d"]["user"]);
+    a.guild = GuildUser();
+    a.guild->guildId = j["d"]["guild_id"];
+    funs.onGuildMemberRemoveF(a);
+  }
+}
+
+
+void NyaBot::guildMemberAdd(nlohmann::json j){
+  if(funs.onGuildMemberAddF){
+    User a = deserializeUser(j["d"]["user"]);
+    a.guild = deserializeGuildUser(j["d"]);
+    a.guild->guildId = j["d"]["guild_id"];
+    funs.onGuildMemberAddF(a);
+  }
+
+}
+
+
+void NyaBot::guildMemberUpdate(nlohmann::json j){
+  if(funs.onGuildMemberUpdateF){
+    User a = deserializeUser(j["d"]["user"]);
+    a.guild = deserializeGuildUser(j["d"]);
+    a.guild->guildId = j["d"]["guild_id"];
+    funs.onGuildMemberUpdateF(a);
+  }
+}
+
+
