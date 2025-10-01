@@ -14,7 +14,7 @@
 class NyaBot;
 
 struct GuildMemberRequestData {
-  std::vector<User> users;
+  std::vector<User> users = {};
   std::move_only_function<void(std::vector<User> a)> callback;
 };
 

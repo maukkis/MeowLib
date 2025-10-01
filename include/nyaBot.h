@@ -113,8 +113,14 @@ enum Intents {
   DIRECT_MESSAGE_POLLS = 1 << 25
 };
 }
+
 template<typename T>
-concept CommandHandler = std::is_base_of_v<Command, T>;
+concept HasOnCommandImplemented = !std::is_same_v<decltype(&Command::onCommand), decltype(&T::onCommand)>;
+
+template<typename T>
+concept CommandHandler = std::is_base_of_v<Command, T> && HasOnCommandImplemented<T>;
+
+
 
 
 class NyaBot {
@@ -140,6 +146,13 @@ public:
     commands[commandName] = std::move(p);
   }
 
+
+  template<CommandHandler Command, typename... Args>
+  void addCommandHandler(const std::string& commandName, Args&&... args){
+    commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
+  }
+
+
   void enableDebugLogging(){
     Log::enabled = true;
   }
@@ -150,10 +163,7 @@ public:
     retryAmount = amount;
   }
 
-  template<CommandHandler Command, typename... Args>
-  void addCommandHandler(const std::string& commandName, Args&&... args){
-    commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
-  }
+
   ///
   /// @brief changes the presence of the bot user the gateway connection must be on ready state for this to be called
   /// @param p presence object
