@@ -9,6 +9,7 @@
 #include "modalInteraction.h"
 #include "queue.h"
 #include "restclient.h"
+#include "automod.h"
 #include "selectInteraction.h"
 #include "slashCommandInt.h"
 #include "presence.h"
@@ -223,6 +224,7 @@ public:
   GuildApiRoutes guild{this};
   EmojiApiRoutes emoji{this};
   MessageApiRoutes message{this};
+  AutoModApiRoutes automod{this};
 private:
   void listen();
   void connect();
