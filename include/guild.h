@@ -1,5 +1,6 @@
 #ifndef _INCLUDE_GUILD_H
 #define _INCLUDE_GUILD_H
+#include <functional>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
@@ -7,9 +8,15 @@
 #include "error.h"
 #include <expected>
 #include <string_view>
+#include <vector>
 #include "role.h"
+#include "user.h"
 class NyaBot;
 
+struct GuildMemberRequestData {
+  std::vector<User> users;
+  std::move_only_function<void(std::vector<User> a)> callback;
+};
 
 struct GuildBan {
   std::string guildId;

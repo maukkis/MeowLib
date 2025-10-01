@@ -1,4 +1,5 @@
 #include "../../include/nyaBot.h"
+#include <mutex>
 #include "../../include/guild.h"
 
 
@@ -69,3 +70,26 @@ void NyaBot::guildMemberUpdate(nlohmann::json j){
 }
 
 
+void NyaBot::guildMemberChunk(nlohmann::json j){
+  j = j["d"];
+  const auto& nonce = j["nonce"];
+  if(!guildMembersChunkTable.contains(nonce)){
+    Log::error("Unknown chunk received!!!");
+    return;
+  }
+  for(const auto& a : j["members"]){
+    User u = deserializeUser(a["user"]);
+    u.guild = deserializeGuildUser(a);
+    guildMembersChunkTable[nonce].users.emplace_back(u);
+  }
+  int index = j["chunk_index"];
+  int chunkCount = j["chunk_count"];
+  if(index == (chunkCount-1)){
+    Log::dbg("received all chunks");
+    guildMembersChunkTable[nonce].callback(std::move(guildMembersChunkTable[nonce].users));
+    std::unique_lock<std::mutex> lock (guildMemberChunkmtx); 
+    guildMembersChunkTable.erase(nonce);
+    return;
+  }
+  Log::dbg("expecting " + std::to_string(chunkCount - index) + " chunks");
+}

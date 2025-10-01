@@ -1,8 +1,11 @@
 #include "../include/guild.h"
+#include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <format>
+#include "../include/helpers.h"
 #include "../include/nyaBot.h"
+#include "../include/eventCodes.h"
 
 
 UnavailableGuild deserializeUnavailableGuild(const nlohmann::json& j){
@@ -18,6 +21,29 @@ GuildBan deserializeGuildBan(const nlohmann::json& j){
     .user = deserializeUser(j["user"])
   };
 }
+
+std::future<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view guildId,
+                                                           const std::string_view query,
+                                                           int limit)
+{
+  nlohmann::json j;
+  j["op"] = RequestGuildMember;
+  auto nonce = generate32ByteASCIINonce();
+  j["d"] = nlohmann::json::object();
+  j["d"]["nonce"] = nonce;
+  j["d"]["guild_id"] = guildId;
+  j["d"]["query"] = query;
+  j["d"]["limit"] = limit;
+  std::promise<std::vector<User>> promise;
+  auto fut = promise.get_future();
+  std::unique_lock<std::mutex> lock(guildMemberChunkmtx);
+  guildMembersChunkTable.insert({nonce, GuildMemberRequestData{.callback = [pro = std::move(promise)](std::vector<User> a) mutable {
+    pro.set_value(std::move(a));
+  }}});
+  queue.addToQueue(j.dump());
+  return fut;
+}
+
 
 Guild deserializeGuild(const nlohmann::json& j){
   Guild g;

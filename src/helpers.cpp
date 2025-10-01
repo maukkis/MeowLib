@@ -1,3 +1,4 @@
+#include <random>
 #include <string>
 #include <string_view>
 #include <format>
@@ -32,5 +33,17 @@ std::string& lower(std::string& a){
   std::transform(a.begin(), a.end(), a.begin(), [](char c){
     return std::tolower(c);
   });
+  return a;
+}
+
+std::string generate32ByteASCIINonce(){
+  static std::random_device dev;
+  static std::mt19937 rnd(dev());
+  static std::uniform_int_distribution<> distrib(33, 126);
+  std::string a;
+  a.reserve(32);
+  for(size_t i = 0; i < 32; ++i){
+    a += (distrib(rnd));
+  }
   return a;
 }

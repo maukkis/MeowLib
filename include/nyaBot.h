@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <expected>
 #include <functional>
+#include <future>
 #include <nlohmann/json_fwd.hpp>
 #include "error.h"
 #include <string>
@@ -198,6 +199,9 @@ public:
   
   void addInteractionCallback(const std::string_view s, std::function<void(ModalInteraction&)> f);
   std::expected<std::nullopt_t, Error> syncSlashCommands();
+  std::future<std::vector<User>> requestGuildMembers(const std::string_view guildId,
+                                                     const std::string_view query,
+                                                     const int limit);
   RestClient rest {this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
@@ -229,6 +233,7 @@ private:
   void guildMemberRemove(nlohmann::json j);
   void guildMemberAdd(nlohmann::json j);
   void guildMemberUpdate(nlohmann::json j);
+  void guildMemberChunk(nlohmann::json j);
 
   void channelCreate(nlohmann::json j);
   void channelUpdate(nlohmann::json j);
@@ -259,6 +264,7 @@ private:
     {"GUILD_MEMBER_REMOVE", std::bind(&NyaBot::guildMemberRemove, this, std::placeholders::_1)},
     {"GUILD_MEMBER_ADD", std::bind(&NyaBot::guildMemberAdd, this, std::placeholders::_1)},
     {"GUILD_MEMBER_UPDATE", std::bind(&NyaBot::guildMemberUpdate, this, std::placeholders::_1)},
+    {"GUILD_MEMBERS_CHUNK", std::bind(&NyaBot::guildMemberChunk, this, std::placeholders::_1)},
     {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
@@ -267,6 +273,9 @@ private:
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
+
+  std::mutex guildMemberChunkmtx;
+  std::unordered_map<std::string, GuildMemberRequestData> guildMembersChunkTable;
   Funs funs;
   ImportantApiStuff api;
   InteractionCallbacks iCallbacks;
