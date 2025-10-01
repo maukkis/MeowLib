@@ -199,6 +199,12 @@ public:
   
   void addInteractionCallback(const std::string_view s, std::function<void(ModalInteraction&)> f);
   std::expected<std::nullopt_t, Error> syncSlashCommands();
+
+  /// @brief request guild members from a guild from the gw
+  /// @param guildId guild to request from
+  /// @param query what the username has to start with leave as "" for all
+  /// @param limit max amount of members to receive leave 0 for no limit
+  /// @returns future to a std::vector<User> with the guild field filled up
   std::future<std::vector<User>> requestGuildMembers(const std::string_view guildId,
                                                      const std::string_view query,
                                                      const int limit);
