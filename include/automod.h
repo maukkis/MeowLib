@@ -34,7 +34,9 @@ enum class AutoModActionType {
   BLOCK_MEMBER_INTERACTION
 };
 
+
 struct AutoModAction{
+  AutoModAction() = default;
   AutoModAction(const nlohmann::json& j);
   nlohmann::json generate() const;
   AutoModActionType type;
@@ -80,6 +82,24 @@ struct AutoModRule {
   std::vector<std::string> exemptChannels;
 };
 
+
+
+struct AutoModActionExecution {
+  AutoModActionExecution(const nlohmann::json& j);
+  std::string guildId;
+  AutoModAction action;
+  std::string ruleId;
+  AutoModTriggerType type;
+  std::string userId;
+  std::optional<std::string> channelId;
+  std::optional<std::string> messageId;
+  std::optional<std::string> alertSystemMessageId;
+  std::string content;
+  std::optional<std::string> matchedKeyword;
+  std::string matchedContent;
+};
+
+
 class AutoModApiRoutes {
 public:
   AutoModApiRoutes(NyaBot *b);
@@ -88,6 +108,11 @@ public:
                                                           const std::string_view ruleId);
   std::expected<AutoModRule, Error> createAutoModerationRule(const std::string_view guildId,
                                                              const AutoModRule& r);
+  std::expected<AutoModRule, Error> modifyAutoModerationRule(const std::string_view guildId,
+                                                             const std::string_view ruleId,
+                                                             const AutoModRule& r);
+  std::expected<std::nullopt_t, Error> deleteAutoModerationRule(const std::string_view guildId,
+                                                                const std::string_view ruleId);
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);
   NyaBot *bot;

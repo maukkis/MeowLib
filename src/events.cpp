@@ -2,6 +2,27 @@
 #include <nlohmann/json.hpp>
 #include "../include/slashCommandInt.h"
 
+
+
+void NyaBot::onAutoModerationRuleCreate(std::function<void(AutoModRule&)> f){
+  funs.onAutoModerationRuleCreateF = f;
+}
+
+
+void NyaBot::onAutoModerationRuleUpdate(std::function<void(AutoModRule&)> f){
+  funs.onAutoModerationRuleUpdateF = f;
+}
+
+
+void NyaBot::onAutoModerationRuleDelete(std::function<void(AutoModRule&)> f){
+  funs.onAutoModerationRuleDeleteF = f;
+}
+
+
+void NyaBot::onAutoModerationActionExecution(std::function<void(AutoModActionExecution&)> f){
+  funs.onAutoModerationActionExecutionF = f;
+}
+
 void NyaBot::onReady(std::function<void ()> f) {
   funs.onReadyF = f;
 }

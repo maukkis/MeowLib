@@ -132,6 +132,25 @@ nlohmann::json AutoModRule::generate() const{
 }
 
 
+AutoModActionExecution::AutoModActionExecution(const nlohmann::json& j){
+  guildId = j["guild_id"];
+  action = AutoModAction(j["action"]);
+  ruleId = j["rule_id"];
+  type = j["rule_trigger_type"];
+  userId = j["user_id"];
+  if(j.contains("channel_id"))
+    channelId = j["channel_id"];
+  if(j.contains("message_id"))
+    messageId = j["message_id"];
+  if(j.contains("alert_system_message_id"))
+    alertSystemMessageId = j["alert_system_message_id"];
+  content = j["content"];
+  if(!j["matched_keyword"].is_null())
+    matchedKeyword = j["matched_keyword"];
+  matchedContent = j["matched_content"];
+}
+
+
 AutoModApiRoutes::AutoModApiRoutes(NyaBot *bot): bot{bot}{}
 
 
@@ -166,6 +185,33 @@ std::expected<AutoModRule, Error> AutoModApiRoutes::createAutoModerationRule(con
   }
   return AutoModRule(nlohmann::json::parse(res->first));
 }
+
+std::expected<AutoModRule, Error> AutoModApiRoutes::modifyAutoModerationRule(const std::string_view guildId,
+                                                                             const std::string_view ruleId,
+                                                                             const AutoModRule& r)
+{
+  auto res = bot->rest.patch(std::format(APIURL "/guilds/{}/auto-moderation/rules/{}", guildId, ruleId), r.generate().dump());
+  if(!res.has_value() || res->second != 200){
+    Log::error("failed to modify automod rule "
+             + res.value_or(std::make_pair("", 0)).first);
+    return std::unexpected(Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first));
+  }
+  return AutoModRule(nlohmann::json::parse(res->first));
+}
+
+
+std::expected<std::nullopt_t, Error> AutoModApiRoutes::deleteAutoModerationRule(const std::string_view guildId,
+                                                                                const std::string_view ruleId)
+{
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/auto-moderation/rules/{}", guildId, ruleId));
+  if(!res.has_value() || res->second != 204){
+    Log::error("failed to delete automod rule "
+             + res.value_or(std::make_pair("", 0)).first);
+    return std::unexpected(Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first));
+  }
+  return std::nullopt; 
+}
+
 
 std::expected<std::string, Error> AutoModApiRoutes::getReq(const std::string& endpoint){
   auto res = bot->rest.get(endpoint);

@@ -43,6 +43,12 @@ struct ImportantApiStuff {
 };
 
 struct Funs {
+  std::function<void(AutoModRule&)> onAutoModerationRuleCreateF = {};
+  std::function<void(AutoModRule&)> onAutoModerationRuleUpdateF = {};
+  std::function<void(AutoModRule&)> onAutoModerationRuleDeleteF = {};
+  std::function<void(AutoModActionExecution&)> onAutoModerationActionExecutionF = {};
+
+
   std::function<void(SlashCommandInt&)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
@@ -170,6 +176,13 @@ public:
   /// @param p presence object
   ///
   void changePresence(const Presence& p);
+
+  void onAutoModerationRuleCreate(std::function<void(AutoModRule&)> f);
+  void onAutoModerationRuleUpdate(std::function<void(AutoModRule&)> f);
+  void onAutoModerationRuleDelete(std::function<void(AutoModRule&)> f);
+  void onAutoModerationActionExecution(std::function<void(AutoModActionExecution&)> f);
+
+
   void onReady(std::function<void()> f);
   void onSlash(std::function<void(SlashCommandInt&)> f);
   void onAutocomplete(std::function<void()> f);
@@ -234,6 +247,12 @@ private:
   void routeInteraction(SelectInteraction& interaction);
   void routeInteraction(ModalInteraction& interaction);
 
+
+  void autoModerationRuleCreate(nlohmann::json j);
+  void autoModerationRuleUpdate(nlohmann::json j);
+  void autoModerationRuleDelete(nlohmann::json j);
+  void autoModerationActionExecution(nlohmann::json j);
+
   void ready(nlohmann::json j);
   void interaction(nlohmann::json j);
   void resumed(nlohmann::json j);
@@ -268,6 +287,10 @@ private:
   meowWs::Websocket handle;
  
   std::unordered_map<std::string_view, std::function<void(nlohmann::json)>> dispatchHandlers {
+    {"AUTO_MODERATION_RULE_CREATE", std::bind(&NyaBot::autoModerationRuleCreate, this, std::placeholders::_1)},
+    {"AUTO_MODERATION_RULE_UPDATE", std::bind(&NyaBot::autoModerationRuleUpdate, this, std::placeholders::_1)},
+    {"AUTO_MODERATION_RULE_DELETE", std::bind(&NyaBot::autoModerationRuleDelete, this, std::placeholders::_1)},
+    {"AUTO_MODERATION_ACTION_EXECUTION", std::bind(&NyaBot::autoModerationActionExecution, this, std::placeholders::_1)},
     {"INTERACTION_CREATE", std::bind(&NyaBot::interaction, this, std::placeholders::_1)},
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
     {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
