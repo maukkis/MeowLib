@@ -17,9 +17,10 @@ std::expected<Emoji, Error> EmojiApiRoutes::createApplicationEmoji(const std::st
   j["image"] = attachmentToDataUri(file);
   auto res = bot->rest.post(std::format(APIURL "/applications/{}/emojis", bot->api.appId), j.dump());
   if(!res.has_value() || res->second != 201){
-    Log::error("failed to create a new application emoji" + std::to_string(res->second) + 
-               res.value_or(std::make_pair("meowHttp error", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create an application emoji");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeEmoji(nlohmann::json::parse(res->first));
 }
@@ -30,28 +31,33 @@ std::expected<Emoji, Error> EmojiApiRoutes::modifyApplicationEmoji(const std::st
   j["name"] = name;
   auto res = bot->rest.patch(std::format(APIURL "/applications/{}/emojis/{}", bot->api.appId, id), j.dump());
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to modify an application emoji" +
-               res.value_or(std::make_pair("meowHttp error", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to modify an application emoji");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeEmoji(nlohmann::json::parse(res->first));
 }
 
-void EmojiApiRoutes::deleteApplicationEmoji(const std::string_view id){
+std::expected<std::nullopt_t, Error> EmojiApiRoutes::deleteApplicationEmoji(const std::string_view id){
   auto res = bot->rest.deletereq(std::format(APIURL "/applications/{}/emojis/{}", bot->api.appId, id));
   if(!res.has_value() || res->second != 204){
-    Log::error("failed to delete an application emoji" +
-               res.value_or(std::make_pair("meowHttp error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to delete an application emoji");
+    err.printErrors();
+    return std::unexpected(err);
   }
+  return std::nullopt;
 }
 
 
 std::expected<Emoji, Error> EmojiApiRoutes::getApplicationEmoji(const std::string_view id){
   auto res = bot->rest.get(std::format(APIURL "/applications/{}/emojis/{}", bot->api.appId, id));
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to get an application emoji" + 
-               res.value_or(std::make_pair("meowHttp error", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get an application emoji");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeEmoji(nlohmann::json::parse(res->first));
 }
@@ -60,9 +66,10 @@ std::expected<Emoji, Error> EmojiApiRoutes::getApplicationEmoji(const std::strin
 std::expected<std::unordered_map<std::string, Emoji>, Error> EmojiApiRoutes::listApplicationEmojis(){
   auto res = bot->rest.get(std::format(APIURL "/applications/{}/emojis", bot->api.appId));
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to get an application emoji" + 
-               res.value_or(std::make_pair("meowHttp error", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get an application emoji");
+    err.printErrors();
+    return std::unexpected(err);
   }
   auto j = nlohmann::json::parse(res->first);
   std::unordered_map<std::string, Emoji> items;

@@ -26,9 +26,10 @@ std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(Message
                              "POST"
                              );
     if(!res.has_value() || res->second != 204){
-      Log::error("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
-      
-      return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to update an interaction rmessage");
+      err.printErrors();
+      return std::unexpected(err);
     }
   } else {
     nlohmann::json b;

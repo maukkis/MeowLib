@@ -100,8 +100,10 @@ GuildApiRoutes::GuildApiRoutes(NyaBot *bot){
 std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
   auto res = bot->rest.get(std::format(APIURL "/guilds/{}", id));
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to get guild\n" + res.value_or(std::make_pair("", 0)).first);
-    return {};
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get guild");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeGuild(nlohmann::json::parse(res->first));
 }
@@ -109,8 +111,10 @@ std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
 std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
   auto res = bot->rest.get(std::format(APIURL "/guilds/{}/preview", id));
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to get guild preview\n" + res.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get guild preview");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeGuildPreview(nlohmann::json::parse(res->first));
 }

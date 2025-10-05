@@ -74,9 +74,10 @@ std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
                                    api.appId),
                        json.dump());
   if(!meow.has_value() || meow->second != 200){
-    Log::error("something went wrong while syncing slash commands " + 
-             meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to sync slash commands");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return std::nullopt;
 }

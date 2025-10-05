@@ -34,7 +34,7 @@ public:
   std::expected<Emoji, Error> modifyApplicationEmoji(const std::string_view id, const std::string_view name);
   /// @brief deletes an application emoji
   /// @param id emoji id to delete
-  void deleteApplicationEmoji(const std::string_view id);
+  std::expected<std::nullopt_t, Error> deleteApplicationEmoji(const std::string_view id);
   /// @brief gets an application emoji object
   /// @param id emoji id to get
   /// @returns Emoji object on success nothing on error

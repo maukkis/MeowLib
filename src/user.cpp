@@ -9,6 +9,8 @@
 UserApiRoutes::UserApiRoutes(NyaBot *bot)
   : bot{bot}{}
 
+
+
 std::expected<User, Error> UserApiRoutes::getUser(const std::string_view id){
   return getReq(std::format(APIURL "/users/{}", id))
     .and_then([](std::expected<std::string, Error> a){
@@ -16,12 +18,16 @@ std::expected<User, Error> UserApiRoutes::getUser(const std::string_view id){
     });
 }
 
+
+
 std::expected<User, Error> UserApiRoutes::getCurrentUser(){
   return getReq(APIURL "/users/@me")
     .and_then([](std::expected<std::string, Error> a){
       return std::expected<User, Error>(deserializeUser(nlohmann::json::parse(a.value())));
     });
 }
+
+
 
 std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id){
   nlohmann::json j;
@@ -31,13 +37,16 @@ std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id)
     j.dump()
   );
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to create dm channel"
-             + res.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create dm");
+    err.printErrors();
+    return std::unexpected(err);
   }
   auto i = nlohmann::json::parse(res->first);
   return deserializeChannel(i);
 }
+
+
 
 std::expected<User, Error> UserApiRoutes::modifyCurrentUser(std::optional<std::string> username,
                                                std::optional<Attachment> avatar,
@@ -52,9 +61,10 @@ std::expected<User, Error> UserApiRoutes::modifyCurrentUser(std::optional<std::s
     j["banner"] = attachmentToDataUri(*banner);
   auto res = bot->rest.patch(APIURL "/users/@me", j.dump());
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to modify current user"
-             + res.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to modify current user");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return deserializeUser(nlohmann::json::parse(res->first));
 }
@@ -62,9 +72,10 @@ std::expected<User, Error> UserApiRoutes::modifyCurrentUser(std::optional<std::s
 std::expected<std::string, Error> UserApiRoutes::getReq(const std::string& endpoint){
   auto res = bot->rest.get(endpoint);
   if(!res.has_value() || res->second != 200){
-    Log::error("failed to fetch user "
-             + res.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to fetch user");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return res->first;
 }

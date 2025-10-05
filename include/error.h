@@ -2,14 +2,16 @@
 #define _INCLUDE_ERROR_H
 #include <string>
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 
 
 struct Error {
   Error(const std::string& j);
+  void printErrors();
   int code{};
   std::string message;
   // will be empty for every non request error
-  std::vector<std::pair<std::string, std::string>> errors;
+  std::unordered_map<std::string, std::pair<std::string, std::string>> errors;
 };
 
 

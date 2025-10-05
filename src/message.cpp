@@ -105,8 +105,10 @@ std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view 
   auto meow = bot->rest.post(std::format(APIURL "/channels/{}/messages", id),
                              content);
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create a message");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return meow->first;
 }
@@ -117,8 +119,10 @@ std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view 
                              boundary,
                              "POST");
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create a message");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return meow->first;
 }

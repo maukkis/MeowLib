@@ -50,8 +50,10 @@ std::expected<std::nullopt_t, Error> Interaction::respond(const Message& a){
                              "POST"
                              );
     if(!res.has_value() || res->second != 204){
-      Log::error("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
-      return std::unexpected(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to respond to an interaction");
+      err.printErrors();
+      return std::unexpected(err);
     }
   } else {
     nlohmann::json b;
@@ -70,9 +72,10 @@ std::expected<std::nullopt_t, Error> Interaction::createFollowUpMessage(const st
                                         applicationId, interactionToken),
                            j.dump());
   if(!ret.has_value() || ret->second != 200){
-    Log::error("failed to create a follow up message" +
-             ret.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(ret.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      auto err = Error(ret.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to respond to create a follow up message");
+      err.printErrors();
+      return std::unexpected(err);
   }
   return std::nullopt;
 }
@@ -95,8 +98,10 @@ std::expected<std::nullopt_t, Error> Interaction::manualResponse(const nlohmann:
   auto meow = bot->rest.post(APIURL "/interactions/" + interactionId + '/' + interactionToken + "/callback",
                             j.dump());
   if(!meow.has_value() || meow->second != 204){
-    Log::error("failed to respond to an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to respond to an interaction");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return std::nullopt;
 }
@@ -106,8 +111,10 @@ std::expected<std::nullopt_t, Error> Interaction::manualEdit(const nlohmann::jso
     auto meow = bot->rest.patch(APIURL "/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to edit an interaction\n" + meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to edit an interaction response");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return std::nullopt;
 }
@@ -132,9 +139,10 @@ std::expected<std::nullopt_t, Error> Interaction::edit(const Message& a){
                                      "woof",
                                      "PATCH");
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to edit an interaction\n" +
-             meow.value_or(std::make_pair("", 0)).first);
-    return std::unexpected(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to edit an interaction response");
+    err.printErrors();
+    return std::unexpected(err);
   }
   return std::nullopt;
 }
