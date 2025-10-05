@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _INCLUDE_USER_H
 #define _INCLUDE_USER_H
 #include "attachment.h"
@@ -9,6 +10,7 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 class NyaBot;
+struct Guild;
 
 struct PrimaryGuild {
   std::string identityGuildId;
@@ -50,6 +52,9 @@ public:
   std::expected<User, Error> modifyCurrentUser(std::optional<std::string> username = std::nullopt,
                                                std::optional<Attachment> avatar = std::nullopt,
                                                std::optional<Attachment> banner = std::nullopt);
+  std::expected<std::vector<Guild>, Error> getCurrentUserGuilds();
+  std::expected<std::nullopt_t, Error> leaveGuild(const std::string_view id);
+
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);
   NyaBot *bot = nullptr;

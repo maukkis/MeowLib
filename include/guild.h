@@ -10,8 +10,8 @@
 #include <string_view>
 #include <vector>
 #include "role.h"
-#include "user.h"
 class NyaBot;
+
 
 struct GuildMemberRequestData {
   std::vector<User> users = {};

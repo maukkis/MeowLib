@@ -1,7 +1,7 @@
 - [x] add proper error handling to some rest api functions that dont already have it to prevent undefined behaviour
 - [x] implement cv2 with comptime component layout checking via templates
 - [x] automod api functions
-- [ ] user api functions
+- [x] user api functions
 - [ ] moderation api functions
 - [x] message gateway events
 - [x] guild gateway events

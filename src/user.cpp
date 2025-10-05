@@ -3,6 +3,7 @@
 #include <optional>
 #include <string_view>
 #include <format>
+#include "../include/guild.h"
 #include "../include/nyaBot.h"
 #include "../include/helpers.h"
 
@@ -28,6 +29,29 @@ std::expected<User, Error> UserApiRoutes::getCurrentUser(){
 }
 
 
+std::expected<std::vector<Guild>, Error> UserApiRoutes::getCurrentUserGuilds(){
+  return getReq(APIURL "/users/@me/guilds?with_counts=true")
+    .and_then([](std::expected<std::string, Error> a){
+      std::vector<Guild> b;
+      auto j = nlohmann::json::parse(a.value());
+      for(const auto& c : j){
+        b.emplace_back(deserializeGuild(c));
+      }
+      return std::expected<std::vector<Guild>, Error>(std::move(b));
+    });
+}
+
+
+std::expected<std::nullopt_t, Error> UserApiRoutes::leaveGuild(const std::string_view id){
+  auto res = bot->rest.deletereq(std::format(APIURL "/users/@me/guilds/{}", id));
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to leave guild");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
 
 std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id){
   nlohmann::json j;

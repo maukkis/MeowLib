@@ -53,22 +53,30 @@ Guild deserializeGuild(const nlohmann::json& j){
     g.icon = j["icon"];
   if(j.contains("icon_hash") && !j["icon_hash"].is_null())
     g.iconHash = j["icon_hash"];
-  if(!j["splash"].is_null())
+  if(j.contains("splash") && !j["splash"].is_null())
     g.splash = j["splash"];
-  if(!j["discovery_splash"].is_null())
+  if(j.contains("discovery_splash") && !j["discovery_splash"].is_null())
     g.discoverySplash = j["discovery_splash"];
   if(j.contains("owner"))
     g.owner = j["owner"];
-  g.ownerId = j["owner_id"];
+  if(j.contains("owner_id"))
+    g.ownerId = j["owner_id"];
   if(j.contains("permissions"))
     g.permissions = j["permissions"];
-  for(const auto& a : j["roles"])
-    g.roles.emplace_back(a);
-  for(const auto& a : j["emojis"])
-    g.emojis.emplace_back(deserializeEmoji(a));
   if(!j["banner"].is_null())
     g.banner = j["banner"];
-  g.nsfwLevel = j["nsfw_level"].get<int>();
+  if(j.contains("nsfw_level"))
+    g.nsfwLevel = j["nsfw_level"].get<int>();
+
+  if(j.contains("roles")){
+    for(const auto& a : j["roles"])
+      g.roles.emplace_back(a);
+  }
+  if(j.contains("emojis")){
+    for(const auto& a : j["emojis"])
+      g.emojis.emplace_back(deserializeEmoji(a));
+  }
+
   return g;
 }
 
@@ -78,9 +86,9 @@ GuildPreview deserializeGuildPreview(const nlohmann::json& j){
   g.name = j["name"];
   if(!j["icon"].is_null())
     g.icon = j["icon"];
-  if(!j["splash"].is_null())
+  if(j.contains("splash") && !j["splash"].is_null())
     g.splash = j["splash"];
-  if(!j["discovery_splash"].is_null())
+  if(j.contains("discovery_splash") && !j["discovery_splash"].is_null())
     g.discoverySplash = j["discovery_splash"];
   for(const auto& e : j["emojis"])
     g.emojis.emplace_back(deserializeEmoji(e));
