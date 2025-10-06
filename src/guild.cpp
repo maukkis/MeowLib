@@ -17,7 +17,8 @@ UnavailableGuild deserializeUnavailableGuild(const nlohmann::json& j){
 
 GuildBan deserializeGuildBan(const nlohmann::json& j){
   return {
-    .guildId = j["guild_id"],
+    .guildId = j.contains("guild_id") && !j["guild_id"].is_null() ? std::make_optional(j["guild_id"]) : std::nullopt,
+    .reason = !j["reason"].is_null() ? std::make_optional(j["reason"]) : std::nullopt,
     .user = deserializeUser(j["user"])
   };
 }
@@ -106,23 +107,77 @@ GuildApiRoutes::GuildApiRoutes(NyaBot *bot){
 }
 
 std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
-  auto res = bot->rest.get(std::format(APIURL "/guilds/{}", id));
+  return getReq(std::format(APIURL "/guilds/{}", id))
+  .and_then([](std::expected<std::string, Error> a){
+    return std::expected<Guild, Error>(deserializeGuild(nlohmann::json::parse(a.value())));
+  });
+}
+
+std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
+  return getReq(std::format(APIURL "/guilds/{}/preview", id))
+  .and_then([](std::expected<std::string, Error> a){
+    return std::expected<GuildPreview, Error>(deserializeGuildPreview(nlohmann::json::parse(a.value())));
+  });
+}
+
+
+std::expected<std::vector<GuildBan>, Error> GuildApiRoutes::getGuildBans(const std::string_view id){
+  return getReq(std::format(APIURL "/guilds/{}/bans", id))
+  .and_then([](std::expected<std::string, Error> a){
+    std::vector<GuildBan> bans;
+    nlohmann::json j = nlohmann::json::parse(a.value());
+    for(const auto& c : j)
+      bans.emplace_back(deserializeGuildBan(c));
+    return std::expected<std::vector<GuildBan>, Error>(std::move(bans));
+  });
+}
+std::expected<GuildBan, Error> GuildApiRoutes::getGuildBan(const std::string_view guildId,
+                                                           const std::string_view userId)
+{
+  return getReq(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId))
+  .and_then([](std::expected<std::string, Error> a){
+    return std::expected<GuildBan, Error>(deserializeGuildBan(nlohmann::json::parse(a.value())));
+  });
+
+}
+std::expected<std::nullopt_t, Error> GuildApiRoutes::createGuildBan(const std::string_view guildId,
+                                                                    const std::string_view userId,
+                                                                    const std::optional<int> dms)
+{
+  nlohmann::json j;
+  if(dms)
+    j["delete_messages_seconds"] = *dms;
+
+  auto res = bot->rest.put(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId), j.dump());
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to ban member from guild");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildBan(const std::string_view guildId,
+                                                                    const std::string_view userId)
+{
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId));
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to remove ban from member from guild");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+std::expected<std::string, Error> GuildApiRoutes::getReq(const std::string& endpoint){
+  auto res = bot->rest.get(endpoint);
   if(!res.has_value() || res->second != 200){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to get guild");
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeGuild(nlohmann::json::parse(res->first));
-}
-
-std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
-  auto res = bot->rest.get(std::format(APIURL "/guilds/{}/preview", id));
-  if(!res.has_value() || res->second != 200){
-    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
-    Log::error("failed to get guild preview");
-    err.printErrors();
-    return std::unexpected(err);
-  }
-  return deserializeGuildPreview(nlohmann::json::parse(res->first));
+  return res->first;
 }
