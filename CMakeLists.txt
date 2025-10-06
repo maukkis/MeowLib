@@ -8,18 +8,60 @@ if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
 endif()
 find_package(nlohmann_json REQUIRED)
 find_package(Threads REQUIRED)
+find_package(meowHttp REQUIRED)
 set(CMAKE_CXX_STANDARD 23)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_compile_options(-Wall -Werror -O1 -g)
+  add_compile_options(-Wall -Werror -O1 -g -fsanitize=address)
+  add_link_options(-fsanitize=address)
 else()
   add_compile_options(-Wall -Werror -O3)
 endif()
 
 file(GLOB_RECURSE MeowLib_src "src/*.cpp")
-add_subdirectory(${PROJECT_SOURCE_DIR}/meowHttp)
 add_library(MeowLib ${MeowLib_src})
 target_compile_definitions(MeowLib PRIVATE MEOWLIB_VERSION="${PROJECT_VERSION}")
 target_link_libraries(MeowLib PRIVATE nlohmann_json::nlohmann_json meowHttp Threads::Threads)
+
+target_include_directories(MeowLib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/MeowLib>)
+
+install(TARGETS MeowLib EXPORT MeowLibTargets DESTINATION lib)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib)
+include(CMakePackageConfigHelpers)
+set(config_dir lib/cmake/MeowLib)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfigVersion.cmake"
+  VERSION ${meowHttp_version}
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfig.cmake"
+  INSTALL_DESTINATION ${config_dir}
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+export(
+  EXPORT MeowLibTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibTargets.cmake"
+)
+
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfigVersion.cmake
+  DESTINATION ${config_dir}
+)
+
+install(EXPORT MeowLibTargets
+  FILE
+    MeowLibTargets.cmake
+  DESTINATION
+    ${config_dir}
+)

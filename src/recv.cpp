@@ -1,4 +1,4 @@
-#include "../meowHttp/src/includes/websocket.h"
+#include <meowHttp/websocket.h>
 #include <chrono>
 #include <cstdint>
 #include <cstring>

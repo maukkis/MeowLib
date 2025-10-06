@@ -13,7 +13,8 @@ Error::Error(const std::string& str){
   }
   code = j["code"];
   message = j["message"];
-  for(const auto& a : j["errors"].flatten().items()){
+  auto jFlattened = j["errors"].flatten();
+  for(const auto& a : jFlattened.items()){
     auto key = a.key().substr(0, a.key().rfind("/"));
     std::string type = a.key().substr(a.key().rfind("/")+1);
     if(type == "code"){

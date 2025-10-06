@@ -1,6 +1,6 @@
 #include "../include/restclient.h"
 #include "../include/nyaBot.h"
-#include "../meowHttp/src/includes/https.h"
+#include <meowHttp/https.h>
 #include <string>
 #include <thread>
 #include <utility>

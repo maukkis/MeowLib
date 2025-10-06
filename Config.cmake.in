@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(FindPackageHandleStandardArgs)
+find_library(lib MeowLib)
+find_package_handle_standard_args(@PROJECT_NAME@ DEFAULT_MSG lib)
+find_package(meowHttp REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(Threads REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/MeowLibTargets.cmake")

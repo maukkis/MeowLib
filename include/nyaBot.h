@@ -1,6 +1,6 @@
 #ifndef nyaBot_H
 #define nyaBot_H
-#include "../meowHttp/src/includes/websocket.h"
+#include <meowHttp/websocket.h>
 #include "buttonInteraction.h"
 #include "channel.h"
 #include "emoji.h"
