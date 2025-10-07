@@ -1,4 +1,5 @@
 #include "../include/user.h"
+#include <nlohmann/detail/value_t.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string_view>
@@ -109,9 +110,35 @@ GuildUser deserializeGuildUser(const nlohmann::json &j){
     .nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]),
     .avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]),
     .banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]),
-    .roles = j["roles"].get<std::vector<std::string>>()
+    .roles = j["roles"].get<std::vector<std::string>>(),
+    .communicationDisabledUntil = 
+      j.contains("communication_disabled_until")
+      && !j["communication_disabled_until"].is_null() ? 
+        std::make_optional(j["communication_disabled_until"])
+        : std::nullopt
   };
 }
+
+nlohmann::json serializeGuildUser(const GuildUser& a){
+  nlohmann::json j;
+  if(a.nick)
+    j["nick"] = *a.nick;
+  else
+    j["nick"] = nullptr;
+  
+  if(a.communicationDisabledUntil)
+    j["communication_disabled_until"] = *a.communicationDisabledUntil;
+  else
+    j["communication_disabled_until"] = nullptr;
+
+  if(!a.roles.empty())
+    j["roles"] = a.roles;
+  else
+    j["roles"] = nullptr;
+  return j;
+}
+
+
 
 User deserializeUser(const nlohmann::json& j){
   return {

@@ -175,6 +175,43 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildBan(const std::s
 }
 
 
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildMember(const std::string_view guildId,
+                                                                       const std::string_view userId,
+                                                                       const std::optional<std::string>& auditLogReason )
+{
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/members/{}", guildId, userId), auditLogReason.has_value() ? 
+    std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *auditLogReason }) : std::nullopt);
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to remove guild member");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+std::expected<User, Error> GuildApiRoutes::modifyGuildMember(const std::string_view guildId,
+                                                             const std::string_view userId,
+                                                             const GuildUser& user,
+                                                             const std::optional<std::string>& reason)
+{
+  auto res = bot->rest.patch(std::format(APIURL "/guilds/{}/members/{}", guildId, userId),
+    serializeGuildUser(user).dump(),
+    reason.has_value() ? std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *reason }) : std::nullopt);
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to modify guild member");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  auto j = nlohmann::json::parse(res->first);
+  auto u = deserializeUser(j["user"]);
+  u.guild = deserializeGuildUser(j);
+  return u;
+}
+
+
 std::expected<std::string, Error> GuildApiRoutes::getReq(const std::string& endpoint){
   auto res = bot->rest.get(endpoint);
   if(!res.has_value() || res->second != 200){

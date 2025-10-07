@@ -77,14 +77,27 @@ public:
   /// @brief fetches a guild preview by its id
   /// @param id guild id
   std::expected<GuildPreview, Error> getPreview(const std::string_view id);
+  
   std::expected<std::vector<GuildBan>, Error> getGuildBans(const std::string_view id);
+  
   std::expected<GuildBan, Error> getGuildBan(const std::string_view guildId, const std::string_view userId);
+  
   std::expected<std::nullopt_t, Error> createGuildBan(const std::string_view guildId,
                                                       const std::string_view userId,
                                                       const std::optional<int> deleteMessagesSeconds = std::nullopt,
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
+  
   std::expected<std::nullopt_t, Error> removeGuildBan(const std::string_view guildId, const std::string_view userId,
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
+
+  std::expected<std::nullopt_t, Error> removeGuildMember(const std::string_view guildId, const std::string_view userId,
+                                                         const std::optional<std::string>& auditLogReason = std::nullopt);
+
+  std::expected<User, Error> modifyGuildMember(const std::string_view guildId,
+                                               const std::string_view userId,
+                                               const GuildUser& user,
+                                               const std::optional<std::string>& reason);
+
 
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);

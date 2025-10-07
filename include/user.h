@@ -24,9 +24,11 @@ struct GuildUser {
   std::optional<std::string> nick = std::nullopt;
   std::optional<std::string> avatar = std::nullopt;
   std::optional<std::string> banner = std::nullopt;
-  std::vector<std::string> roles;
+  std::vector<std::string> roles = {};
   // only for guild member gw events
   std::optional<std::string> guildId = std::nullopt;
+  // an iso8601 timestamp 
+  std::optional<std::string> communicationDisabledUntil = std::nullopt;
 };
 
 struct User {
@@ -62,6 +64,7 @@ private:
 
 
 GuildUser deserializeGuildUser(const nlohmann::json& j);
+nlohmann::json serializeGuildUser(const GuildUser& a);
 User deserializeUser(const nlohmann::json& j);
 PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j);
 #endif
