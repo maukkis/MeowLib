@@ -81,8 +81,10 @@ public:
   std::expected<GuildBan, Error> getGuildBan(const std::string_view guildId, const std::string_view userId);
   std::expected<std::nullopt_t, Error> createGuildBan(const std::string_view guildId,
                                                       const std::string_view userId,
-                                                      std::optional<int> deleteMessagesSeconds = std::nullopt);
-  std::expected<std::nullopt_t, Error> removeGuildBan(const std::string_view guildId, const std::string_view userId);
+                                                      const std::optional<int> deleteMessagesSeconds = std::nullopt,
+                                                      const std::optional<std::string>& auditLogReason = std::nullopt);
+  std::expected<std::nullopt_t, Error> removeGuildBan(const std::string_view guildId, const std::string_view userId,
+                                                      const std::optional<std::string>& auditLogReason = std::nullopt);
 
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);

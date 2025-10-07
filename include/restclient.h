@@ -46,24 +46,28 @@ public:
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
   std::expected<std::pair<std::string, int>, RestErrors> post(const std::string& endpoint,
-                                              const std::string& data);
+                                                              const std::string& data,
+                                                              const std::optional<std::vector<std::string>>& headers = std::nullopt);
 
   /// @brief send a patch request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
   std::expected<std::pair<std::string, int>, RestErrors> patch(const std::string& endpoint,
-                                               const std::string& data);
+                                                               const std::string& data,
+                                                               const std::optional<std::vector<std::string>>& headers = std::nullopt);
 
   /// @brief send a put request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
   std::expected<std::pair<std::string, int>, RestErrors> put(const std::string& endpoint,
-                                             const std::string& data);
+                                                             const std::string& data,
+                                                             const std::optional<std::vector<std::string>>& headers = std::nullopt);
 
   /// @brief send a delete request to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   // stupid C++ having delete as a keyword
-  std::expected<std::pair<std::string, int>, RestErrors> deletereq(const std::string& endpoint);
+  std::expected<std::pair<std::string, int>, RestErrors> deletereq(const std::string& endpoint,
+                                                                   const std::optional<std::vector<std::string>>& headers = std::nullopt);
   /// @brief send form data  to a discord api endpoint
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent

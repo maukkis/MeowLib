@@ -142,13 +142,15 @@ std::expected<GuildBan, Error> GuildApiRoutes::getGuildBan(const std::string_vie
 }
 std::expected<std::nullopt_t, Error> GuildApiRoutes::createGuildBan(const std::string_view guildId,
                                                                     const std::string_view userId,
-                                                                    const std::optional<int> dms)
+                                                                    const std::optional<int> dms,
+                                                                    const std::optional<std::string>& reason)
 {
   nlohmann::json j;
   if(dms)
     j["delete_messages_seconds"] = *dms;
 
-  auto res = bot->rest.put(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId), j.dump());
+  auto res = bot->rest.put(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId), j.dump(), reason.has_value() ? 
+    std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *reason }) : std::nullopt);
   if(!res.has_value() || res->second != 204){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to ban member from guild");
@@ -158,9 +160,11 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::createGuildBan(const std::s
   return std::nullopt;
 }
 std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildBan(const std::string_view guildId,
-                                                                    const std::string_view userId)
+                                                                    const std::string_view userId,
+                                                                    const std::optional<std::string>& reason)
 {
-  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId));
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId), reason.has_value() ? 
+    std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *reason }) : std::nullopt);
   if(!res.has_value() || res->second != 204){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to remove ban from member from guild");
