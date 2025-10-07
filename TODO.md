@@ -2,7 +2,7 @@
 - [x] implement cv2 with comptime component layout checking via templates
 - [x] automod api functions
 - [x] user api functions
-- [ ] moderation api functions
+- [x] moderation api functions
 - [x] message gateway events
 - [x] guild gateway events
 - [x] proper interaction callbacks using interactionCallbackTables for different types of interactions (button string select etc)<br>
