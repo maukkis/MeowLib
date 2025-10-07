@@ -1,6 +1,6 @@
 #include "../include/restclient.h"
 #include "../include/nyaBot.h"
-#include "../meowHttp/src/includes/https.h"
+#include <meowHttp/https.h>
 #include <string>
 #include <thread>
 #include <utility>
@@ -13,38 +13,66 @@ std::expected<std::pair<std::string, int>, RestErrors> RestClient::get(const std
 {
   return sendRawData(endpoint,
               "GET", 
-              {"authorization: Bot " + bot->api.token, "content-type: application/json"});
+              {"authorization: Bot " + bot->api.token});
 }
 
 std::expected<std::pair<std::string, int>, RestErrors> RestClient::post(const std::string& endpoint,
-                                                        const std::string& data)
+                                                                        const std::string& data,
+                                                                        const std::optional<std::vector<std::string>>& headers)
 {
-  return sendRawData(endpoint,
-              "POST", 
-              {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
+  std::vector<std::string> headerss {
+    "authorization: Bot " + bot->api.token,
+    "content-type: application/json"
+  };
+
+  if(headers)
+    headerss.insert(headerss.end(), headers->begin(), headers->end());
+
+
+  return sendRawData(endpoint, "POST", std::move(headerss), data);
 }
 
 std::expected<std::pair<std::string, int>, RestErrors> RestClient::patch(const std::string& endpoint,
-                                                        const std::string& data)
+                                                                         const std::string& data,
+                                                                         const std::optional<std::vector<std::string>>& headers)
 {
-  return sendRawData(endpoint,
-              "PATCH", 
-              {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
+  std::vector<std::string> headerss {
+    "authorization: Bot " + bot->api.token,
+    "content-type: application/json"
+  };
+  
+  if(headers)
+    headerss.insert(headerss.end(), headers->begin(), headers->end());
+
+  return sendRawData(endpoint, "PATCH", std::move(headerss), data);
 }
 
 std::expected<std::pair<std::string, int>, RestErrors> RestClient::put(const std::string& endpoint,
-                                                        const std::string& data)
+                                                                       const std::string& data,
+                                                                       const std::optional<std::vector<std::string>>& headers)
 {
-  return sendRawData(endpoint,
-              "PUT", 
-              {"authorization: Bot " + bot->api.token, "content-type: application/json"}, data);
+  std::vector<std::string> headerss {
+    "authorization: Bot " + bot->api.token,
+    "content-type: application/json"
+  };
+  
+  if(headers)
+    headerss.insert(headerss.end(), headers->begin(), headers->end());
+
+  return sendRawData(endpoint, "PUT", std::move(headerss), data);
 }
 
-std::expected<std::pair<std::string, int>, RestErrors> RestClient::deletereq(const std::string& endpoint)
+std::expected<std::pair<std::string, int>, RestErrors> RestClient::deletereq(const std::string& endpoint,
+                                                                             const std::optional<std::vector<std::string>>& headers)
 {
-  return sendRawData(endpoint,
-              "DELETE", 
-              {"authorization: Bot " + bot->api.token, "content-type: application/json"});
+  std::vector<std::string> headerss {
+    "authorization: Bot " + bot->api.token,
+  };
+  
+  if(headers)
+    headerss.insert(headerss.end(), headers->begin(), headers->end());
+
+  return sendRawData(endpoint, "DELETE", std::move(headerss));
 }
 
 
@@ -68,6 +96,8 @@ RestClient::sendRawData(const std::string& endpoint,
                         const std::vector<std::string>& headers,
                         const std::optional<std::string>& data)
 {
+  int retryCount = 0;
+  int timeToWait = 5;
   while(true){
     if(rtl.globalLimit){
       Log::warn("we are being globally ratelimited!");
@@ -90,9 +120,19 @@ RestClient::sendRawData(const std::string& endpoint,
 
     for(const auto& a : headers)
       meow.setHeader(a);
+
     if(meow.perform() != OK){
-      return std::unexpected(RestErrors::IOERR);
+      if(retryCount > bot->retryAmount)
+        return std::unexpected(RestErrors::IOERR);
+      ++retryCount;
+      if(timeToWait > 300) timeToWait = 300;
+      Log::error("failed to send a http request to endpoint " + endpoint);
+      Log::error("waiting for " + std::to_string(timeToWait) + " seconds before retrying");
+      std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
+      timeToWait *= 2;
+      continue;
     }
+
     if(meow.getLastStatusCode() == 429){
       if(meow.headers["x-ratelimit-global"] == "true"){
         Log::warn("we are being globally ratelimited!");
@@ -103,6 +143,7 @@ RestClient::sendRawData(const std::string& endpoint,
         rtl.globalResetAfter.store(0);
         continue;
       }
+
       if(meow.headers["x-ratelimit-scope"] == "user"){
         Log::warn("we are being user ratelimited!");
         std::unique_lock<std::mutex> lock(rtl.rltmtx);
@@ -117,6 +158,7 @@ RestClient::sendRawData(const std::string& endpoint,
         rtl.userRateLimitTable.erase(endpoint);
         continue;
       }
+
       else{
         Log::warn("we are being ratelimited on a bucket!");
         std::this_thread::sleep_for(std::chrono::seconds(std::stoi(meow.headers["retry-after"], nullptr, 10)));

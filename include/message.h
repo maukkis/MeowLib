@@ -7,15 +7,48 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include "user.h"
 #include <vector>
 #include <memory>
+#include "emoji.h"
+#include <expected>
+#include "error.h"
+
+
 class NyaBot;
+
+
+struct MessageDelete {
+  std::string id;
+  std::string channelId;
+  std::optional<std::string> guildId;
+};
+
+enum class MessageReactionTypes {
+  NORMAL,
+  BURST
+};
+
+struct MessageReaction {
+  MessageReaction(const nlohmann::json& j);
+  std::string userId;
+  std::string channelId;
+  std::string messageId;
+  std::optional<std::string> guildId = std::nullopt;
+  std::optional<User> member = std::nullopt;
+  Emoji emoji;
+  std::optional<std::string> messageAuthorId = std::nullopt;
+  bool burst;
+  std::optional<std::vector<std::string>> burst_colors = std::nullopt;
+  MessageReactionTypes type;
+};
 
 
 class Message {
 public:
   nlohmann::json generate() const;
   Message() = default;
+  Message(const nlohmann::json& j);
   Message(Message&&) = default;
   template<typename T>
   requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
@@ -27,9 +60,17 @@ public:
   Message& setMessageFlags(int flags);
   Message& setContent(const std::string_view a);
   std::vector<Attachment> attachments;
-private:
   std::string content;
+  std::string id;
   int msgflags = 0;
+  std::string timestamp;
+  bool mentionEveryone;
+  User author;
+  std::optional<std::string> webhookId;
+  std::string channelId;
+  // ONLY FOR GATEWAY MESSAGE EVENTS
+  std::optional<std::string> guildId;
+private:
   std::vector<std::unique_ptr<Component>> components;
 };
 
@@ -40,14 +81,14 @@ public:
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param content message content
-  void create(const std::string_view id, const std::string_view content);
+  std::expected<Message, Error> create(const std::string_view id, const std::string_view content);
   /// @brief creates a new message
   /// @param id channel id to send message in
   /// @param msg Message object
-  void create(const std::string_view id, const Message& msg);
+  std::expected<Message, Error> create(const std::string_view id, const Message& msg);
 private:
-  void send(const std::string_view id, const std::string& content);
-  void send(const std::string_view id, const std::string& content, const std::string& boundary);
+  std::expected<std::string, Error> send(const std::string_view id, const std::string& content);
+  std::expected<std::string, Error> send(const std::string_view id, const std::string& content, const std::string& boundary);
   NyaBot *bot;
 };
 

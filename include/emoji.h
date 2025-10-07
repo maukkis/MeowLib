@@ -7,6 +7,8 @@
 #include "attachment.h"
 #include "user.h"
 #include <string_view>
+#include "error.h"
+
 class NyaBot;
 
 
@@ -24,22 +26,22 @@ public:
   /// @param file to be uploaded
   /// @param name name of the emoji
   /// @returns Emoji object on sucess nothing on failure 
-  std::expected<Emoji, std::nullopt_t> createApplicationEmoji(const std::string_view name, const Attachment& file);
+  std::expected<Emoji, Error> createApplicationEmoji(const std::string_view name, const Attachment& file);
   /// @brief modifies an application emoji
   /// @param id emoji id to edit
   /// @param name new name for the emoji
   /// @returns new emoji object on success nothing on failure
-  std::expected<Emoji, std::nullopt_t> modifyApplicationEmoji(const std::string_view id, const std::string_view name);
+  std::expected<Emoji, Error> modifyApplicationEmoji(const std::string_view id, const std::string_view name);
   /// @brief deletes an application emoji
   /// @param id emoji id to delete
-  void deleteApplicationEmoji(const std::string_view id);
+  std::expected<std::nullopt_t, Error> deleteApplicationEmoji(const std::string_view id);
   /// @brief gets an application emoji object
   /// @param id emoji id to get
   /// @returns Emoji object on success nothing on error
-  std::expected<Emoji, std::nullopt_t> getApplicationEmoji(const std::string_view id);
+  std::expected<Emoji, Error> getApplicationEmoji(const std::string_view id);
   /// @brief lists all application emojis
   /// @returns map of id's to emojis
-  std::expected<std::unordered_map<std::string, Emoji>, std::nullopt_t> listApplicationEmojis();
+  std::expected<std::unordered_map<std::string, Emoji>, Error> listApplicationEmojis();
 private:
   const std::string_view appId;
   NyaBot *bot;

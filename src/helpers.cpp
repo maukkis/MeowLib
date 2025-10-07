@@ -1,9 +1,10 @@
+#include <random>
 #include <string>
 #include <string_view>
 #include <format>
 #include <vector>
-#include "../include/attachment.h"
-#include <nlohmann/json.hpp>
+#include "../include/helpers.h"
+#include "../include/base64.h"
 
 
 std::string makeFormData(const nlohmann::json j, const std::string_view boundary, const std::vector<Attachment>& a){
@@ -20,3 +21,29 @@ std::string makeFormData(const nlohmann::json j, const std::string_view boundary
 }
 
 
+
+std::string attachmentToDataUri(const Attachment& file){
+  std::string type = file.name.substr(file.name.rfind(".")+1);
+  std::string dataUri = "data:image/" + lower(type) + ";base64,";
+  return dataUri + encodeB64(file.data);
+}
+
+
+std::string& lower(std::string& a){
+  std::transform(a.begin(), a.end(), a.begin(), [](char c){
+    return std::tolower(c);
+  });
+  return a;
+}
+
+std::string generate32ByteASCIINonce(){
+  static std::random_device dev;
+  static std::mt19937 rnd(dev());
+  static std::uniform_int_distribution<> distrib(33, 126);
+  std::string a;
+  a.reserve(32);
+  for(size_t i = 0; i < 32; ++i){
+    a += (distrib(rnd));
+  }
+  return a;
+}

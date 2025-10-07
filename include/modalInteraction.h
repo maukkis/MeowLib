@@ -6,8 +6,6 @@
 #include <unordered_set>
 
 
-/// @deprecated use SelectData instead
-using StringSelectData = std::unordered_set<std::string>;
 using SelectData = std::unordered_set<std::string>;
 using TextInputData = std::string;
 

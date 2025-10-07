@@ -1,23 +1,24 @@
 #include "../include/componentInteraction.h"
 #include "../include/nyaBot.h"
 #include "../include/helpers.h"
+#include <format>
 
 
-void ComponentInteraction::updateMessage(){
+std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(){
   nlohmann::json j;
   j["type"] = 6;
-  manualResponse(j);
+  return manualResponse(j);
 }
 
 
-void ComponentInteraction::updateMessage(Message& a){
+std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(Message& a){
   if(!a.attachments.empty()){
     nlohmann::json j;
     j["type"] = 7;
     j["data"] = a.generate();
     auto payload = makeFormData(j, "woof", a.attachments);
     auto res =
-      bot->rest.sendFormData(std::format("https://discord.com/api/v10/interactions/{}/{}/callback",
+      bot->rest.sendFormData(std::format(APIURL "/interactions/{}/{}/callback",
                                          interactionId,
                                          interactionToken),
                              payload,
@@ -25,13 +26,16 @@ void ComponentInteraction::updateMessage(Message& a){
                              "POST"
                              );
     if(!res.has_value() || res->second != 204){
-      Log::error("failed to respond to an interaction\n" + res.value_or(std::make_pair("", 0)).first);
+      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to update an interaction rmessage");
+      err.printErrors();
+      return std::unexpected(err);
     }
   } else {
     nlohmann::json b;
     b["type"] = 7;
     b["data"] = a.generate();
-    this->manualResponse(b);
+    return this->manualResponse(b);
   }
-
+  return std::nullopt;
 }

@@ -1,11 +1,45 @@
 #include "../include/message.h"
 #include "../include/helpers.h"
+#include <optional>
 #include <string_view>
+#include <format>
 #include "../include/nyaBot.h"
 
 
+MessageReaction::MessageReaction(const nlohmann::json& j){
+  userId = j["user_id"];
+  channelId = j["channel_id"];
+  messageId = j["message_id"];
+  if(j.contains("guild_id"))
+    guildId = j["guild_id"];
+  if(j.contains("member")){
+    member = deserializeUser(j["member"]["user"]);
+    member->guild = deserializeGuildUser(j["member"]);
+  }
+  emoji = deserializeEmoji(j["emoji"]);
+  if(j.contains("message_author_id"))
+    messageAuthorId = j["message_author_id"];
+  burst = j["burst"];
+  if(burst)
+    burst_colors = j["burst_colors"].get<std::vector<std::string>>();
+  type = static_cast<MessageReactionTypes>(j["type"].get<int>());
+}
 
 
+Message::Message(const nlohmann::json& j){
+  content = j["content"];
+  msgflags = j["flags"];
+  mentionEveryone = j["mention_everyone"];
+  channelId = j["channel_id"];
+  if(j.contains("webhook_id"))
+    webhookId = j["webhook_id"];
+  author = deserializeUser(j["author"]);
+  if(j.contains("member"))
+    author.guild = deserializeGuildUser(j["member"]);
+  if(j.contains("guild_id"))
+    guildId = j["guild_id"];
+  id = j["id"];
+}
 
 nlohmann::json Message::generate() const {
   nlohmann::json j;
@@ -41,35 +75,54 @@ Message& Message::setMessageFlags(int msgflags){
 MessageApiRoutes::MessageApiRoutes(NyaBot *bot) : bot{bot}{}
 
 
-void MessageApiRoutes::create(const std::string_view id, const std::string_view content){
+std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id, const std::string_view content){
   nlohmann::json j;
   j["content"] = content;
-  send(id, j.dump()); 
+
+  return send(id, j.dump()).and_then([](std::expected<std::string, Error> a){
+    return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+  });
+
 }
 
-void MessageApiRoutes::create(const std::string_view id, const Message& a){
+std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id, const Message& a){
   if(!a.attachments.empty()){
     auto payload = makeFormData(a.generate(), "woof", a.attachments);
-    send(id, payload, "woof");
+
+    return send(id, payload, "woof").and_then([](std::expected<std::string, Error> a){
+      return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+    });
+
   } else {
-    send(id, a.generate().dump());
+    return send(id, a.generate().dump()).and_then([](std::expected<std::string, Error> a){
+      return std::expected<Message, Error>(Message(nlohmann::json::parse(a.value())));
+    });
+
   }
 }
 
-void MessageApiRoutes::send(const std::string_view id, const std::string& content){
-  auto meow = bot->rest.post(std::format("https://discord.com/api/v10/channels/{}/messages", id),
+std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content){
+  auto meow = bot->rest.post(std::format(APIURL "/channels/{}/messages", id),
                              content);
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create a message");
+    err.printErrors();
+    return std::unexpected(err);
   }
+  return meow->first;
 }
 
-void MessageApiRoutes::send(const std::string_view id, const std::string& content, const std::string& boundary){
-  auto meow = bot->rest.sendFormData(std::format("https://discord.com/api/v10/channels/{}/messages", id),
+std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content, const std::string& boundary){
+  auto meow = bot->rest.sendFormData(std::format(APIURL "/channels/{}/messages", id),
                              content,
                              boundary,
                              "POST");
   if(!meow.has_value() || meow->second != 200){
-    Log::error("failed to create a message\n" + meow.value_or(std::make_pair("", 0)).first);
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create a message");
+    err.printErrors();
+    return std::unexpected(err);
   }
+  return meow->first;
 }

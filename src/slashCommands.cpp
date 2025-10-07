@@ -1,6 +1,8 @@
 #include "../include/slashCommands.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
+#include <format>
 
 
 SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 
@@ -29,7 +31,7 @@ void NyaBot::addSlash(const SlashCommand& slash){
   slashs.emplace_back(slash);
 }
 
-void NyaBot::syncSlashCommands(){
+std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
   nlohmann::json json;
   json = nlohmann::json::array();
   for(const auto& it : slashs){
@@ -68,10 +70,14 @@ void NyaBot::syncSlashCommands(){
     json.emplace_back(a);
   }
   std::string write;
-  auto meow = rest.put(std::format("https://discord.com/api/v10/applications/{}/commands",
+  auto meow = rest.put(std::format(APIURL "/applications/{}/commands",
                                    api.appId),
                        json.dump());
-  if(!meow.has_value() || meow->second != 200)
-    Log::error("something went wrong while syncing slash commands " + 
-             meow.value_or(std::make_pair("", 0)).first);
+  if(!meow.has_value() || meow->second != 200){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to sync slash commands");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
 }

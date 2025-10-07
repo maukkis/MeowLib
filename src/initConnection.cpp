@@ -1,7 +1,8 @@
-#include "../meowHttp/src/includes/websocket.h"
+#include <meowHttp/websocket.h>
 #include <csignal>
 #include <pthread.h>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
@@ -13,6 +14,9 @@ NyaBot::NyaBot(int intents){
   handle = meowWs::Websocket()
     .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
   std::signal(SIGINT, NyaBot::signalHandler);
+  #ifndef NDEBUG
+    Log::info(std::string("MeowLib version: ") + MEOWLIB_VERSION + " with " + std::to_string(dispatchHandlers.size()) + " gw events implemented");
+  #endif
 }
 
 meow NyaBot::reconnect(bool resume){
@@ -58,14 +62,18 @@ NyaBot::~NyaBot(){
 
 
 void NyaBot::connect(){
-  if(handle.perform() == OK){
-    Log::dbg("connected to the websocket succesfully!");
+  int timeToWait = 5;
+  for(int attempts = 0; attempts < retryAmount; ++attempts, timeToWait *= 2){
+    if(handle.perform() == OK){
+      Log::dbg("connected to the websocket succesfully!");
+      return;
+    }
+    else {
+      if(timeToWait > 300) timeToWait = 300;
+      Log::error("failed to connect to the gateway waiting " + std::to_string(timeToWait) + " seconds");
+      std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
+    }
   }
-  else {
-    Log::error("something went wrong");
-    std::exit(1);
-  }
-  
 }
 
 void NyaBot::sendIdent(){
