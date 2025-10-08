@@ -29,6 +29,20 @@ enum class MessageReactionTypes {
   BURST
 };
 
+enum class MessageReferenceTypes {
+  DEFAULT,
+  FORWARD,
+};
+
+class MessageReference {
+public:
+  nlohmann::json generate() const;
+  MessageReferenceTypes type{};
+  std::optional<std::string> channelId = std::nullopt;
+  std::optional<std::string> messageId = std::nullopt;
+};
+
+
 struct MessageReaction {
   MessageReaction(const nlohmann::json& j);
   std::string userId;
@@ -50,6 +64,8 @@ public:
   Message() = default;
   Message(const nlohmann::json& j);
   Message(Message&&) = default;
+  /// @brief sets the reply to the message if this was received as an event
+  Message& replyTo();
   template<typename T>
   requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
   Message& addComponent(T&& comp){
@@ -70,6 +86,7 @@ public:
   std::string channelId;
   // ONLY FOR GATEWAY MESSAGE EVENTS
   std::optional<std::string> guildId;
+  std::optional<MessageReference> messageReference;
 private:
   std::vector<std::unique_ptr<Component>> components;
 };

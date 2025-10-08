@@ -6,6 +6,18 @@
 #include "../include/nyaBot.h"
 
 
+
+nlohmann::json MessageReference::generate() const {
+  nlohmann::json j;
+  j["type"] = static_cast<int>(type);
+  if(channelId)
+    j["channel_id"] = *channelId;
+  if(messageId)
+    j["message_id"] = *messageId;
+  return j;
+}
+
+
 MessageReaction::MessageReaction(const nlohmann::json& j){
   userId = j["user_id"];
   channelId = j["channel_id"];
@@ -41,8 +53,17 @@ Message::Message(const nlohmann::json& j){
   id = j["id"];
 }
 
+Message& Message::replyTo(){
+  if(!id.empty()){
+    messageReference = MessageReference{.type = MessageReferenceTypes::DEFAULT, .messageId = id};
+  }
+  return *this;
+}
+
 nlohmann::json Message::generate() const {
   nlohmann::json j;
+  if(messageReference)
+    j["message_reference"] = messageReference->generate();
   if(!content.empty()){
     j["content"] = content;
     if(msgflags != 0) j["flags"] = msgflags;

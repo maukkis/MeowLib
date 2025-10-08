@@ -110,7 +110,7 @@ void NyaBot::listen(){
         break;
         case InvalidSession:
           Log::dbg("invalid session owo reconnecting without resuming :3");
-          reconnect(false);
+          reconnect(meowJson["d"].get<bool>());
         break;
         default:
           Log::dbg("barks?");
@@ -124,7 +124,12 @@ void NyaBot::listen(){
     }
     catch(meowHttp::Exception &e){
       Log::error(e.what());
-      if(e.closed()) reconnect(true);
+      if(e.closed()){
+        reconnect(true);
+        // same thing here as in zombified connections we have to reset clocks to avoid a potential unnecessary reconnect
+        sentHB = std::chrono::steady_clock::now();
+        lastHB = std::chrono::steady_clock::now();
+      }
       else {
         Log::error("fatal error exiting :3");
         return;
