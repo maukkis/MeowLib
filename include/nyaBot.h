@@ -10,6 +10,7 @@
 #include "queue.h"
 #include "restclient.h"
 #include "automod.h"
+#include "role.h"
 #include "selectInteraction.h"
 #include "slashCommandInt.h"
 #include "presence.h"
@@ -62,6 +63,7 @@ struct Funs {
   std::function<void(Message&)> onMessageUpdateF = {};
   std::function<void(MessageDelete&)> onMessageDeleteF = {};
   std::function<void(MessageReaction&)> onMessageReactionAddF = {};
+  std::function<void(MessageReaction&)> onMessageReactionRemoveF = {};
 
   std::function<void(Guild&)> onGuildCreateF = {};
   std::function<void(Guild&)> onGuildUpdateF = {};
@@ -71,7 +73,10 @@ struct Funs {
   std::function<void(User&)> onGuildMemberRemoveF = {};
   std::function<void(User&)> onGuildMemberAddF = {};
   std::function<void(User&)> onGuildMemberUpdateF = {};
-
+  std::function<void(RoleEvent&)> onGuiildRoleCreateF = {};
+  std::function<void(RoleEvent&)> onGuiildRoleUpdateF = {};
+  std::function<void(RoleDeleteEvent&)> onGuiildRoleDeleteF = {};
+  
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
   std::function<void(Channel&)> onChannelDeleteF = {};
@@ -195,6 +200,7 @@ public:
   void onMessageUpdate(std::function<void(Message&)> f);
   void onMessageDelete(std::function<void(MessageDelete&)> f);
   void onMessageReactionAdd(std::function<void(MessageReaction&)> f);
+  void onMessageReactionRemove(std::function<void(MessageReaction&)> f);
 
   void onGuildCreate(std::function<void(Guild&)> f);
   void onGuildUpdate(std::function<void(Guild&)> f);
@@ -204,7 +210,10 @@ public:
   void onGuildMemberRemove(std::function<void(User&)> f);
   void onGuildMemberAdd(std::function<void(User&)> f);
   void onGuildMemberUpdate(std::function<void(User&)> f);
-
+  void onGuildRoleCreate(std::function<void(RoleEvent&)> f);
+  void onGuildRoleUpdate(std::function<void(RoleEvent&)> f);
+  void onGuildRoleDelete(std::function<void(RoleDeleteEvent&)> f);
+  
   void onChannelCreate(std::function<void(Channel&)> f);
   void onChannelUpdate(std::function<void(Channel&)> f);
   void onChannelDelete(std::function<void(Channel&)> f);
@@ -262,6 +271,7 @@ private:
   void messageUpdate(nlohmann::json j);
   void messageDelete(nlohmann::json j);
   void messageReactionAdd(nlohmann::json j);
+  void messageReactionRemove(nlohmann::json j);
 
   void guildCreate(nlohmann::json j);
   void guildUpdate(nlohmann::json j);
@@ -272,7 +282,10 @@ private:
   void guildMemberAdd(nlohmann::json j);
   void guildMemberUpdate(nlohmann::json j);
   void guildMemberChunk(nlohmann::json j);
-
+  void guildRoleCreate(nlohmann::json j);
+  void guildRoleUpdate(nlohmann::json j);
+  void guildRoleDelete(nlohmann::json j);
+  
   void channelCreate(nlohmann::json j);
   void channelUpdate(nlohmann::json j);
   void channelDelete(nlohmann::json j);
@@ -307,7 +320,11 @@ private:
     {"GUILD_MEMBER_ADD", std::bind(&NyaBot::guildMemberAdd, this, std::placeholders::_1)},
     {"GUILD_MEMBER_UPDATE", std::bind(&NyaBot::guildMemberUpdate, this, std::placeholders::_1)},
     {"GUILD_MEMBERS_CHUNK", std::bind(&NyaBot::guildMemberChunk, this, std::placeholders::_1)},
+    {"GUILD_ROLE_CREATE", std::bind(&NyaBot::guildRoleCreate, this, std::placeholders::_1)},
+    {"GUILD_ROLE_UPDATE", std::bind(&NyaBot::guildRoleUpdate, this, std::placeholders::_1)},
+    {"GUILD_ROLE_DELETE", std::bind(&NyaBot::guildRoleDelete, this, std::placeholders::_1)},
     {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
+    {"MESSAGE_REACTION_REMOVE", std::bind(&NyaBot::messageReactionRemove, this, std::placeholders::_1)},
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
     {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)},

@@ -69,6 +69,39 @@ void NyaBot::guildMemberUpdate(nlohmann::json j){
   }
 }
 
+void NyaBot::guildRoleCreate(nlohmann::json j){
+  if(funs.onGuiildRoleCreateF){
+    RoleEvent a
+      {
+        .guildId = j["d"]["guild_id"], 
+        .role = Role(j["d"]["role"])
+      };
+    funs.onGuiildRoleCreateF(a);
+  }
+}
+
+
+void NyaBot::guildRoleUpdate(nlohmann::json j){
+  if(funs.onGuiildRoleUpdateF){
+    RoleEvent a
+      {
+        .guildId = j["d"]["guild_id"], 
+        .role = Role(j["d"]["role"])
+      };
+    funs.onGuiildRoleUpdateF(a);
+  }
+}
+
+void NyaBot::guildRoleDelete(nlohmann::json j){
+  if(funs.onGuiildRoleDeleteF){
+    RoleDeleteEvent a
+      {
+        .guildId = j["d"]["guild_id"], 
+        .roleId = j["d"]["role_id"]
+      };
+    funs.onGuiildRoleDeleteF(a);
+  }
+}
 
 void NyaBot::guildMemberChunk(nlohmann::json j){
   j = j["d"];

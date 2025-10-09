@@ -65,6 +65,11 @@ void NyaBot::onMessageReactionAdd(std::function<void(MessageReaction&)> f){
   funs.onMessageReactionAddF = f;
 }
 
+
+void NyaBot::onMessageReactionRemove(std::function<void(MessageReaction&)> f){
+  funs.onMessageReactionRemoveF = f;
+}
+
 void NyaBot::onGuildCreate(std::function<void(Guild&)> f){
   funs.onGuildCreateF = f;
 }
@@ -96,6 +101,20 @@ void NyaBot::onGuildMemberAdd(std::function<void(User&)> f){
 void NyaBot::onGuildMemberUpdate(std::function<void(User&)> f){
   funs.onGuildMemberUpdateF = f;
 }
+
+
+void NyaBot::onGuildRoleCreate(std::function<void(RoleEvent&)> f){
+  funs.onGuiildRoleCreateF = f; 
+}
+
+void NyaBot::onGuildRoleUpdate(std::function<void(RoleEvent&)> f){
+  funs.onGuiildRoleUpdateF = f; 
+}
+
+void NyaBot::onGuildRoleDelete(std::function<void(RoleDeleteEvent&)> f){
+  funs.onGuiildRoleDeleteF = f; 
+}
+
 
 void NyaBot::onChannelCreate(std::function<void(Channel&)> f){
   funs.onChannelCreateF = f;

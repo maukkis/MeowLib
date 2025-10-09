@@ -12,6 +12,7 @@ struct RoleColors{
   std::optional<int> tertiaryColor;
 };
 
+
 struct Role {
   Role(const nlohmann::json& j);
   std::string id;
@@ -25,6 +26,17 @@ struct Role {
   bool managed;
   bool mentionable;
   int flags;
+};
+
+
+struct RoleEvent {
+  std::string guildId;
+  Role role;
+};
+
+struct RoleDeleteEvent {
+  std::string guildId;
+  std::string roleId;
 };
 
 #endif
