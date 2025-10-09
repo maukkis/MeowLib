@@ -216,6 +216,44 @@ std::expected<User, Error> GuildApiRoutes::modifyGuildMember(const std::string_v
 }
 
 
+
+std::expected<std::nullopt_t, Error> GuildApiRoutes::addGuildMemberRole(const std::string_view guildId,
+                                                                        const std::string_view userId,
+                                                                        const std::string_view roleId,
+                                                                        const std::optional<std::string>& auditLogReason)
+{
+  auto res = bot->rest.put(std::format(APIURL "/guilds/{}/members/{}/roles/{}", guildId, userId, roleId), std::nullopt,
+    auditLogReason.has_value() ? 
+      std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *auditLogReason }) : std::nullopt);
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to add role to guild member");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildMemberRole(const std::string_view guildId,
+                                                                        const std::string_view userId,
+                                                                        const std::string_view roleId,
+                                                                        const std::optional<std::string>& auditLogReason)
+{
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/members/{}/roles/{}", guildId, userId, roleId),
+    auditLogReason.has_value() ? 
+      std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *auditLogReason }) : std::nullopt);
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to remove role from guild member");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+
 std::expected<std::string, Error> GuildApiRoutes::getReq(const std::string& endpoint){
   auto res = bot->rest.get(endpoint);
   if(!res.has_value() || res->second != 200){

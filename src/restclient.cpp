@@ -48,7 +48,7 @@ std::expected<std::pair<std::string, int>, RestErrors> RestClient::patch(const s
 }
 
 std::expected<std::pair<std::string, int>, RestErrors> RestClient::put(const std::string& endpoint,
-                                                                       const std::string& data,
+                                                                       const std::optional<std::string>& data,
                                                                        const std::optional<std::vector<std::string>>& headers)
 {
   std::vector<std::string> headerss {

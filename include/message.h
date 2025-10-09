@@ -105,6 +105,18 @@ public:
   /// @param id channel id to send message in
   /// @param msg Message object
   std::expected<Message, Error> create(const std::string_view id, const Message& msg);
+
+  std::expected<std::nullopt_t, Error> createReaction(const std::string_view channelId,
+                                                      const std::string_view messageId,
+                                                      const std::string_view emojiId);
+
+  std::expected<std::nullopt_t, Error> removeOwnReaction(const std::string_view channelId,
+                                                      const std::string_view messageId,
+                                                      const std::string_view emojiId);
+  std::expected<std::nullopt_t, Error> removeUsersReaction(const std::string_view channelId,
+                                                           const std::string_view messageId,
+                                                           const std::string_view emojiId,
+                                                           const std::string_view userId);
 private:
   std::expected<std::string, Error> send(const std::string_view id, const std::string& content);
   std::expected<std::string, Error> send(const std::string_view id, const std::string& content, const std::string& boundary);

@@ -138,6 +138,51 @@ std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id
   }
 }
 
+std::expected<std::nullopt_t, Error> MessageApiRoutes::createReaction(const std::string_view channelId,
+                                                                      const std::string_view messageId,
+                                                                      const std::string_view emojiId)
+{
+  auto meow = bot->rest.put(std::format(APIURL "/channels/{}/messages/{}/reactions/{}/@me", channelId, messageId, asciiToURLEncoded(emojiId)));
+  if(!meow.has_value() || meow->second != 204){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create message reaction");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+std::expected<std::nullopt_t, Error> MessageApiRoutes::removeOwnReaction(const std::string_view channelId,
+                                                                      const std::string_view messageId,
+                                                                      const std::string_view emojiId)
+{
+  auto meow = bot->rest.deletereq(std::format(APIURL "/channels/{}/messages/{}/reactions/{}/@me", channelId, messageId, asciiToURLEncoded(emojiId)));
+  if(!meow.has_value() || meow->second != 204){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to remove own message reaction");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+std::expected<std::nullopt_t, Error> MessageApiRoutes::removeUsersReaction(const std::string_view channelId,
+                                                                           const std::string_view messageId,
+                                                                           const std::string_view emojiId,
+                                                                           const std::string_view userId)
+{
+  auto meow = bot->rest.deletereq(std::format(APIURL "/channels/{}/messages/{}/reactions/{}/{}", channelId, messageId, asciiToURLEncoded(emojiId), userId));
+  if(!meow.has_value() || meow->second != 204){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to remove user message reaction");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+
+}
+
 std::expected<std::string, Error> MessageApiRoutes::send(const std::string_view id, const std::string& content){
   auto meow = bot->rest.post(std::format(APIURL "/channels/{}/messages", id),
                              content);

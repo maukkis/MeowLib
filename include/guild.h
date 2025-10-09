@@ -98,6 +98,18 @@ public:
                                                const GuildUser& user,
                                                const std::optional<std::string>& reason);
 
+  std::expected<std::nullopt_t, Error> addGuildMemberRole(const std::string_view guildId,
+                                                          const std::string_view userId,
+                                                          const std::string_view roleId,
+                                                          const std::optional<std::string>& auditLogReason = std::nullopt);
+
+
+  std::expected<std::nullopt_t, Error> removeGuildMemberRole(const std::string_view guildId,
+                                                             const std::string_view userId,
+                                                             const std::string_view roleId,
+                                                             const std::optional<std::string>& auditLogReason = std::nullopt);
+
+
 
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);

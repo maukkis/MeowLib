@@ -36,6 +36,15 @@ std::string& lower(std::string& a){
   return a;
 }
 
+std::string asciiToURLEncoded(const std::string_view a){
+  std::string c;
+  for(const auto& b : a){
+    c += std::format("%{:x}", static_cast<unsigned char>(b));
+  }
+  return c;
+}
+
+
 std::string generate32ByteASCIINonce(){
   static std::random_device dev;
   static std::mt19937 rnd(dev());
