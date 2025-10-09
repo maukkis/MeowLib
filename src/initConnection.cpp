@@ -45,7 +45,7 @@ meow NyaBot::reconnect(bool resume){
 }
 
 void NyaBot::run(const std::string_view token){
-  this->api.token = token;
+  api.token = token;
   Log::dbg("fetching /gateway/bot :3");
   auto res = rest.get(APIURL "/gateway/bot");
   if(!res.has_value() || res->second != 200){

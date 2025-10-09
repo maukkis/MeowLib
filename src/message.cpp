@@ -55,7 +55,23 @@ Message::Message(const nlohmann::json& j){
 
 Message& Message::replyTo(){
   if(!id.empty()){
-    messageReference = MessageReference{.type = MessageReferenceTypes::DEFAULT, .messageId = id};
+    messageReference = MessageReference
+      {
+        .type = MessageReferenceTypes::DEFAULT,
+        .messageId = id
+      };
+  }
+  return *this;
+}
+
+Message& Message::forward(){
+  if(!id.empty() && !channelId.empty()){
+    messageReference = MessageReference
+      {
+        .type = MessageReferenceTypes::FORWARD,
+        .channelId = channelId,
+        .messageId = id
+      };
   }
   return *this;
 }

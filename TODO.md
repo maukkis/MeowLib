@@ -6,7 +6,7 @@
 - [x] message gateway events
 - [ ] polls!
 - [ ] audit log
-- [ ] forwarding
+- [x] forwarding
 - [x] replying
 - [ ] sharding
 - [ ] guild templates!

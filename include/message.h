@@ -66,6 +66,8 @@ public:
   Message(Message&&) = default;
   /// @brief sets the reply to the message if this was received as an event
   Message& replyTo();
+  /// @brief sets the current message in this object to be forwarded
+  Message& forward();
   template<typename T>
   requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
   Message& addComponent(T&& comp){
