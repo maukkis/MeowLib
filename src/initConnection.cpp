@@ -1,5 +1,6 @@
 #include <meowHttp/websocket.h>
 #include <csignal>
+#include <nlohmann/json_fwd.hpp>
 #include <pthread.h>
 #include <string>
 #include <thread>
@@ -11,8 +12,6 @@
 NyaBot::NyaBot(int intents){
   api.intents = intents;
   a = this;
-  handle = meowWs::Websocket()
-    .setUrl("https://gateway.discord.gg/?v=10&encoding=json");
   std::signal(SIGINT, NyaBot::signalHandler);
   #ifndef NDEBUG
     Log::info(std::string("MeowLib version: ") + MEOWLIB_VERSION + " with " + std::to_string(dispatchHandlers.size()) + " gw events implemented");
@@ -27,7 +26,7 @@ meow NyaBot::reconnect(bool resume){
   if(api.resumeUrl.find("wss") != std::string::npos)
     api.resumeUrl.replace(0, 3, "https");
 
-  handle.setUrl(api.resumeUrl);
+  handle.setUrl(resume ? api.resumeUrl : api.defaultUrl);
   connect();
   getHeartbeatInterval();
   if(resume){
@@ -47,6 +46,21 @@ meow NyaBot::reconnect(bool resume){
 
 void NyaBot::run(const std::string_view token){
   this->api.token = token;
+  Log::dbg("fetching /gateway/bot :3");
+  auto res = rest.get(APIURL "/gateway/bot");
+  if(!res.has_value() || res->second != 200){
+    Log::error("failed to get /gateway/bot exiting :(");
+    return;
+  }
+  auto j = nlohmann::json::parse(res->first);
+  if(j["session_start_limit"]["remaining"] == 0){
+    Log::error("no login remaining please attempt after " +
+               std::to_string(j["session_start_limit"]["reset_after"].get<int>()) +
+               " milliseconds");
+    return;
+  }
+  api.defaultUrl = j["url"].get<std::string>().replace(0, 3, "https") + "/?v=10&encoding=json";
+  handle.setUrl(api.defaultUrl);
   connect();
   getHeartbeatInterval();
   Log::dbg("interval is " + std::to_string(api.interval));

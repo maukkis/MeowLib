@@ -38,9 +38,13 @@ std::future<std::vector<User>> NyaBot::requestGuildMembers(const std::string_vie
   std::promise<std::vector<User>> promise;
   auto fut = promise.get_future();
   std::unique_lock<std::mutex> lock(guildMemberChunkmtx);
-  guildMembersChunkTable.insert({nonce, GuildMemberRequestData{.callback = [pro = std::move(promise)](std::vector<User> a) mutable {
-    pro.set_value(std::move(a));
-  }}});
+  guildMembersChunkTable.insert({nonce, GuildMemberRequestData{
+    .callback = 
+      [pro = std::move(promise)](std::vector<User> a) mutable {
+        pro.set_value(std::move(a));
+      }
+    }
+  });
   queue.addToQueue(j.dump());
   return fut;
 }

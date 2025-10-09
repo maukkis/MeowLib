@@ -39,6 +39,7 @@ struct ImportantApiStuff {
   std::string appId;
   std::string sesId;
   std::string resumeUrl;
+  std::string defaultUrl;
   int intents = 0;
 };
 

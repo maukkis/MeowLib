@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 
 Attachment readFile(const std::string& a){
