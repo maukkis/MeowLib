@@ -2,6 +2,7 @@
 #include <nlohmann/detail/value_t.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <format>
 #include "../include/guild.h"
@@ -111,6 +112,9 @@ GuildUser deserializeGuildUser(const nlohmann::json &j){
     .avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]),
     .banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]),
     .roles = j["roles"].get<std::vector<std::string>>(),
+    .permissions = j.contains("permissions") ? 
+      std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
+      : std::nullopt,
     .communicationDisabledUntil = 
       j.contains("communication_disabled_until")
       && !j["communication_disabled_until"].is_null() ? 

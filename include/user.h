@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #ifndef _INCLUDE_USER_H
 #define _INCLUDE_USER_H
 #include "attachment.h"
@@ -25,6 +26,7 @@ struct GuildUser {
   std::optional<std::string> avatar = std::nullopt;
   std::optional<std::string> banner = std::nullopt;
   std::vector<std::string> roles = {};
+  std::optional<uint64_t> permissions = std::nullopt; 
   // only for guild member gw events
   std::optional<std::string> guildId = std::nullopt;
   // an iso8601 timestamp 
