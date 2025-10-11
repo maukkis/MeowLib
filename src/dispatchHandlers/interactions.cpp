@@ -44,7 +44,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
   const std::string commandName = json["data"]["name"];
   SlashCommandInt slash(id, interactionToken, commandName, user, appId, a);
 
-  slash.appPermissions = json["app_permissions"];
+  slash.appPermissions = std::stoull(json["app_permissions"].get<std::string>(), nullptr, 10);
   if(json.contains("guild_id"))
     slash.guildId = json["guild_id"];
   slash.resolvedUsers = deserializeResolved<User>(json["data"]);
@@ -69,7 +69,7 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a);
 
-  button.appPermissions = j["app_permissions"];
+  button.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
 
   if(j.contains("guild_id"))
     button.guildId = j["guild_id"];
@@ -90,7 +90,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   const std::string& name = j["data"]["custom_id"];
   ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
 
-  modal.appPermissions = j["app_permissions"];
+  modal.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
   modal.guildId = j["guild_id"];
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   for(auto& a : j["data"]["components"]){
@@ -138,7 +138,7 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"], a);
 
-  select.appPermissions = j["app_permissions"];
+  select.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
   if(j.contains("guild_id"))
     select.guildId = j["guild_id"];
   select.interaction = deserializeInteractionData(j);

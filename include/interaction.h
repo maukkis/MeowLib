@@ -91,7 +91,7 @@ public:
   std::optional<std::string> guildId;
   NyaBot *bot;
   const std::string interactionId;
-  std::string appPermissions;
+  uint64_t appPermissions;
 protected:
   const std::string interactionToken;
   const std::string applicationId;
