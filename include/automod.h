@@ -67,6 +67,7 @@ struct AutoModTriggerMetadata {
 };
 
 struct AutoModRule {
+  AutoModRule() = default;
   AutoModRule(const nlohmann::json& j);
   nlohmann::json generate() const;
   std::string id;
