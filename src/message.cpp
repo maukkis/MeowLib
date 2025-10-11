@@ -5,8 +5,18 @@
 #include <format>
 #include "../include/nyaBot.h"
 
+namespace {
 
+InteractionData deserializeInteractionData(const nlohmann::json& j){
+  return {
+    .id = j["id"],
+    .type = j["type"],
+    .name = j["name"],
+    .user = deserializeUser(j["user"])
+  };
+}
 
+}
 nlohmann::json MessageReference::generate() const {
   nlohmann::json j;
   j["type"] = static_cast<int>(type);
@@ -43,6 +53,9 @@ Message::Message(const nlohmann::json& j){
   msgflags = j["flags"];
   mentionEveryone = j["mention_everyone"];
   channelId = j["channel_id"];
+  if(j.contains("interaction")){
+    interactionData = deserializeInteractionData(j["interaction"]);
+  }
   if(j.contains("webhook_id"))
     webhookId = j["webhook_id"];
   author = deserializeUser(j["author"]);

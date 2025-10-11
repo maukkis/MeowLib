@@ -31,11 +31,7 @@ enum types{
   MODAL_SUBMIT = 5,
 };
 
-struct InteractionData{
-  std::string id;
-  int type;
-  std::string name;
-};
+
 
 
 class Interaction {

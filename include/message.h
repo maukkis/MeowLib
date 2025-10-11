@@ -15,6 +15,13 @@
 #include "error.h"
 
 
+struct InteractionData{
+  std::string id;
+  int type;
+  std::string name;
+  User user;
+};
+
 class NyaBot;
 
 
@@ -89,6 +96,7 @@ public:
   // ONLY FOR GATEWAY MESSAGE EVENTS
   std::optional<std::string> guildId;
   std::optional<MessageReference> messageReference;
+  std::optional<InteractionData> interactionData;
 private:
   std::vector<std::unique_ptr<Component>> components;
 };

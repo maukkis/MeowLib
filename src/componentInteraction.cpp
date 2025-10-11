@@ -3,6 +3,16 @@
 #include "../include/helpers.h"
 #include <format>
 
+ComponentInteraction::ComponentInteraction(
+  const std::string_view id,
+  const std::string_view token,
+  const std::string_view commandName,
+  User user,
+  const std::string& applicationId,
+  NyaBot *bot, const nlohmann::json& msgj)
+  : Interaction(id, token, commandName, user, applicationId, bot),
+    message{msgj} {};
+
 
 std::expected<std::nullopt_t, Error> ComponentInteraction::updateMessage(){
   nlohmann::json j;
