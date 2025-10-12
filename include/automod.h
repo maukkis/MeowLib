@@ -10,7 +10,7 @@ class NyaBot;
 
 enum class AutoModEventType {
   MESSAGE_SEND = 1,
-  MESSAGE_UPDATE = 2
+  MEMBER_UPDATE = 2
 };
 
 enum class AutoModTriggerType {
