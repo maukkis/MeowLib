@@ -35,7 +35,7 @@ include(CMakePackageConfigHelpers)
 set(config_dir lib/cmake/MeowLib)
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfigVersion.cmake"
-  VERSION ${meowHttp_version}
+  VERSION ${PROJECT_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
