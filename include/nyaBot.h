@@ -242,12 +242,13 @@ public:
   std::future<std::vector<User>> requestGuildMembers(const std::string_view guildId,
                                                      const std::string_view query,
                                                      const int limit);
-  RestClient rest {this};
+  RestClient rest{this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
   EmojiApiRoutes emoji{this};
   MessageApiRoutes message{this};
   AutoModApiRoutes automod{this};
+  ChannelApiRoutes channel{this};
 private:
   void listen();
   void connect();

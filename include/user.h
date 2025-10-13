@@ -50,8 +50,8 @@ public:
   UserApiRoutes(NyaBot *bot);
   /// @brief fetches an user object
   /// @param id user id to fetch
-  std::expected<User, Error> getUser(const std::string_view id);
-  std::expected<User, Error> getCurrentUser();
+  std::expected<User, Error> get(const std::string_view id);
+  std::expected<User, Error> getCurrent();
   std::expected<Channel, Error> createDM(const std::string_view id);
   std::expected<User, Error> modifyCurrentUser(std::optional<std::string> username = std::nullopt,
                                                std::optional<Attachment> avatar = std::nullopt,

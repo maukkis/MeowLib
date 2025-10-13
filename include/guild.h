@@ -78,33 +78,38 @@ public:
   /// @param id guild id
   std::expected<GuildPreview, Error> getPreview(const std::string_view id);
   
-  std::expected<std::vector<GuildBan>, Error> getGuildBans(const std::string_view id);
+  std::expected<std::vector<Channel>, Error> getChannels(const std::string_view guildId);
+
+  std::expected<Channel, Error> createChannel(const std::string_view guildId, const Channel& a);
+
+
+  std::expected<std::vector<GuildBan>, Error> getBans(const std::string_view id);
   
-  std::expected<GuildBan, Error> getGuildBan(const std::string_view guildId, const std::string_view userId);
+  std::expected<GuildBan, Error> getBan(const std::string_view guildId, const std::string_view userId);
   
-  std::expected<std::nullopt_t, Error> createGuildBan(const std::string_view guildId,
+  std::expected<std::nullopt_t, Error> createBan(const std::string_view guildId,
                                                       const std::string_view userId,
                                                       const std::optional<int> deleteMessagesSeconds = std::nullopt,
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
   
-  std::expected<std::nullopt_t, Error> removeGuildBan(const std::string_view guildId, const std::string_view userId,
+  std::expected<std::nullopt_t, Error> removeBan(const std::string_view guildId, const std::string_view userId,
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
 
-  std::expected<std::nullopt_t, Error> removeGuildMember(const std::string_view guildId, const std::string_view userId,
+  std::expected<std::nullopt_t, Error> removeMember(const std::string_view guildId, const std::string_view userId,
                                                          const std::optional<std::string>& auditLogReason = std::nullopt);
 
-  std::expected<User, Error> modifyGuildMember(const std::string_view guildId,
+  std::expected<User, Error> modifyMember(const std::string_view guildId,
                                                const std::string_view userId,
                                                const GuildUser& user,
                                                const std::optional<std::string>& reason);
 
-  std::expected<std::nullopt_t, Error> addGuildMemberRole(const std::string_view guildId,
+  std::expected<std::nullopt_t, Error> addMemberRole(const std::string_view guildId,
                                                           const std::string_view userId,
                                                           const std::string_view roleId,
                                                           const std::optional<std::string>& auditLogReason = std::nullopt);
 
 
-  std::expected<std::nullopt_t, Error> removeGuildMemberRole(const std::string_view guildId,
+  std::expected<std::nullopt_t, Error> removeMemberRole(const std::string_view guildId,
                                                              const std::string_view userId,
                                                              const std::string_view roleId,
                                                              const std::optional<std::string>& auditLogReason = std::nullopt);

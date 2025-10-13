@@ -154,7 +154,7 @@ AutoModActionExecution::AutoModActionExecution(const nlohmann::json& j){
 AutoModApiRoutes::AutoModApiRoutes(NyaBot *bot): bot{bot}{}
 
 
-std::expected<std::vector<AutoModRule>, Error> AutoModApiRoutes::listAutoModerationRules(const std::string_view guildId){
+std::expected<std::vector<AutoModRule>, Error> AutoModApiRoutes::listRules(const std::string_view guildId){
   return getReq(std::format(APIURL "/guilds/{}/auto-moderation/rules", guildId))
     .and_then([](std::expected<std::string, Error> a){
       std::vector<AutoModRule> b;
@@ -165,7 +165,7 @@ std::expected<std::vector<AutoModRule>, Error> AutoModApiRoutes::listAutoModerat
     });
 }
 
-std::expected<AutoModRule, Error> AutoModApiRoutes::getAutoModerationRule(const std::string_view guildId,
+std::expected<AutoModRule, Error> AutoModApiRoutes::getRule(const std::string_view guildId,
                                                                           const std::string_view ruleId)
 {
   return getReq(std::format(APIURL "/guilds/{}/auto-moderation/rules/{}", guildId, ruleId))
@@ -174,7 +174,7 @@ std::expected<AutoModRule, Error> AutoModApiRoutes::getAutoModerationRule(const 
     });
 }
 
-std::expected<AutoModRule, Error> AutoModApiRoutes::createAutoModerationRule(const std::string_view guildId,
+std::expected<AutoModRule, Error> AutoModApiRoutes::createRule(const std::string_view guildId,
                                                                              const AutoModRule& r)
 {
   auto res = bot->rest.post(std::format(APIURL "/guilds/{}/auto-moderation/rules", guildId), r.generate().dump());
@@ -187,7 +187,7 @@ std::expected<AutoModRule, Error> AutoModApiRoutes::createAutoModerationRule(con
   return AutoModRule(nlohmann::json::parse(res->first));
 }
 
-std::expected<AutoModRule, Error> AutoModApiRoutes::modifyAutoModerationRule(const std::string_view guildId,
+std::expected<AutoModRule, Error> AutoModApiRoutes::modifyRule(const std::string_view guildId,
                                                                              const std::string_view ruleId,
                                                                              const AutoModRule& r)
 {
@@ -202,7 +202,7 @@ std::expected<AutoModRule, Error> AutoModApiRoutes::modifyAutoModerationRule(con
 }
 
 
-std::expected<std::nullopt_t, Error> AutoModApiRoutes::deleteAutoModerationRule(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> AutoModApiRoutes::deleteRule(const std::string_view guildId,
                                                                                 const std::string_view ruleId)
 {
   auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/auto-moderation/rules/{}", guildId, ruleId));

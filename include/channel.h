@@ -4,6 +4,11 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
+#include <expected>
+#include <string_view>
+#include "error.h"
+
+class NyaBot;
 
 enum class ChannelType{
   GUILD_TEXT,
@@ -24,13 +29,30 @@ enum class ChannelType{
 struct Channel {
   std::string id{};
   ChannelType type{};
-  std::optional<std::string> guildId;
-  std::optional<int> position;
-  std::optional<std::string> name;
-  std::optional<std::string> topic;
+  std::optional<std::string> guildId = std::nullopt;
+  std::optional<int> position = std::nullopt;
+  std::optional<std::string> name = std::nullopt;
+  std::optional<std::string> topic = std::nullopt;
+};
+
+
+class ChannelApiRoutes {
+public:
+  ChannelApiRoutes(NyaBot *bot);
+  
+  /// @brief modifies a channel
+  /// @param id channel id
+  /// @param ch Channel object
+  std::expected<Channel, Error> modify(const std::string_view id, const Channel& ch);
+  /// @brief deletes/closes a channel
+  /// @param id channel id
+  // stupid C++ not letting me have a function called delete grrrr *bites*
+  std::expected<Channel, Error> close(const std::string_view id);
+private:
+  NyaBot *bot;
 };
 
 
 Channel deserializeChannel(const nlohmann::json& j);
-
+nlohmann::json serializeChannel(const Channel& a);
 #endif 

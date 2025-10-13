@@ -104,16 +104,16 @@ struct AutoModActionExecution {
 class AutoModApiRoutes {
 public:
   AutoModApiRoutes(NyaBot *b);
-  std::expected<std::vector<AutoModRule>, Error> listAutoModerationRules(const std::string_view guildId);
-  std::expected<AutoModRule, Error> getAutoModerationRule(const std::string_view guildId,
-                                                          const std::string_view ruleId);
-  std::expected<AutoModRule, Error> createAutoModerationRule(const std::string_view guildId,
-                                                             const AutoModRule& r);
-  std::expected<AutoModRule, Error> modifyAutoModerationRule(const std::string_view guildId,
-                                                             const std::string_view ruleId,
-                                                             const AutoModRule& r);
-  std::expected<std::nullopt_t, Error> deleteAutoModerationRule(const std::string_view guildId,
-                                                                const std::string_view ruleId);
+  std::expected<std::vector<AutoModRule>, Error> listRules(const std::string_view guildId);
+  std::expected<AutoModRule, Error> getRule(const std::string_view guildId,
+                                            const std::string_view ruleId);
+  std::expected<AutoModRule, Error> createRule(const std::string_view guildId,
+                                                const AutoModRule& r);
+  std::expected<AutoModRule, Error> modifyRule(const std::string_view guildId,
+                                               const std::string_view ruleId,
+                                               const AutoModRule& r);
+  std::expected<std::nullopt_t, Error> deleteRule(const std::string_view guildId,
+                                                  const std::string_view ruleId);
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);
   NyaBot *bot;

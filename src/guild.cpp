@@ -125,7 +125,32 @@ std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_
 }
 
 
-std::expected<std::vector<GuildBan>, Error> GuildApiRoutes::getGuildBans(const std::string_view id){
+
+std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId){
+  return getReq(std::format(APIURL "/guilds/{}/channels", guildId))
+  .transform([](std::string a){
+    std::vector<Channel> vec;
+    auto j = nlohmann::json::parse(a);
+    for(const auto& channel : j)
+      vec.emplace_back(deserializeChannel(channel));
+    return vec;
+  });
+}
+
+
+std::expected<Channel, Error> GuildApiRoutes::createChannel(const std::string_view guildId, const Channel& a){
+  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/channels", guildId), serializeChannel(a).dump());
+  if(!res.has_value() || res->second != 201){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create guild channel");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return deserializeChannel(nlohmann::json::parse(res->first));
+}
+
+
+std::expected<std::vector<GuildBan>, Error> GuildApiRoutes::getBans(const std::string_view id){
   return getReq(std::format(APIURL "/guilds/{}/bans", id))
   .and_then([](std::expected<std::string, Error> a){
     std::vector<GuildBan> bans;
@@ -135,7 +160,7 @@ std::expected<std::vector<GuildBan>, Error> GuildApiRoutes::getGuildBans(const s
     return std::expected<std::vector<GuildBan>, Error>(std::move(bans));
   });
 }
-std::expected<GuildBan, Error> GuildApiRoutes::getGuildBan(const std::string_view guildId,
+std::expected<GuildBan, Error> GuildApiRoutes::getBan(const std::string_view guildId,
                                                            const std::string_view userId)
 {
   return getReq(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId))
@@ -144,7 +169,7 @@ std::expected<GuildBan, Error> GuildApiRoutes::getGuildBan(const std::string_vie
   });
 
 }
-std::expected<std::nullopt_t, Error> GuildApiRoutes::createGuildBan(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> GuildApiRoutes::createBan(const std::string_view guildId,
                                                                     const std::string_view userId,
                                                                     const std::optional<int> dms,
                                                                     const std::optional<std::string>& reason)
@@ -163,7 +188,7 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::createGuildBan(const std::s
   }
   return std::nullopt;
 }
-std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildBan(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeBan(const std::string_view guildId,
                                                                     const std::string_view userId,
                                                                     const std::optional<std::string>& reason)
 {
@@ -179,7 +204,7 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildBan(const std::s
 }
 
 
-std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildMember(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeMember(const std::string_view guildId,
                                                                        const std::string_view userId,
                                                                        const std::optional<std::string>& auditLogReason )
 {
@@ -195,7 +220,7 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildMember(const std
 }
 
 
-std::expected<User, Error> GuildApiRoutes::modifyGuildMember(const std::string_view guildId,
+std::expected<User, Error> GuildApiRoutes::modifyMember(const std::string_view guildId,
                                                              const std::string_view userId,
                                                              const GuildUser& user,
                                                              const std::optional<std::string>& reason)
@@ -217,7 +242,7 @@ std::expected<User, Error> GuildApiRoutes::modifyGuildMember(const std::string_v
 
 
 
-std::expected<std::nullopt_t, Error> GuildApiRoutes::addGuildMemberRole(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> GuildApiRoutes::addMemberRole(const std::string_view guildId,
                                                                         const std::string_view userId,
                                                                         const std::string_view roleId,
                                                                         const std::optional<std::string>& auditLogReason)
@@ -235,7 +260,7 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::addGuildMemberRole(const st
 }
 
 
-std::expected<std::nullopt_t, Error> GuildApiRoutes::removeGuildMemberRole(const std::string_view guildId,
+std::expected<std::nullopt_t, Error> GuildApiRoutes::removeMemberRole(const std::string_view guildId,
                                                                         const std::string_view userId,
                                                                         const std::string_view roleId,
                                                                         const std::optional<std::string>& auditLogReason)

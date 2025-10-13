@@ -2,7 +2,6 @@
 #include "../include/log.h"
 
 
-
 Error::Error(const std::string& str){
   nlohmann::json j;
   try {
