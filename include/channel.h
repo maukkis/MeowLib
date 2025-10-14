@@ -33,6 +33,12 @@ struct Channel {
   std::optional<int> position = std::nullopt;
   std::optional<std::string> name = std::nullopt;
   std::optional<std::string> topic = std::nullopt;
+  std::optional<bool> nsfw = std::nullopt;
+  std::optional<std::string> lastPinTimestamp = std::nullopt;
+  std::optional<std::string> parentId = std::nullopt;
+  std::optional<std::string> lastMessageId = std::nullopt;
+  // only for gateway thread events
+  std::optional<bool> newlyCreated = std::nullopt;
 };
 
 
@@ -48,6 +54,9 @@ public:
   /// @param id channel id
   // stupid C++ not letting me have a function called delete grrrr *bites*
   std::expected<Channel, Error> close(const std::string_view id);
+  /// @brief joins a thread
+  /// @param id id of the thread
+  std::expected<std::nullopt_t, Error> joinThread(const std::string_view id);
 private:
   NyaBot *bot;
 };

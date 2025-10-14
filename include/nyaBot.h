@@ -28,6 +28,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
+#include "thread.h"
 #include "typingstart.h"
 #include "user.h"
 
@@ -80,6 +81,13 @@ struct Funs {
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
   std::function<void(Channel&)> onChannelDeleteF = {};
+
+  std::function<void(Channel&)> onThreadCreateF = {};
+  std::function<void(Channel&)> onThreadUpdateF = {};
+  std::function<void(Channel&)> onThreadDeleteF = {};
+  std::function<void(ThreadListSync&)> onThreadListSyncF = {};
+  std::function<void(ThreadMember&)> onThreadMemberUpdateF = {};
+  std::function<void(ThreadMembersUpdate&)> onThreadMembersUpdateF = {}; 
 
   std::function<void(TypingStart&)> onTypingStartF = {};
 };
@@ -218,6 +226,12 @@ public:
   void onChannelUpdate(std::function<void(Channel&)> f);
   void onChannelDelete(std::function<void(Channel&)> f);
 
+  void onThreadCreate(std::function<void(Channel&)> f);
+  void onThreadUpdate(std::function<void(Channel&)> f);
+  void onThreadDelete(std::function<void(Channel&)> f);
+  void onThreadListSync(std::function<void(ThreadListSync&)> f);
+  void onThreadMemberUpdate(std::function<void(ThreadMember&)> f);
+  void onThreadMembersUpdate(std::function<void(ThreadMembersUpdate&)> f);
 
   void onTypingStart(std::function<void(TypingStart&)> f);
   ///
@@ -291,6 +305,13 @@ private:
   void channelUpdate(nlohmann::json j);
   void channelDelete(nlohmann::json j);
 
+  void threadCreate(nlohmann::json j);
+  void threadUpdate(nlohmann::json j);
+  void threadDelete(nlohmann::json j);
+  void threadListSync(nlohmann::json j);
+  void threadMemberUpdate(nlohmann::json j);
+  void threadMembersUpdate(nlohmann::json j);
+
   void typingStart(nlohmann::json j);
 
   meow reconnect(bool resume);
@@ -329,6 +350,12 @@ private:
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
     {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)},
+    {"THREAD_CREATE", std::bind(&NyaBot::threadCreate, this, std::placeholders::_1)},
+    {"THREAD_UPDATE", std::bind(&NyaBot::threadUpdate, this, std::placeholders::_1)},
+    {"THREAD_DELETE", std::bind(&NyaBot::threadDelete, this, std::placeholders::_1)},
+    {"THREAD_LIST_SYNC", std::bind(&NyaBot::threadListSync, this, std::placeholders::_1)},
+    {"THREAD_MEMBER_UPDATE", std::bind(&NyaBot::threadMemberUpdate, this, std::placeholders::_1)},
+    {"THREAD_MEMBERS_UPDATE", std::bind(&NyaBot::threadMembersUpdate, this, std::placeholders::_1)},
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
   };
 

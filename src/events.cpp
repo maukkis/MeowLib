@@ -128,6 +128,32 @@ void NyaBot::onChannelDelete(std::function<void(Channel&)> f){
   funs.onChannelDeleteF = f;
 }
 
+void NyaBot::onThreadCreate(std::function<void(Channel&)> f){
+  funs.onThreadCreateF = f;
+}
+
+void NyaBot::onThreadUpdate(std::function<void(Channel&)> f){
+  funs.onThreadUpdateF = f;
+}
+
+void NyaBot::onThreadDelete(std::function<void(Channel&)> f){
+  funs.onThreadDeleteF = f;
+}
+
+void NyaBot::onThreadListSync(std::function<void(ThreadListSync&)> f){
+  funs.onThreadListSyncF = f;
+}
+
+void NyaBot::onThreadMemberUpdate(std::function<void(ThreadMember&)> f){
+  funs.onThreadMemberUpdateF = f;
+}
+
+void NyaBot::onThreadMembersUpdate(std::function<void(ThreadMembersUpdate&)> f){
+  funs.onThreadMembersUpdateF = f;
+}
+
+
+
 void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
   funs.onTypingStartF = f;
 }
