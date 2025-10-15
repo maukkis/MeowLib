@@ -11,20 +11,30 @@ namespace {
 
 
 
-
 template<typename T>
-std::unordered_map<std::string, T> deserializeResolved(nlohmann::json& d){
-  std::unordered_map<std::string, T> map;
-  if(std::is_same_v<T, User>){
-    for(auto& a : d["resolved"]["users"]){
+std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
+  if(!d.contains("resolved")) return std::unordered_map<std::string, T>();
+  if constexpr(std::is_same_v<T, User>){
+    std::unordered_map<std::string, T> map;
+    if(!d["resolved"].contains("users")) return map;
+    for(auto& a : d["resolved"]["users"])
       map[a["id"]] = deserializeUser(a);
-    }
     for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
       map[it.key()].guild = deserializeGuildUser(d["resolved"]["members"][it.key()]);
     }
+    return map;
   }
-  return map;
+  else if constexpr(std::is_same_v<T, ResolvedAttachment>){
+    std::unordered_map<std::string, ResolvedAttachment> map;
+    if(!d["resolved"].contains("attachments")) return map;
+    for(const auto& a : d["resolved"]["attachments"].items()){
+      ResolvedAttachment c(a.value());
+      map[a.key()] = std::move(c);
+    }
+    return map;
+  }
 }
+
 
 SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, NyaBot *a){
   const std::string id = json["id"];
@@ -42,6 +52,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
   if(json.contains("guild_id"))
     slash.guildId = json["guild_id"];
   slash.resolvedUsers = deserializeResolved<User>(json["data"]);
+  slash.resolvedAttachments = deserializeResolved<ResolvedAttachment>(json["data"]);
   if(json["data"].contains("options")){
     for (const auto& it : json["data"]["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});
@@ -87,6 +98,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   modal.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
   modal.guildId = j["guild_id"];
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
+  modal.resolvedAttachments = deserializeResolved<ResolvedAttachment>(j["data"]);
   for(auto& a : j["data"]["components"]){
     if(!a.contains("component")) continue;
     switch(a["component"]["type"].get<int>()){
@@ -95,6 +107,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
       case USER_SELECT:
       case ROLE_SELECT:
       case CHANNEL_SELECT:
+      case FILE_UPLOAD:
       case MENTIONABLE_SELECT:
         {
           const auto& vec = a["component"]["values"].get<std::vector<std::string>>();

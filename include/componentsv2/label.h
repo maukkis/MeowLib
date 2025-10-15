@@ -1,6 +1,7 @@
 #ifndef _INCLUDE_COMPONENTSV2_H
 #define _INCLUDE_COMPONENTSV2_H
 #include "componentsv2.h"
+#include "fileupload.h"
 #include "selectcomponents.h"
 #include "textInput.h"
 #include <type_traits>
@@ -15,6 +16,9 @@ struct AllowedInLabel<T, std::enable_if_t<std::is_base_of<SelectComponent, T>::v
 
 template<>
 struct AllowedInLabel<TextInputComponent> : std::true_type {};
+
+template<>
+struct AllowedInLabel<FileUploadComponent> : std::true_type {};
 
 template<typename T>
 concept AllowedInLabel_t = AllowedInLabel<std::remove_reference_t<T>>::value;

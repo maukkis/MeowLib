@@ -8,6 +8,7 @@ enum class Types {
   INTEGER,
   BOOLEAN,
   USER,
+  ATTACHMENT = 11,
 };
 
 enum class IntegrationTypes {
