@@ -1,5 +1,18 @@
 #include "../include/thread.h"
 #include <nlohmann/json.hpp>
+#include "../include/channel.h"
+
+ThreadMetadata::ThreadMetadata(const nlohmann::json& j){
+  archived = j["archived"];
+  autoArchiveDuration = j["auto_archive_duration"];
+  archiveTimestamp = j["archive_timestamp"];
+  locked = j["locked"];
+  if(j.contains("invitable"))
+    invitable = j["invitable"];
+  if(j.contains("create_timestamp") && !j["create_timestamp"].is_null())
+    createTimestamp = j["create_timestamp"];
+}
+
 
 
 ThreadMember::ThreadMember(const nlohmann::json& j){

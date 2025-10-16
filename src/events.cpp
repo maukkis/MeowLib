@@ -61,6 +61,16 @@ void NyaBot::onMessageDelete(std::function<void(MessageDelete&)> f){
   funs.onMessageDeleteF = f;
 }
 
+void NyaBot::onMessagePollVoteRemove(std::function<void(MessagePollVote&)> f){
+  funs.onMessagePollVoteRemoveF = f;
+}
+
+
+void NyaBot::onMessagePollVoteAdd(std::function<void(MessagePollVote&)> f){
+  funs.onMessagePollVoteAddF = f;
+}
+
+
 void NyaBot::onMessageReactionAdd(std::function<void(MessageReaction&)> f){
   funs.onMessageReactionAddF = f;
 }

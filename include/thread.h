@@ -1,13 +1,12 @@
 #ifndef _INCLUDE_THREAD_H
 #define _INCLUDE_THREAD_H
-#include "channel.h"
 #include "user.h"
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
 #include <optional>
 
-
+struct Channel;
 
 struct ThreadMember {
   ThreadMember() = default;

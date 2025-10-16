@@ -64,7 +64,15 @@ Message::Message(const nlohmann::json& j){
   if(j.contains("guild_id"))
     guildId = j["guild_id"];
   id = j["id"];
+  if(j.contains("poll"))
+    poll = Poll(j["poll"]);
 }
+
+Message& Message::addPoll(const Poll& a){
+  poll = a;
+  return *this;
+}
+
 
 Message& Message::replyTo(){
   if(!id.empty()){
@@ -104,6 +112,8 @@ nlohmann::json Message::generate() const {
       j["components"].emplace_back(a->generate());
     }
   }
+  if(poll)
+    j["poll"] = poll->generate();
   return j;
 }
 

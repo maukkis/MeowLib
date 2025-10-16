@@ -19,7 +19,8 @@ constexpr std::string_view UserAgent {R"(DiscordBot (https://git.girlsmell.xyz/l
 
 // TODO: add rest of the errors here
 enum class RestErrors {
-  IOERR
+  IOERR,
+  INTERRUPT,
 };
 
 struct RateLimit {

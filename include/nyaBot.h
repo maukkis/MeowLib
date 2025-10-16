@@ -7,6 +7,7 @@
 #include "guild.h"
 #include "message.h"
 #include "modalInteraction.h"
+#include "poll.h"
 #include "queue.h"
 #include "restclient.h"
 #include "automod.h"
@@ -65,6 +66,10 @@ struct Funs {
   std::function<void(MessageDelete&)> onMessageDeleteF = {};
   std::function<void(MessageReaction&)> onMessageReactionAddF = {};
   std::function<void(MessageReaction&)> onMessageReactionRemoveF = {};
+
+  std::function<void(MessagePollVote&)> onMessagePollVoteAddF = {};
+  std::function<void(MessagePollVote&)> onMessagePollVoteRemoveF = {};
+
 
   std::function<void(Guild&)> onGuildCreateF = {};
   std::function<void(Guild&)> onGuildUpdateF = {};
@@ -196,6 +201,9 @@ public:
   void onAutoModerationRuleDelete(std::function<void(AutoModRule&)> f);
   void onAutoModerationActionExecution(std::function<void(AutoModActionExecution&)> f);
 
+  void onMessagePollVoteRemove(std::function<void(MessagePollVote&)> f);
+  void onMessagePollVoteAdd(std::function<void(MessagePollVote&)> f);
+
 
   void onReady(std::function<void()> f);
   void onSlash(std::function<void(SlashCommandInt&)> f);
@@ -288,6 +296,9 @@ private:
   void messageReactionAdd(nlohmann::json j);
   void messageReactionRemove(nlohmann::json j);
 
+  void messagePollVoteAdd(nlohmann::json j);
+  void messagePollVoteRemove(nlohmann::json j);
+
   void guildCreate(nlohmann::json j);
   void guildUpdate(nlohmann::json j);
   void guildDelete(nlohmann::json j);
@@ -333,6 +344,8 @@ private:
     {"MESSAGE_CREATE", std::bind(&NyaBot::messageCreate, this, std::placeholders::_1)},
     {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
     {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)},
+    {"MESSAGE_POLL_VOTE_ADD", std::bind(&NyaBot::messagePollVoteAdd, this, std::placeholders::_1)},
+    {"MESSAGE_POLL_VOTE_REMOVE", std::bind(&NyaBot::messagePollVoteRemove, this, std::placeholders::_1)},
     {"GUILD_CREATE", std::bind(&NyaBot::guildCreate, this, std::placeholders::_1)},
     {"GUILD_UPDATE", std::bind(&NyaBot::guildUpdate, this, std::placeholders::_1)},
     {"GUILD_DELETE", std::bind(&NyaBot::guildDelete, this, std::placeholders::_1)},

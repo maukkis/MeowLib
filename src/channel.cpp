@@ -24,6 +24,8 @@ Channel deserializeChannel(const nlohmann::json& j) {
     a.lastPinTimestamp = j["last_pin_timestamp"];
   if(j.contains("nsfw"))
     a.nsfw = j["nsfw"];
+  if(j.contains("thread_metadata"))
+    a.threadMetadata = ThreadMetadata(j["thread_metadata"]);
   return a;
 }
 

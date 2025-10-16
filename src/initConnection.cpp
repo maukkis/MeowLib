@@ -75,7 +75,7 @@ NyaBot::~NyaBot(){
 
 void NyaBot::connect(){
   int timeToWait = 5;
-  for(int attempts = 0; attempts < retryAmount; ++attempts, timeToWait *= 2){
+  for(int attempts = 0; attempts < retryAmount && !stop; ++attempts, timeToWait *= 2){
     if(handle.perform() == OK){
       Log::dbg("connected to the websocket succesfully!");
       return;

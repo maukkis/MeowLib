@@ -26,6 +26,19 @@ enum class ChannelType{
   GUILD_MEDIA,
 };
 
+
+struct ThreadMetadata {
+  ThreadMetadata() = default;
+  ThreadMetadata(const nlohmann::json& j);
+  bool archived{};
+  int autoArchiveDuration{};
+  std::string archiveTimestamp;
+  bool locked{};
+  std::optional<bool> invitable;
+  std::optional<std::string> createTimestamp;
+};
+
+
 struct Channel {
   std::string id{};
   ChannelType type{};
@@ -39,6 +52,7 @@ struct Channel {
   std::optional<std::string> lastMessageId = std::nullopt;
   // only for gateway thread events
   std::optional<bool> newlyCreated = std::nullopt;
+  std::optional<ThreadMetadata> threadMetadata = std::nullopt;
 };
 
 
