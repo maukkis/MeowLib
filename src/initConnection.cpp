@@ -1,10 +1,8 @@
 #include <meowHttp/websocket.h>
 #include <csignal>
 #include <nlohmann/json_fwd.hpp>
-#include <pthread.h>
 #include <string>
 #include <thread>
-#include <unistd.h>
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>

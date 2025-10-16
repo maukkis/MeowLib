@@ -2,6 +2,7 @@
 #define _INCLUDE_AUTOMOD_H
 #include "error.h"
 #include <expected>
+#include <variant>
 #include <string>
 #include <nlohmann/json_fwd.hpp>
 #include <vector>
