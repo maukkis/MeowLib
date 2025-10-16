@@ -1,10 +1,8 @@
 #include <meowHttp/websocket.h>
 #include <csignal>
 #include <nlohmann/json_fwd.hpp>
-#include <pthread.h>
 #include <string>
 #include <thread>
-#include <unistd.h>
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
@@ -77,7 +75,7 @@ NyaBot::~NyaBot(){
 
 void NyaBot::connect(){
   int timeToWait = 5;
-  for(int attempts = 0; attempts < retryAmount; ++attempts, timeToWait *= 2){
+  for(int attempts = 0; attempts < retryAmount && !stop; ++attempts, timeToWait *= 2){
     if(handle.perform() == OK){
       Log::dbg("connected to the websocket succesfully!");
       return;

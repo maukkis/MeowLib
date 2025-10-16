@@ -98,7 +98,7 @@ RestClient::sendRawData(const std::string& endpoint,
 {
   int retryCount = 0;
   int timeToWait = 5;
-  while(true){
+  while(!bot->stop){
     if(rtl.globalLimit){
       Log::warn("we are being globally ratelimited!");
       std::this_thread::sleep_for(std::chrono::seconds(rtl.globalResetAfter.load()));
@@ -168,4 +168,5 @@ RestClient::sendRawData(const std::string& endpoint,
     
     return std::make_pair(d, meow.getLastStatusCode());
   }
+  return std::unexpected(RestErrors::INTERRUPT);
 }

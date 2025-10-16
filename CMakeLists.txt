@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25.1)
 
 project(MeowLib
 DESCRIPTION "simple discord bot library written in C++"
-VERSION 0.2.0)
+VERSION 0.3.0)
 if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
   add_compile_options(-pthread)
 endif()
@@ -13,11 +13,15 @@ set(CMAKE_CXX_STANDARD 23)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_compile_options(-Wall -Werror -O1 -g -fsanitize=address)
-  add_link_options(-fsanitize=address)
+if(WIN32)
+  # msvc gives stupid warnings that dont really matter and causes this to not compile fuck msvc
+  set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
 else()
-  add_compile_options(-Wall -Werror -O3)
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Werror -fsanitize=address")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_link_options(-fsanitize=address)
+  endif()
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror")
 endif()
 
 file(GLOB_RECURSE MeowLib_src "src/*.cpp")

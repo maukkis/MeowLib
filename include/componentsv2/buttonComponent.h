@@ -23,7 +23,7 @@ public:
   ButtonComponent& addEmoji(const Emoji& e);
 private:
   ComponentTypes type = BUTTON;
-  enum Style style;
+  enum Style style{};
   std::optional<std::string> label;
   std::string customId;
   std::optional<Emoji> emoji = std::nullopt;

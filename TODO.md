@@ -4,7 +4,8 @@
 - [x] user api functions
 - [x] moderation api functions
 - [x] message gateway events
-- [ ] polls!
+- [ ] guild scheduled events!
+- [x] polls!
 - [ ] audit log
 - [x] forwarding
 - [x] replying

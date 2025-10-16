@@ -43,3 +43,20 @@ void NyaBot::messageReactionRemove(nlohmann::json j){
     funs.onMessageReactionRemoveF(a);
   }
 }
+
+
+void NyaBot::messagePollVoteAdd(nlohmann::json j){
+  if(funs.onMessagePollVoteAddF){
+    MessagePollVote a(j["d"]);
+    funs.onMessagePollVoteAddF(a);
+  }
+}
+
+void NyaBot::messagePollVoteRemove(nlohmann::json j){
+  if(funs.onMessagePollVoteRemoveF){
+    MessagePollVote a(j["d"]);
+    funs.onMessagePollVoteRemoveF(a);
+  }
+}
+
+

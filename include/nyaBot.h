@@ -7,6 +7,7 @@
 #include "guild.h"
 #include "message.h"
 #include "modalInteraction.h"
+#include "poll.h"
 #include "queue.h"
 #include "restclient.h"
 #include "automod.h"
@@ -28,6 +29,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include "commandHandling.h"
+#include "thread.h"
 #include "typingstart.h"
 #include "user.h"
 
@@ -51,7 +53,7 @@ struct Funs {
   std::function<void(AutoModActionExecution&)> onAutoModerationActionExecutionF = {};
 
 
-  std::function<void(SlashCommandInt&)> onSlashF = {};
+  std::function<void(SlashCommandInteraction&)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
   std::function<void(ButtonInteraction&)> onButtonF = {};
@@ -64,6 +66,10 @@ struct Funs {
   std::function<void(MessageDelete&)> onMessageDeleteF = {};
   std::function<void(MessageReaction&)> onMessageReactionAddF = {};
   std::function<void(MessageReaction&)> onMessageReactionRemoveF = {};
+
+  std::function<void(MessagePollVote&)> onMessagePollVoteAddF = {};
+  std::function<void(MessagePollVote&)> onMessagePollVoteRemoveF = {};
+
 
   std::function<void(Guild&)> onGuildCreateF = {};
   std::function<void(Guild&)> onGuildUpdateF = {};
@@ -80,6 +86,13 @@ struct Funs {
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
   std::function<void(Channel&)> onChannelDeleteF = {};
+
+  std::function<void(Channel&)> onThreadCreateF = {};
+  std::function<void(Channel&)> onThreadUpdateF = {};
+  std::function<void(Channel&)> onThreadDeleteF = {};
+  std::function<void(ThreadListSync&)> onThreadListSyncF = {};
+  std::function<void(ThreadMember&)> onThreadMemberUpdateF = {};
+  std::function<void(ThreadMembersUpdate&)> onThreadMembersUpdateF = {}; 
 
   std::function<void(TypingStart&)> onTypingStartF = {};
 };
@@ -188,9 +201,12 @@ public:
   void onAutoModerationRuleDelete(std::function<void(AutoModRule&)> f);
   void onAutoModerationActionExecution(std::function<void(AutoModActionExecution&)> f);
 
+  void onMessagePollVoteRemove(std::function<void(MessagePollVote&)> f);
+  void onMessagePollVoteAdd(std::function<void(MessagePollVote&)> f);
+
 
   void onReady(std::function<void()> f);
-  void onSlash(std::function<void(SlashCommandInt&)> f);
+  void onSlash(std::function<void(SlashCommandInteraction&)> f);
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);
@@ -218,6 +234,12 @@ public:
   void onChannelUpdate(std::function<void(Channel&)> f);
   void onChannelDelete(std::function<void(Channel&)> f);
 
+  void onThreadCreate(std::function<void(Channel&)> f);
+  void onThreadUpdate(std::function<void(Channel&)> f);
+  void onThreadDelete(std::function<void(Channel&)> f);
+  void onThreadListSync(std::function<void(ThreadListSync&)> f);
+  void onThreadMemberUpdate(std::function<void(ThreadMember&)> f);
+  void onThreadMembersUpdate(std::function<void(ThreadMembersUpdate&)> f);
 
   void onTypingStart(std::function<void(TypingStart&)> f);
   ///
@@ -242,12 +264,13 @@ public:
   std::future<std::vector<User>> requestGuildMembers(const std::string_view guildId,
                                                      const std::string_view query,
                                                      const int limit);
-  RestClient rest {this};
+  RestClient rest{this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
   EmojiApiRoutes emoji{this};
   MessageApiRoutes message{this};
   AutoModApiRoutes automod{this};
+  ChannelApiRoutes channel{this};
 private:
   void listen();
   void connect();
@@ -273,6 +296,9 @@ private:
   void messageReactionAdd(nlohmann::json j);
   void messageReactionRemove(nlohmann::json j);
 
+  void messagePollVoteAdd(nlohmann::json j);
+  void messagePollVoteRemove(nlohmann::json j);
+
   void guildCreate(nlohmann::json j);
   void guildUpdate(nlohmann::json j);
   void guildDelete(nlohmann::json j);
@@ -289,6 +315,13 @@ private:
   void channelCreate(nlohmann::json j);
   void channelUpdate(nlohmann::json j);
   void channelDelete(nlohmann::json j);
+
+  void threadCreate(nlohmann::json j);
+  void threadUpdate(nlohmann::json j);
+  void threadDelete(nlohmann::json j);
+  void threadListSync(nlohmann::json j);
+  void threadMemberUpdate(nlohmann::json j);
+  void threadMembersUpdate(nlohmann::json j);
 
   void typingStart(nlohmann::json j);
 
@@ -311,6 +344,8 @@ private:
     {"MESSAGE_CREATE", std::bind(&NyaBot::messageCreate, this, std::placeholders::_1)},
     {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
     {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)},
+    {"MESSAGE_POLL_VOTE_ADD", std::bind(&NyaBot::messagePollVoteAdd, this, std::placeholders::_1)},
+    {"MESSAGE_POLL_VOTE_REMOVE", std::bind(&NyaBot::messagePollVoteRemove, this, std::placeholders::_1)},
     {"GUILD_CREATE", std::bind(&NyaBot::guildCreate, this, std::placeholders::_1)},
     {"GUILD_UPDATE", std::bind(&NyaBot::guildUpdate, this, std::placeholders::_1)},
     {"GUILD_DELETE", std::bind(&NyaBot::guildDelete, this, std::placeholders::_1)},
@@ -328,6 +363,12 @@ private:
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
     {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)},
+    {"THREAD_CREATE", std::bind(&NyaBot::threadCreate, this, std::placeholders::_1)},
+    {"THREAD_UPDATE", std::bind(&NyaBot::threadUpdate, this, std::placeholders::_1)},
+    {"THREAD_DELETE", std::bind(&NyaBot::threadDelete, this, std::placeholders::_1)},
+    {"THREAD_LIST_SYNC", std::bind(&NyaBot::threadListSync, this, std::placeholders::_1)},
+    {"THREAD_MEMBER_UPDATE", std::bind(&NyaBot::threadMemberUpdate, this, std::placeholders::_1)},
+    {"THREAD_MEMBERS_UPDATE", std::bind(&NyaBot::threadMembersUpdate, this, std::placeholders::_1)},
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
   };
 

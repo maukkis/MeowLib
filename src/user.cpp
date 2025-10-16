@@ -14,7 +14,7 @@ UserApiRoutes::UserApiRoutes(NyaBot *bot)
 
 
 
-std::expected<User, Error> UserApiRoutes::getUser(const std::string_view id){
+std::expected<User, Error> UserApiRoutes::get(const std::string_view id){
   return getReq(std::format(APIURL "/users/{}", id))
     .and_then([](std::expected<std::string, Error> a){
       return std::expected<User, Error>(deserializeUser(nlohmann::json::parse(a.value())));
@@ -23,7 +23,7 @@ std::expected<User, Error> UserApiRoutes::getUser(const std::string_view id){
 
 
 
-std::expected<User, Error> UserApiRoutes::getCurrentUser(){
+std::expected<User, Error> UserApiRoutes::getCurrent(){
   return getReq(APIURL "/users/@me")
     .and_then([](std::expected<std::string, Error> a){
       return std::expected<User, Error>(deserializeUser(nlohmann::json::parse(a.value())));

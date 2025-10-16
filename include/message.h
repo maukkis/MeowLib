@@ -8,11 +8,13 @@
 #include <string_view>
 #include <type_traits>
 #include "user.h"
+#include "poll.h"
 #include <vector>
 #include <memory>
 #include "emoji.h"
 #include <expected>
 #include "error.h"
+
 
 
 struct InteractionData{
@@ -81,6 +83,7 @@ public:
     components.emplace_back(std::make_unique<std::remove_cvref_t<T>>(std::forward<T>(comp)));
     return *this;
   }
+  Message& addPoll(const Poll& a);
   Message& addAttachment(const Attachment& a);
   Message& setMessageFlags(int flags);
   Message& setContent(const std::string_view a);
@@ -97,6 +100,7 @@ public:
   std::optional<std::string> guildId;
   std::optional<MessageReference> messageReference;
   std::optional<InteractionData> interactionData;
+  std::optional<Poll> poll;
 private:
   std::vector<std::unique_ptr<Component>> components;
 };

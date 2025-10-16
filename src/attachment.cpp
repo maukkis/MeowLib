@@ -3,7 +3,32 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <nlohmann/json.hpp>
 
+ResolvedAttachment::ResolvedAttachment(const nlohmann::json& j){
+  id = j["id"];
+  filename = j["filename"];
+  if(j.contains("title"))
+    title = j["title"];
+
+  if(j.contains("description"))
+    description = j["description"];
+
+  if(j.contains("content_type"))
+    contentType = j["content_type"];
+
+  size = j["size"];
+  url = j["url"];
+  proxyUrl = j["proxy_url"];
+  if(j.contains("height") && !j["height"].is_null())
+    height = j["height"];
+
+  if(j.contains("width") && !j["width"].is_null())
+    width = j["width"];
+
+  if(j.contains("ephemeral"))
+    ephemeral = j["ephemeral"];
+}
 
 Attachment readFile(const std::string& a){
   std::string name = a.substr(a.rfind("/")+1);

@@ -25,7 +25,7 @@ std::string encodeB64(const std::string_view a){
   while(str.length() > 0){
     if(str.length() >= 3){
       const uint32_t val = (str.at(0) << 16) | (str.at(1) << 8) | str.at(2);
-      for(ssize_t i = 3; i >= 0; --i){
+      for(int i = 3; i >= 0; --i){
         const uint8_t chr = (val & (0b00111111 << i * 6)) >> i * 6;
         encoded += base64_map.at(chr);
       }
@@ -33,7 +33,7 @@ std::string encodeB64(const std::string_view a){
     }
     else if(str.length() == 2){
       const uint32_t val = (str.at(0) << 16) | str.at(1) << 8;
-      for(ssize_t i = 3; i > 0; --i){
+      for(int i = 3; i > 0; --i){
         const uint8_t chr = (val & (0b00111111 << i * 6)) >> i * 6;
         encoded += base64_map.at(chr);
       }
