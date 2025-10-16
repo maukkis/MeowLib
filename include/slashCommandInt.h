@@ -7,12 +7,15 @@
 class NyaBot;
 
 
-struct SlashCommandInt : public Interaction {
+struct SlashCommandInteraction : public Interaction {
   using Interaction::Interaction;
   /// A map of parameters key is custom_id value is the value.
   std::unordered_map<std::string, std::string> parameters;
   std::unordered_map<std::string, User> resolvedUsers;
   std::unordered_map<std::string, ResolvedAttachment> resolvedAttachments;
 };
+
+// will be removed in later versions please switch to SlashCommandInteraction
+using SlashCommandInt = SlashCommandInteraction;
 
 #endif 

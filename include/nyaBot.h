@@ -53,7 +53,7 @@ struct Funs {
   std::function<void(AutoModActionExecution&)> onAutoModerationActionExecutionF = {};
 
 
-  std::function<void(SlashCommandInt&)> onSlashF = {};
+  std::function<void(SlashCommandInteraction&)> onSlashF = {};
   std::function<void()> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
   std::function<void(ButtonInteraction&)> onButtonF = {};
@@ -206,7 +206,7 @@ public:
 
 
   void onReady(std::function<void()> f);
-  void onSlash(std::function<void(SlashCommandInt&)> f);
+  void onSlash(std::function<void(SlashCommandInteraction&)> f);
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
   void onSelectInteraction(std::function<void(SelectInteraction&)> f);

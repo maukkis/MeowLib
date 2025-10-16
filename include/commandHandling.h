@@ -5,7 +5,7 @@
 
 class Command {
 public:
-  virtual void onCommand(SlashCommandInt& e) = 0;
+  virtual void onCommand(SlashCommandInteraction& e) = 0;
   virtual ~Command() = default;
 private:
 };

@@ -27,7 +27,7 @@ void NyaBot::onReady(std::function<void ()> f) {
   funs.onReadyF = f;
 }
 
-void NyaBot::onSlash(std::function<void (SlashCommandInt&)> f) {
+void NyaBot::onSlash(std::function<void (SlashCommandInteraction&)> f) {
   funs.onSlashF = f;
 }
 

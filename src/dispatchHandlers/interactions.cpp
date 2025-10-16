@@ -36,7 +36,7 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
 }
 
 
-SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, NyaBot *a){
+SlashCommandInteraction constructSlash(nlohmann::json& json, const std::string& appId, NyaBot *a){
   const std::string id = json["id"];
   const std::string interactionToken = json["token"];
   User user;
@@ -46,7 +46,7 @@ SlashCommandInt constructSlash(nlohmann::json& json, const std::string& appId, N
   } else user = deserializeUser(json["user"]);
   
   const std::string commandName = json["data"]["name"];
-  SlashCommandInt slash(id, interactionToken, commandName, user, appId, a);
+  SlashCommandInteraction slash(id, interactionToken, commandName, user, appId, a);
 
   slash.appPermissions = std::stoull(json["app_permissions"].get<std::string>(), nullptr, 10);
   if(json.contains("guild_id"))
