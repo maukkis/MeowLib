@@ -59,6 +59,11 @@ public:
   /// @param a Modal object
   ///
   std::expected<std::nullopt_t, Error> respond(const Modal& a);
+
+  ///
+  /// @brief deletes the original interaction response
+  ///
+  std::expected<std::nullopt_t, Error> deleteOriginalResponse();
   ///
   /// @brief Responds to an interaction with raw json data
   /// @param j json data
@@ -68,20 +73,21 @@ public:
   /// @brief Edits an interaction original response with raw json data
   /// @param j json data
   ///
-  std::expected<std::nullopt_t, Error> manualEdit(const nlohmann::json& j);
+  std::expected<Message, Error> manualEdit(const nlohmann::json& j);
   ///
   /// @brief Edits interaction original response with a message.
   ///
-  std::expected<std::nullopt_t, Error> edit(std::string_view response, int flags = 0);
+  std::expected<Message, Error> edit(std::string_view response, int flags = 0);
   /// @brief Edits an interaction original response with a Message object
   /// Reason why you would do this is to be able to attach attachments
   /// or components.
-  std::expected<std::nullopt_t, Error> edit(const Message& a);
+  std::expected<Message, Error> edit(const Message& a);
   
   /// @brief creates a follow up message to the interaction
   /// @param msg message to send
   /// @param flags optionally message flags
-  std::expected<std::nullopt_t, Error> createFollowUpMessage(const std::string_view msg, int flags = 0);
+  std::expected<Message, Error> createFollowUpMessage(const std::string_view msg, int flags = 0);
+  std::expected<Message, Error> createFollowUpMessage(const Message& a);
   const std::string commandName;
   const User user;
   std::optional<std::string> guildId;

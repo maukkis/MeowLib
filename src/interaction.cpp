@@ -64,7 +64,7 @@ std::expected<std::nullopt_t, Error> Interaction::respond(const Message& a){
   return std::nullopt;
 }
 
-std::expected<std::nullopt_t, Error> Interaction::createFollowUpMessage(const std::string_view msg, int flags){
+std::expected<Message, Error> Interaction::createFollowUpMessage(const std::string_view msg, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
   j["content"] = msg;
@@ -73,12 +73,39 @@ std::expected<std::nullopt_t, Error> Interaction::createFollowUpMessage(const st
                            j.dump());
   if(!ret.has_value() || ret->second != 200){
       auto err = Error(ret.value_or(std::make_pair("meowHttp IO error", 0)).first);
-      Log::error("failed to respond to create a follow up message");
+      Log::error("failed to create a follow up message");
       err.printErrors();
       return std::unexpected(err);
   }
-  return std::nullopt;
+  return Message(nlohmann::json::parse(ret->first));
 }
+
+
+
+std::expected<Message, Error> Interaction::createFollowUpMessage(const Message& a){
+  std::expected<std::pair<std::string, int>, RestErrors> meow;
+  if(a.attachments.empty()){
+    meow = bot->rest.post(std::format(APIURL "/webhooks/{}/{}",
+                                        applicationId, interactionToken),
+                          a.generate());
+  } else {
+    auto payload = makeFormData(a.generate(), "woof", a.attachments);
+    meow = bot->rest.sendFormData(std::format(APIURL "/webhooks/{}/{}",
+                                              applicationId, interactionToken),
+                                  payload,
+                                  "woof",
+                                  "POST");
+  }
+  if(!meow.has_value() || meow->second != 200){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create a follow up message");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return nlohmann::json::parse(meow->first);
+}
+
+
 
 std::expected<std::nullopt_t, Error> Interaction::respond(){
   nlohmann::json j;
@@ -107,7 +134,7 @@ std::expected<std::nullopt_t, Error> Interaction::manualResponse(const nlohmann:
 }
 
 
-std::expected<std::nullopt_t, Error> Interaction::manualEdit(const nlohmann::json& j){
+std::expected<Message, Error> Interaction::manualEdit(const nlohmann::json& j){
     auto meow = bot->rest.patch(APIURL "/webhooks/" + applicationId  + '/' + interactionToken + "/messages/@original",
                    j.dump());
   if(!meow.has_value() || meow->second != 200){
@@ -116,11 +143,11 @@ std::expected<std::nullopt_t, Error> Interaction::manualEdit(const nlohmann::jso
     err.printErrors();
     return std::unexpected(err);
   }
-  return std::nullopt;
+  return Message(nlohmann::json::parse(meow->first));
 }
 
 
-std::expected<std::nullopt_t, Error> Interaction::edit(const std::string_view response, int flags){
+std::expected<Message, Error> Interaction::edit(const std::string_view response, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
   j["content"] = response;
@@ -128,7 +155,7 @@ std::expected<std::nullopt_t, Error> Interaction::edit(const std::string_view re
 }
 
 
-std::expected<std::nullopt_t, Error> Interaction::edit(const Message& a){
+std::expected<Message, Error> Interaction::edit(const Message& a){
   if(a.attachments.empty()){
     return manualEdit(a.generate());
   }
@@ -144,5 +171,5 @@ std::expected<std::nullopt_t, Error> Interaction::edit(const Message& a){
     err.printErrors();
     return std::unexpected(err);
   }
-  return std::nullopt;
+  return nlohmann::json::parse(meow->first);
 }
