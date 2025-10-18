@@ -64,6 +64,21 @@ std::expected<std::nullopt_t, Error> Interaction::respond(const Message& a){
   return std::nullopt;
 }
 
+
+
+std::expected<std::nullopt_t, Error> Interaction::deleteOriginalResponse(){
+  auto res = bot->rest.deletereq(std::format(APIURL "/webhooks/{}/{}/messages/@original",
+                                             applicationId, interactionToken));
+  if(!res.has_value() || res->second != 204){
+      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to create a follow up message");
+      err.printErrors();
+      return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
 std::expected<Message, Error> Interaction::createFollowUpMessage(const std::string_view msg, int flags){
   nlohmann::json j;
   if(flags != 0) j["flags"] = flags;
