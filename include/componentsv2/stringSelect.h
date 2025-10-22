@@ -28,7 +28,7 @@ public:
   StringSelectComponent& setRequired(const bool);
   nlohmann::json generate() override;
   template<typename... T>
-  requires(std::conjunction<std::is_same<T, StringSelectOption>...>::value)
+  requires(std::conjunction<std::is_same<std::remove_reference_t<T>, StringSelectOption>...>::value)
   StringSelectComponent& addOptions(T&&... vals){
     static_assert(sizeof...(vals) <= 25, "cannot have more than 25 options!!");
     (options.emplace_back(std::forward<T>(vals)), ...);

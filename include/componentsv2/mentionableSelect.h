@@ -17,10 +17,10 @@ public:
   MentionableSelectComponent& setPlaceHolder(const std::string_view);
   nlohmann::json generate() override;
   template<typename... T>
-  requires(std::conjunction<std::is_same<std::remove_cvref_t<T>, std::string_view>...>::value)
-  MentionableSelectComponent& addOptions(T... vals){
+  requires(std::conjunction<std::is_same<std::remove_cvref_t<T>, SelectDefaultValue>...>::value)
+  MentionableSelectComponent& addOptions(T&&... vals){
     static_assert(sizeof...(vals) <= 25, "cannot have more than 25 options!!");
-    (options.emplace_back(SelectDefaultValue{.type = "user", .id = vals}), ...);
+    (options.emplace_back(std::forward<T>(vals)), ...);
     return *this;
   }
 private:

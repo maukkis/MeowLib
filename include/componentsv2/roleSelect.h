@@ -20,7 +20,7 @@ public:
   requires(std::conjunction<std::is_same<std::remove_cvref_t<T>, std::string_view>...>::value)
   RoleSelectComponent& addOptions(T... vals){
     static_assert(sizeof...(vals) <= 25, "cannot have more than 25 options!!");
-    (options.emplace_back(SelectDefaultValue{.type = "user", .id = vals}), ...);
+    (options.emplace_back(SelectDefaultValue{.type = "role", .id = vals}), ...);
     return *this;
   }
 private:

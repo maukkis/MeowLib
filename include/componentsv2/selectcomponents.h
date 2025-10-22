@@ -6,8 +6,8 @@
 
 struct SelectDefaultValue{
   std::string id;
-  /// will be filled in by library
-  std::string type = "";
+  /// will be filled in by library except with mentionable selects
+  std::string type;
   nlohmann::json serialize(){
     nlohmann::json j;
     j["type"] = type;
