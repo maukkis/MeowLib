@@ -10,13 +10,23 @@
 #include <string_view>
 #include <vector>
 #include "role.h"
+#include <coroutine>
+
 class NyaBot;
 
 
-struct GuildMemberRequestData {
+struct GuildMemberRequestDataTask {
   std::vector<User> users = {};
-  std::move_only_function<void(std::vector<User> a)> callback;
+  std::coroutine_handle<> hp;
+  bool await_ready() const noexcept { return false; }
+  void await_suspend(std::coroutine_handle<> handle) noexcept {
+    hp = handle;
+  }
+  std::vector<User> await_resume() const noexcept {
+    return users;
+  }
 };
+
 
 struct GuildBan {
   std::optional<std::string> guildId = std::nullopt;

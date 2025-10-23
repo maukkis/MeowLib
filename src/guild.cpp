@@ -23,9 +23,9 @@ GuildBan deserializeGuildBan(const nlohmann::json& j){
   };
 }
 
-std::future<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view guildId,
-                                                           const std::string_view query,
-                                                           int limit)
+MeowAsync<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view guildId,
+                                                         const std::string_view query,
+                                                         int limit)
 {
   nlohmann::json j;
   j["op"] = RequestGuildMember;
@@ -35,18 +35,12 @@ std::future<std::vector<User>> NyaBot::requestGuildMembers(const std::string_vie
   j["d"]["guild_id"] = guildId;
   j["d"]["query"] = query;
   j["d"]["limit"] = limit;
-  std::promise<std::vector<User>> promise;
-  auto fut = promise.get_future();
   std::unique_lock<std::mutex> lock(guildMemberChunkmtx);
-  guildMembersChunkTable.insert({nonce, GuildMemberRequestData{
-    .callback = 
-      [pro = std::move(promise)](std::vector<User> a) mutable {
-        pro.set_value(std::move(a));
-      }
-    }
-  });
+  guildMembersChunkTable[nonce] = GuildMemberRequestDataTask{};
+  lock.release();
   queue.addToQueue(j.dump());
-  return fut;
+  Log::dbg("request guild members sent off to the gateway");
+  co_return co_await guildMembersChunkTable[nonce];
 }
 
 

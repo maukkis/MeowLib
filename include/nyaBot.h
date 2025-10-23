@@ -1,6 +1,7 @@
 #ifndef nyaBot_H
 #define nyaBot_H
 #include <meowHttp/websocket.h>
+#include "async.h"
 #include "buttonInteraction.h"
 #include "channel.h"
 #include "emoji.h"
@@ -261,9 +262,9 @@ public:
   /// @param query what the username has to start with leave as "" for all
   /// @param limit max amount of members to receive leave 0 for no limit
   /// @returns future to a std::vector<User> with the guild field filled up
-  std::future<std::vector<User>> requestGuildMembers(const std::string_view guildId,
-                                                     const std::string_view query,
-                                                     const int limit);
+  MeowAsync<std::vector<User>> requestGuildMembers(const std::string_view guildId,
+                                                   const std::string_view query,
+                                                   const int limit);
   RestClient rest{this};
   UserApiRoutes user{this};
   GuildApiRoutes guild{this};
@@ -375,7 +376,7 @@ private:
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
 
   std::mutex guildMemberChunkmtx;
-  std::unordered_map<std::string, GuildMemberRequestData> guildMembersChunkTable;
+  std::unordered_map<std::string, GuildMemberRequestDataTask> guildMembersChunkTable;
   Funs funs;
   ImportantApiStuff api;
   InteractionCallbacks iCallbacks;

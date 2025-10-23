@@ -104,6 +104,7 @@ void NyaBot::guildRoleDelete(nlohmann::json j){
 }
 
 void NyaBot::guildMemberChunk(nlohmann::json j){
+  Log::dbg("got a chunk");
   j = j["d"];
   const auto& nonce = j["nonce"];
   if(!guildMembersChunkTable.contains(nonce)){
@@ -119,7 +120,7 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
   int chunkCount = j["chunk_count"];
   if(index == (chunkCount-1)){
     Log::dbg("received all chunks");
-    guildMembersChunkTable[nonce].callback(std::move(guildMembersChunkTable[nonce].users));
+    guildMembersChunkTable[nonce].hp.resume();
     std::unique_lock<std::mutex> lock (guildMemberChunkmtx); 
     guildMembersChunkTable.erase(nonce);
     return;
