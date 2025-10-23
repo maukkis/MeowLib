@@ -49,7 +49,7 @@ public:
   ///
   /// @brief Responds to an interaction with a defer.
   ///
-  std::expected<std::nullopt_t, Error> respond();
+  std::expected<std::nullopt_t, Error> respond(int flags = 0);
   /// @brief Responds to an interaction with a Message object.
   /// Reason why you would do this is to be able to attach attachments
   /// or components.
