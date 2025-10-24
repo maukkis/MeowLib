@@ -261,7 +261,7 @@ public:
   /// @param guildId guild to request from
   /// @param query what the username has to start with leave as "" for all
   /// @param limit max amount of members to receive leave 0 for no limit
-  /// @returns future to a std::vector<User> with the guild field filled up
+  /// @returns MeowAsync with a vector of users you can use .get() to get the vector
   MeowAsync<std::vector<User>> requestGuildMembers(const std::string_view guildId,
                                                    const std::string_view query,
                                                    const int limit);
