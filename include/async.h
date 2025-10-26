@@ -28,8 +28,8 @@ public:
       std::terminate();
     }
   };
-  /// @brief gets the value stored in the Async once it is ready this WILL block until its done
-  T get(){
+  /// @brief awaits till the value is available and returns it
+  T await(){
     while(!handle.done()){
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

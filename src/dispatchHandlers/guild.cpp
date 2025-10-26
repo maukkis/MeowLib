@@ -1,9 +1,19 @@
 #include "../../include/nyaBot.h"
+#include <chrono>
 #include <mutex>
+#include <thread>
 #include "../../include/guild.h"
 
 
 void NyaBot::guildCreate(nlohmann::json j){
+  while(api.state != GatewayStates::READY)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  if(api.unavailableGuildIds.contains(j["d"]["id"])){
+    Log::dbg("Guild id: " + j["d"]["id"].get<std::string>() + " meant for caching. Caching the guild and returning");
+    std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
+    api.unavailableGuildIds.erase(j["d"]["id"]);
+    return;
+  }
   if(funs.onGuildCreateF){
     Guild a = deserializeGuild(j["d"]);
     funs.onGuildCreateF(a);
@@ -18,6 +28,14 @@ void NyaBot::guildUpdate(nlohmann::json j){
 }
 
 void NyaBot::guildDelete(nlohmann::json j){
+  while(api.state != GatewayStates::READY){
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  if(api.unavailableGuildIds.contains(j["d"]["id"])){
+    std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
+    api.unavailableGuildIds.erase(j["d"]["id"]);
+    return;
+  }
   if(funs.onGuildDeleteF){
     UnavailableGuild a = deserializeUnavailableGuild(j["d"]);
     funs.onGuildDeleteF(a);
@@ -118,7 +136,7 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
   }
   int index = j["chunk_index"];
   int chunkCount = j["chunk_count"];
-  if(index == (chunkCount-1)){
+  if(index == chunkCount - 1){
     Log::dbg("received all chunks");
     guildMembersChunkTable[nonce].hp.resume();
     std::unique_lock<std::mutex> lock (guildMemberChunkmtx); 

@@ -15,7 +15,7 @@
 class NyaBot;
 
 
-struct GuildMemberRequestDataTask {
+struct GuildMemberRequestTask {
   std::vector<User> users = {};
   std::coroutine_handle<> hp;
   bool await_ready() const noexcept { return false; }

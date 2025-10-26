@@ -1,3 +1,4 @@
+#include <exception>
 #include <meowHttp/websocket.h>
 #include <csignal>
 #include <nlohmann/json_fwd.hpp>
@@ -6,6 +7,7 @@
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
+#include <cxxabi.h>
 
 NyaBot::NyaBot(int intents){
   api.intents = intents;
@@ -14,9 +16,21 @@ NyaBot::NyaBot(int intents){
   #ifndef NDEBUG
     Log::info(std::string("MeowLib version: ") + MEOWLIB_VERSION + " with " + std::to_string(dispatchHandlers.size()) + " gw events implemented");
   #endif
+  std::set_terminate([](){
+    try {
+      std::rethrow_exception(std::current_exception());
+    }
+    catch(std::exception& e){
+      Log::error("!!! THIS IS A BUG PLEASE REPORT THIS TO THE DEVELOPERS !!!");
+      Log::error("Terminate called after throwing an instance of '" + std::string(abi::__cxa_demangle(typeid(e).name(), nullptr, nullptr, nullptr)) + "'");
+      Log::error("  what(): " + std::string(e.what()));
+    }
+    std::abort();
+  });
 }
 
 meow NyaBot::reconnect(bool resume){
+  api.state = GatewayStates::UNAUTHENTICATED;
   if(handle.wsClose(1012, "arf") != OK){
     Log::dbg("woof?");
   }
@@ -35,6 +49,7 @@ meow NyaBot::reconnect(bool resume){
     j["d"]["seq"] = api.sequence;
     if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
       Log::dbg("sent resume!");
+      api.state = GatewayStates::RESUME_SENT;
     }
   } else {
     sendIdent();
@@ -94,6 +109,7 @@ void NyaBot::sendIdent(){
   std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "MeowLib", "device": "MeowLib"}}})"};
   if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
     Log::dbg("ident sent!");
+    api.state = GatewayStates::AUTHENTICATION_SENT;
   }
   else {
     Log::error("something went wrong");

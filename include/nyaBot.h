@@ -21,6 +21,7 @@
 #include <expected>
 #include <functional>
 #include <future>
+#include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include "error.h"
 #include <string>
@@ -29,17 +30,27 @@
 #include <nlohmann/json.hpp>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include "commandHandling.h"
 #include "thread.h"
 #include "typingstart.h"
 #include "user.h"
 
+enum class GatewayStates {
+  UNAUTHENTICATED,
+  AUTHENTICATION_SENT,
+  RESUME_SENT,
+  READY,
+};
 
 
 struct ImportantApiStuff {
   std::string token;
   uint64_t interval;
   size_t sequence{0};
+  std::atomic<GatewayStates> state = GatewayStates::UNAUTHENTICATED;
+  std::mutex UnavailableGuildIdsmtx;
+  std::unordered_set<std::string> unavailableGuildIds;
   std::string appId;
   std::string sesId;
   std::string resumeUrl;
@@ -376,7 +387,7 @@ private:
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
 
   std::mutex guildMemberChunkmtx;
-  std::unordered_map<std::string, GuildMemberRequestDataTask> guildMembersChunkTable;
+  std::unordered_map<std::string, GuildMemberRequestTask> guildMembersChunkTable;
   Funs funs;
   ImportantApiStuff api;
   InteractionCallbacks iCallbacks;
