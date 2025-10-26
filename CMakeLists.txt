@@ -13,9 +13,10 @@ set(CMAKE_CXX_STANDARD 23)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-if(WIN32)
+if(WIN32 AND MSVC)
   # msvc gives stupid warnings that dont really matter and causes this to not compile fuck msvc
   set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "/02")
 else()
   set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Werror -fsanitize=address")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -27,11 +28,11 @@ endif()
 file(GLOB_RECURSE MeowLib_src "src/*.cpp")
 add_library(MeowLib ${MeowLib_src})
 target_compile_definitions(MeowLib PRIVATE MEOWLIB_VERSION="${PROJECT_VERSION}")
-target_link_libraries(MeowLib PRIVATE nlohmann_json::nlohmann_json meowHttp Threads::Threads)
+target_link_libraries(MeowLib PUBLIC nlohmann_json::nlohmann_json meowHttp Threads::Threads)
 
 target_include_directories(MeowLib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/MeowLib>)
+  $<INSTALL_INTERFACE:include>)
 
 install(TARGETS MeowLib EXPORT MeowLibTargets DESTINATION lib)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib)
