@@ -129,11 +129,13 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
     Log::error("Unknown chunk received!!!");
     return;
   }
+  std::unique_lock<std::mutex> lock(guildMembersChunkTable[nonce].usersmtx);
   for(const auto& a : j["members"]){
     User u = deserializeUser(a["user"]);
     u.guild = deserializeGuildUser(a);
     guildMembersChunkTable[nonce].users.emplace_back(u);
   }
+  lock.unlock();
   int index = j["chunk_index"];
   int chunkCount = j["chunk_count"];
   if(index == chunkCount - 1){

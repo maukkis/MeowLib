@@ -16,12 +16,19 @@ class NyaBot;
 
 
 struct GuildMemberRequestTask {
+  GuildMemberRequestTask() = default;
   std::vector<User> users = {};
+  std::mutex usersmtx;
   std::coroutine_handle<> hp;
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> handle) noexcept {
     hp = handle;
   }
+
+  GuildMemberRequestTask& operator=(const GuildMemberRequestTask&){
+    return *this;
+  }
+
   std::vector<User> await_resume() const noexcept {
     return users;
   }
