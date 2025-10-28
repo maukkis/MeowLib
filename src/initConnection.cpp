@@ -7,7 +7,15 @@
 #include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
+#if defined(__GNUC__)
 #include <cxxabi.h>
+#define demangle(x) abi::__cxa_demangle(x, nullptr, nullptr, nullptr)
+#elif defined (_MSC_VER)
+#define demangle(x) x
+#else
+#pragma message "demangling isnt supported"
+#define demangle(x) x
+#endif
 
 NyaBot::NyaBot(int intents){
   api.intents = intents;
@@ -22,7 +30,7 @@ NyaBot::NyaBot(int intents){
     }
     catch(std::exception& e){
       Log::error("!!! THIS IS A BUG PLEASE REPORT THIS TO THE DEVELOPERS !!!");
-      Log::error("Terminate called after throwing an instance of '" + std::string(abi::__cxa_demangle(typeid(e).name(), nullptr, nullptr, nullptr)) + "'");
+      Log::error("Terminate called after throwing an instance of '" + std::string(demangle(typeid(e).name())) + "'");
       Log::error("  what(): " + std::string(e.what()));
     }
     std::abort();
