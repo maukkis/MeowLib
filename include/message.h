@@ -4,6 +4,7 @@
 #include "attachment.h"
 #include <expected>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -14,6 +15,13 @@
 #include "emoji.h"
 #include <expected>
 #include "error.h"
+
+enum MsgFlags {
+  SUPPRESS_EMBEDS = 1 << 2,
+  EPHEMERAL = 1 << 6,
+  SUPPRESS_NOTIFICATIONS = 1 << 12,
+  IS_COMPONENTS_V2 = 1 << 15,
+};
 
 
 
@@ -80,6 +88,7 @@ public:
   template<typename T>
   requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
   Message& addComponent(T&& comp){
+    msgflags |= MsgFlags::IS_COMPONENTS_V2;
     components.emplace_back(std::make_unique<std::remove_cvref_t<T>>(std::forward<T>(comp)));
     return *this;
   }
@@ -117,6 +126,28 @@ public:
   /// @param id channel id to send message in
   /// @param msg Message object
   std::expected<Message, Error> create(const std::string_view id, const Message& msg);
+
+  /// @brief edits a message
+  /// @param channelId channel id where the message is
+  /// @param messageId message id to edit
+  /// @param content optionally message content
+  /// @param msgFlags optionally message flags
+  std::expected<Message, Error> edit(const std::string_view channelId,
+                                     const std::string_view messageId,
+                                     const std::optional<const std::string_view> content = std::nullopt,
+                                     const std::optional<const int> msgFlags = std::nullopt);
+  /// @brief edits a message
+  /// @param channelId channel id where the message is
+  /// @param messageId message id to edit
+  /// @param msg Message object
+  std::expected<Message, Error> edit(const std::string_view channelId,
+                                     const std::string_view messageId,
+                                     const Message& msg);
+
+  std::expected<std::nullopt_t, Error> remove(const std::string_view channelId,
+                                              const std::string_view messageId,
+                                              const std::optional<const std::string_view> reason = std::nullopt);
+
 
   std::expected<std::nullopt_t, Error> createReaction(const std::string_view channelId,
                                                       const std::string_view messageId,

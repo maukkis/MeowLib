@@ -99,19 +99,21 @@ Message& Message::forward(){
 
 nlohmann::json Message::generate() const {
   nlohmann::json j;
+
+  j["flags"] = msgflags;
   if(messageReference)
     j["message_reference"] = messageReference->generate();
+
   if(!content.empty()){
     j["content"] = content;
-    if(msgflags != 0) j["flags"] = msgflags;
   }
-  if(!components.empty()){
-    j["flags"] = 1 << 15 | msgflags;
+  else if(!components.empty()){
     j["components"] = nlohmann::json::array();
     for(const auto& a : components){
       j["components"].emplace_back(a->generate());
     }
   }
+
   if(poll)
     j["poll"] = poll->generate();
   return j;
@@ -160,6 +162,79 @@ std::expected<Message, Error> MessageApiRoutes::create(const std::string_view id
 
   }
 }
+
+std::expected<Message, Error> MessageApiRoutes::edit(const std::string_view channelId,
+                                                     const std::string_view messageId,
+                                                     const std::optional<const std::string_view> content,
+                                                     const std::optional<const int> msgFlags)
+{
+  nlohmann::json j;
+  if(content)
+    j["content"] = *content;
+  if(msgFlags)
+    j["flags"] = *msgFlags;
+  auto meow = bot->rest.patch(std::format(APIURL "/channels/{}/messages/{}", channelId, messageId),
+                              j.dump());
+  if(!meow.has_value() || meow->second != 200){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to edit a message");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return Message(nlohmann::json::parse(meow->first));
+
+}
+
+
+std::expected<Message, Error> MessageApiRoutes::edit(const std::string_view channelId,
+                                                     const std::string_view messageId,
+                                                     const Message& a)
+{
+  
+  std::expected<std::pair<std::string, int>, RestErrors> meow;
+  if(a.attachments.empty()){
+    meow = bot->rest.patch(std::format(APIURL "/channels/{}/messages/{}", channelId, messageId),
+                           a.generate().dump());
+  }
+  else {
+    auto payload = makeFormData(a.generate(), "woof", a.attachments);
+    meow = bot->rest.sendFormData(std::format(APIURL "/channels/{}/messages/{}",
+                                              channelId,
+                                              messageId),
+                                  payload,
+                                  "woof",
+                                  "PATCH");
+
+  }
+  if(!meow.has_value() || meow->second != 200){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to edit a message");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return Message(nlohmann::json::parse(meow->first));
+
+}
+
+std::expected<std::nullopt_t, Error> MessageApiRoutes::remove(const std::string_view channelId,
+                                                              const std::string_view messageId,
+                                                              const std::optional<const std::string_view> reason)
+{
+  auto meow = bot->rest.deletereq(std::format(APIURL "/channels/{}/messages/{}", channelId, messageId),
+                                  reason.has_value() ?
+                                    std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + std::string(*reason) })
+                                    : std::nullopt);
+  if(!meow.has_value() || meow->second != 204){
+    auto err = Error(meow.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to delete a message");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}
+
+
+
 
 std::expected<std::nullopt_t, Error> MessageApiRoutes::createReaction(const std::string_view channelId,
                                                                       const std::string_view messageId,

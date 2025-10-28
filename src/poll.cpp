@@ -78,7 +78,8 @@ PollAnswer& PollAnswer::setText(const std::string_view a){
 
 nlohmann::json PollMedia::generate() const {
   nlohmann::json j;
-  j["text"] = text;
+  if(text)
+    j["text"] = *text;
   return j;
 }
 
