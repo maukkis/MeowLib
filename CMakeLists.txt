@@ -13,21 +13,22 @@ set(CMAKE_CXX_STANDARD 23)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
 if(WIN32 AND MSVC)
   # msvc gives stupid warnings that dont really matter and causes this to not compile fuck msvc
   set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
   set(CMAKE_CXX_FLAGS_RELEASE "/02")
 else()
-  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Werror -fsanitize=address -O0")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Werror -fsanitize=address -O0 -DJSON_DIAGNOSTICS")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(JSON_DIAGNOSTICS)
     add_link_options(-fsanitize=address)
   endif()
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror -DNDEBUG")
 endif()
 
 file(GLOB_RECURSE MeowLib_src "src/*.cpp")
 add_library(MeowLib ${MeowLib_src})
+  
 target_compile_definitions(MeowLib PRIVATE MEOWLIB_VERSION="${PROJECT_VERSION}")
 target_link_libraries(MeowLib PUBLIC nlohmann_json::nlohmann_json meowHttp Threads::Threads)
 
