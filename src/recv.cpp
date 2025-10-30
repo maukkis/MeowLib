@@ -14,6 +14,17 @@
 #include <thread>
 
 
+int NyaBot::getPing(){
+  return api.ping;
+}
+
+
+GatewayStates NyaBot::getCurrentState(){
+  return api.state;
+}
+
+
+
 void NyaBot::listen(){
   using namespace std::chrono_literals;
   std::ofstream meowlog{"meow.log"};
@@ -90,6 +101,7 @@ void NyaBot::listen(){
         case HeartbeatACK:
           Log::dbg("server sent ACK");
           lastHB = std::chrono::steady_clock::now();
+          api.ping = std::chrono::duration_cast<std::chrono::milliseconds>(lastHB - sentHB).count();
         break;
         case Reconnect:
           Log::dbg("got reconnectTwT closing and resuming");

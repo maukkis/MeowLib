@@ -48,6 +48,7 @@ struct ImportantApiStuff {
   std::string token;
   uint64_t interval;
   size_t sequence{0};
+  std::atomic<int> ping = -1;
   std::atomic<GatewayStates> state = GatewayStates::UNAUTHENTICATED;
   std::mutex UnavailableGuildIdsmtx;
   std::unordered_set<std::string> unavailableGuildIds;
@@ -200,7 +201,16 @@ public:
   void setRetryAmount(int amount){
     retryAmount = amount;
   }
+  
+  ///
+  /// @brief gets the current ping with the gateway in ms
+  /// @returns integer that has the ping in ms
+  int getPing();
 
+  ///
+  /// @brief gets the current gateway state
+  ///
+  GatewayStates getCurrentState();
 
   ///
   /// @brief changes the presence of the bot user the gateway connection must be on ready state for this to be called
