@@ -45,6 +45,7 @@ void NyaBot::guildDelete(nlohmann::json j){
 void NyaBot::guildBanAdd(nlohmann::json j){
   if(funs.onGuildBanAddF){
     GuildBan a = deserializeGuildBan(j["d"]);
+    user.cache.insert(a.user.id, a.user);
     funs.onGuildBanAddF(a);
   }
 }
@@ -53,13 +54,15 @@ void NyaBot::guildBanAdd(nlohmann::json j){
 void NyaBot::guildBanRemove(nlohmann::json j){
   if(funs.onGuildBanRemoveF){
     GuildBan a = deserializeGuildBan(j["d"]);
+    user.cache.insert(a.user.id, a.user);
     funs.onGuildBanRemoveF(a);
   }
 }
 
 void NyaBot::guildMemberRemove(nlohmann::json j){
   if(funs.onGuildMemberRemoveF){
-    User a = deserializeUser(j["d"]["user"]);
+    User a(j["d"]["user"]);
+    user.cache.insert(a.id, a);
     a.guild = GuildUser();
     a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberRemoveF(a);
@@ -69,7 +72,8 @@ void NyaBot::guildMemberRemove(nlohmann::json j){
 
 void NyaBot::guildMemberAdd(nlohmann::json j){
   if(funs.onGuildMemberAddF){
-    User a = deserializeUser(j["d"]["user"]);
+    User a(j["d"]["user"]);
+    user.cache.insert(a.id, a);
     a.guild = deserializeGuildUser(j["d"]);
     a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberAddF(a);
@@ -80,7 +84,8 @@ void NyaBot::guildMemberAdd(nlohmann::json j){
 
 void NyaBot::guildMemberUpdate(nlohmann::json j){
   if(funs.onGuildMemberUpdateF){
-    User a = deserializeUser(j["d"]["user"]);
+    User a(j["d"]["user"]);
+    user.cache.insert(a.id, a);
     a.guild = deserializeGuildUser(j["d"]);
     a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberUpdateF(a);
@@ -131,7 +136,8 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
   }
   std::unique_lock<std::mutex> lock(guildMembersChunkTable[nonce].usersmtx);
   for(const auto& a : j["members"]){
-    User u = deserializeUser(a["user"]);
+    User u(a["user"]);
+    user.cache.insert(u.id, u);
     u.guild = deserializeGuildUser(a);
     guildMembersChunkTable[nonce].users.emplace_back(u);
   }

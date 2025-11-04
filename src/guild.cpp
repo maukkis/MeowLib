@@ -19,7 +19,7 @@ GuildBan deserializeGuildBan(const nlohmann::json& j){
   return {
     .guildId = j.contains("guild_id") && !j["guild_id"].is_null() ? std::make_optional(j["guild_id"]) : std::nullopt,
     .reason = !j["reason"].is_null() ? std::make_optional(j["reason"]) : std::nullopt,
-    .user = deserializeUser(j["user"])
+    .user = User(j["user"])
   };
 }
 
@@ -229,7 +229,7 @@ std::expected<User, Error> GuildApiRoutes::modifyMember(const std::string_view g
     return std::unexpected(err);
   }
   auto j = nlohmann::json::parse(res->first);
-  auto u = deserializeUser(j["user"]);
+  User u(j["user"]);
   u.guild = deserializeGuildUser(j);
   return u;
 }

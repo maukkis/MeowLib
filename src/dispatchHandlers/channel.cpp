@@ -8,7 +8,7 @@ TypingStart::TypingStart(const nlohmann::json& j){
   userId = j["user_id"];
   timestamp = j["timestamp"];
   if(j.contains("member")){
-    member = deserializeUser(j["member"]["user"]);
+    member = User(j["member"]["user"]);
     member->guild = deserializeGuildUser(j["member"]);
   }
 }
