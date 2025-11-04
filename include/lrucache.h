@@ -180,6 +180,8 @@ private:
       ptr = ptr->next;
       delete current;
     }
+    hd = nullptr;
+    tl = nullptr;
   }
 
   void moveToHead(Node<T, V> *ptr){
