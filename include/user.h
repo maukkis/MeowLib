@@ -58,12 +58,15 @@ public:
     Log::dbg("cache hits: " + std::to_string(hits) + " misses: " + std::to_string(misses));
   }
   void setCurrentUser(const User& u){
-    currentUser.object = u;
-    currentUser.made = hrclk::now();
+    if(!currentUser){
+      currentUser = CacheObject(u);
+    }
+    currentUser->object = u;
+    currentUser->made = hrclk::now();
   }
   
   std::expected<User, Error> getCurrentUser(){
-    if(hrclk::now() - currentUser.made > ttl){
+    if(!currentUser || hrclk::now() - currentUser->made > ttl){
       auto a = get("@me");
       if(!a){
         Log::error("failed to get current user?");
@@ -72,11 +75,11 @@ public:
       setCurrentUser(*a);
       return a;
     }
-    return currentUser.object;
+    return currentUser->object;
   }
 
 private:
-  CacheObject<User> currentUser;
+  std::optional<CacheObject<User>> currentUser;
 };
 
 
