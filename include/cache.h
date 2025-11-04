@@ -5,6 +5,7 @@
 #include "restclient.h"
 #include <chrono>
 #include "error.h"
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <expected>
 #include <string_view>
@@ -36,10 +37,12 @@ public:
     path{path}{}
   
   void insert(const std::string& key, const T& item){
+    std::unique_lock<std::mutex> lock(mtx);
     cache.insert(key, item);
   }
 
   void erase(const std::string& key){
+    std::unique_lock<std::mutex> lock(mtx);
     cache.erase(key);
   }
 
@@ -53,7 +56,7 @@ public:
     Log::dbg("cache miss! fetching from the api");
     auto i = fetchItem(id);
     if(!i) return i;
-    cache.insert(id, *i);
+    insert(id, *i);
     return i;
   }
 
@@ -62,7 +65,7 @@ protected:
     auto res = rest->get(std::format(APIURL "{}/{}", path, id));
     if(!res.has_value() || res->second != 200){
       auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
-      Log::error("failed to get item " + std::string(id));
+      Log::error("failed to get item " + id);
       err.printErrors();
       return std::unexpected(err);
     }
@@ -70,6 +73,7 @@ protected:
   }
 
   std::optional<T> getFromCache(const std::string& id){
+    std::unique_lock<std::mutex> lock(mtx);
     auto item = cache.get(id);
     if(!item || hrclk::now() - item->made > ttl) return std::nullopt;
     return item->object;
@@ -78,6 +82,7 @@ protected:
   RestClient *rest;
   int hits = 0;
   int misses = 0;
+  std::mutex mtx;
   LruCache<std::string, CacheObject<T>> cache;
   std::string path;
 };
