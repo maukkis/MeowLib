@@ -10,7 +10,7 @@
 #include <expected>
 #include <string_view>
 
-
+struct User;
 
 constexpr auto ttl = std::chrono::minutes(10);
 using hrclk = std::chrono::high_resolution_clock;
@@ -37,8 +37,11 @@ public:
     path{path}{}
   
   void insert(const std::string& key, const T& item){
+    T copy = item;
+    if constexpr(std::is_same_v<T, User>)
+      copy.guild = std::nullopt;
     std::unique_lock<std::mutex> lock(mtx);
-    cache.insert(key, item);
+    cache.insert(key, std::move(copy));
   }
 
   void erase(const std::string& key){
