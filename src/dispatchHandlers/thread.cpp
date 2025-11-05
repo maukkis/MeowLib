@@ -2,24 +2,27 @@
 #include <nlohmann/json.hpp>
 
 void NyaBot::threadCreate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onThreadCreateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onThreadCreateF(a);
   }
 }
 
 
 void NyaBot::threadUpdate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onThreadUpdateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onThreadUpdateF(a);
   }
 }
 
 
 void NyaBot::threadDelete(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onThreadDeleteF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onThreadDeleteF(a);
   }
 }

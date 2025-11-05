@@ -1,4 +1,5 @@
 #pragma once
+#include "cache.h"
 #ifndef _INCLUDE_CHANNEL_H
 #define _INCLUDE_CHANNEL_H
 #include <nlohmann/json.hpp>
@@ -40,6 +41,9 @@ struct ThreadMetadata {
 
 
 struct Channel {
+  Channel() = default;
+  Channel(const nlohmann::json& j);
+  nlohmann::json generate() const;
   std::string id{};
   ChannelType type{};
   std::optional<std::string> guildId = std::nullopt;
@@ -56,10 +60,21 @@ struct Channel {
 };
 
 
+class ChannelCache : public GenericDiscordCache<Channel> {
+public:
+  using GenericDiscordCache::GenericDiscordCache;
+  ~ChannelCache(){
+    Log::dbg("cache hits: " + std::to_string(hits) + " misses: " + std::to_string(misses));
+  }
+};
+
+
+
 class ChannelApiRoutes {
 public:
   ChannelApiRoutes(NyaBot *bot);
-  
+ 
+  std::expected<Channel, Error> get(const std::string_view id);
   /// @brief modifies a channel
   /// @param id channel id
   /// @param ch Channel object
@@ -71,11 +86,10 @@ public:
   /// @brief joins a thread
   /// @param id id of the thread
   std::expected<std::nullopt_t, Error> joinThread(const std::string_view id);
+  ChannelCache cache;
 private:
   NyaBot *bot;
 };
 
 
-Channel deserializeChannel(const nlohmann::json& j);
-nlohmann::json serializeChannel(const Channel& a);
 #endif 

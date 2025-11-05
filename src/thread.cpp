@@ -39,7 +39,7 @@ ThreadListSync::ThreadListSync(const nlohmann::json& j){
     }
   }
   for(const auto& a : j["threads"]){
-    threads.emplace_back(deserializeChannel(a));
+    threads.emplace_back(Channel(a));
   }
   for(const auto& a : j["members"]){
     members.emplace_back(ThreadMember(a));

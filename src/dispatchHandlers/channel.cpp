@@ -16,22 +16,25 @@ TypingStart::TypingStart(const nlohmann::json& j){
 
 
 void NyaBot::channelCreate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onChannelCreateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelCreateF(a);
   }
 }
 
 void NyaBot::channelDelete(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onChannelDeleteF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelDeleteF(a);
   }
 }
 
 void NyaBot::channelUpdate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
   if(funs.onChannelUpdateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelUpdateF(a);
   }
 }

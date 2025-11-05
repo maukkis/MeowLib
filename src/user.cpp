@@ -63,8 +63,9 @@ std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id)
     err.printErrors();
     return std::unexpected(err);
   }
-  auto i = nlohmann::json::parse(res->first);
-  return deserializeChannel(i);
+  Channel a(nlohmann::json::parse(res->first));
+  bot->channel.cache.insert(a.id, a);
+  return a;
 }
 
 

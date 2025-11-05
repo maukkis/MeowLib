@@ -122,25 +122,30 @@ std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_
 
 std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId){
   return getReq(std::format(APIURL "/guilds/{}/channels", guildId))
-  .transform([](std::string a){
+  .transform([this](std::string a){
     std::vector<Channel> vec;
     auto j = nlohmann::json::parse(a);
-    for(const auto& channel : j)
-      vec.emplace_back(deserializeChannel(channel));
+    for(const auto& channel : j){
+      Channel a(channel);
+      bot->channel.cache.insert(a.id, a);
+      vec.emplace_back(std::move(a));
+    }
     return vec;
   });
 }
 
 
 std::expected<Channel, Error> GuildApiRoutes::createChannel(const std::string_view guildId, const Channel& a){
-  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/channels", guildId), serializeChannel(a).dump());
+  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/channels", guildId), a.generate().dump());
   if(!res.has_value() || res->second != 201){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to create guild channel");
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeChannel(nlohmann::json::parse(res->first));
+  Channel b(nlohmann::json::parse(res->first));
+  bot->channel.cache.insert(b.id, b);
+  return b;
 }
 
 
