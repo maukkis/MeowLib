@@ -31,6 +31,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <string_view>
 #include "commandHandling.h"
 #include "thread.h"
 #include "typingstart.h"
@@ -178,6 +179,8 @@ public:
   /// @param slash SlashCommand object
   ///
   void addSlash(const SlashCommand& slash);
+
+  void removeSlash(const std::string_view name);
   ///
   /// @brief Registers a command handler with the library.
   /// @param commandName commands custom_id to handle
@@ -191,6 +194,11 @@ public:
   template<CommandHandler Command, typename... Args>
   void addCommandHandler(const std::string& commandName, Args&&... args){
     commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
+  }
+
+  void removeCommandHandler(const std::string& name){
+    if(commands.contains(name))
+      commands.erase(name);
   }
 
 

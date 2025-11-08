@@ -100,7 +100,10 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
 
   modal.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
-  modal.guildId = j["guild_id"];
+
+  if(j.contains("guild_id"))
+    modal.guildId = j["guild_id"];
+
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   modal.resolvedAttachments = deserializeResolved<ResolvedAttachment>(j["data"]);
   for(auto& a : j["data"]["components"]){

@@ -10,7 +10,7 @@ SlashCommand::SlashCommand(const std::string_view name, const std::string_view d
     desc{desc},
     types{static_cast<int>(type)} {}
 
-SlashCommand& SlashCommand::addParam(SlashCommandParameter a){
+SlashCommand& SlashCommand::addParam(const SlashCommandParameter& a){
   params.emplace_back(a);
   return *this;
 }
@@ -29,6 +29,16 @@ SlashCommandParameter::SlashCommandParameter(const std::string_view name, const 
 
 void NyaBot::addSlash(const SlashCommand& slash){
   slashs.emplace_back(slash);
+}
+
+void NyaBot::removeSlash(const std::string_view name){
+  for(auto it = slashs.begin(); it != slashs.end(); ++it){
+    if(it->name == name){
+      slashs.erase(it);
+      break;
+    }
+  }
+  return;
 }
 
 std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
