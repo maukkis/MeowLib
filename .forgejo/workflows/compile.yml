@@ -8,6 +8,7 @@ on:
 jobs:
   linux:
     runs-on: docker
+    image: meowlib-container
     steps:
       - uses: actions/checkout@v4
       - name: compile
