@@ -1,0 +1,18 @@
+on:
+  pull_request:
+    types: [opened]
+  push:
+    branches:
+      - main
+
+jobs:
+  linux:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - name: compile
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc --all)
