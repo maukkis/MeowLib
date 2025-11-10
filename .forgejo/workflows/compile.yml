@@ -7,7 +7,7 @@ on:
 
 jobs:
   linux:
-    runs-on: docker
+    runs-on: docker-linux
     container:
       image: meowlib-container
     steps:
