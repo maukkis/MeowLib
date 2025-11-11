@@ -25,6 +25,8 @@ struct PrimaryGuild {
 
 
 struct GuildUser {
+  GuildUser() = default;
+  GuildUser(const nlohmann::json& j);
   std::optional<std::string> nick = std::nullopt;
   std::optional<std::string> avatar = std::nullopt;
   std::optional<std::string> banner = std::nullopt;
@@ -106,7 +108,6 @@ private:
 };
 
 
-GuildUser deserializeGuildUser(const nlohmann::json& j);
 nlohmann::json serializeGuildUser(const GuildUser& a);
 PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j);
 #endif

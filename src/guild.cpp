@@ -44,39 +44,36 @@ MeowAsync<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view 
 }
 
 
-Guild deserializeGuild(const nlohmann::json& j){
-  Guild g;
-  g.id = j["id"];
-  g.name = j["name"];
+Guild::Guild(const nlohmann::json& j){
+  id = j["id"];
+  name = j["name"];
   if(!j["icon"].is_null())
-    g.icon = j["icon"];
+    icon = j["icon"];
   if(j.contains("icon_hash") && !j["icon_hash"].is_null())
-    g.iconHash = j["icon_hash"];
+    iconHash = j["icon_hash"];
   if(j.contains("splash") && !j["splash"].is_null())
-    g.splash = j["splash"];
+    splash = j["splash"];
   if(j.contains("discovery_splash") && !j["discovery_splash"].is_null())
-    g.discoverySplash = j["discovery_splash"];
+    discoverySplash = j["discovery_splash"];
   if(j.contains("owner"))
-    g.owner = j["owner"];
+    owner = j["owner"];
   if(j.contains("owner_id"))
-    g.ownerId = j["owner_id"];
+    ownerId = j["owner_id"];
   if(j.contains("permissions"))
-    g.permissions = j["permissions"];
+    permissions = j["permissions"];
   if(!j["banner"].is_null())
-    g.banner = j["banner"];
+    banner = j["banner"];
   if(j.contains("nsfw_level"))
-    g.nsfwLevel = j["nsfw_level"].get<int>();
+    nsfwLevel = j["nsfw_level"].get<int>();
 
   if(j.contains("roles")){
     for(const auto& a : j["roles"])
-      g.roles.emplace_back(a);
+      roles.emplace_back(a);
   }
   if(j.contains("emojis")){
     for(const auto& a : j["emojis"])
-      g.emojis.emplace_back(deserializeEmoji(a));
+      emojis.emplace_back(deserializeEmoji(a));
   }
-
-  return g;
 }
 
 GuildPreview deserializeGuildPreview(const nlohmann::json& j){
@@ -100,15 +97,58 @@ GuildPreview deserializeGuildPreview(const nlohmann::json& j){
 }
 
 
-GuildApiRoutes::GuildApiRoutes(NyaBot *bot){
+GuildCache::GuildCache(NyaBot *bot)
+  : GenericDiscordCache("/guilds", &bot->rest), bot{bot} {}
+
+
+void GuildCache::insertGuildUser(const std::string& guildId, const User& a){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock<std::mutex> lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].usersmtx);
+  relatedObjects[guildId].users.insert(a.id, *a.guild);
+}
+
+std::expected<User, Error> GuildCache::getGuildUser(const std::string& guildId, const std::string& id)
+{
+  auto user = bot->user.cache.getFromCache(id);
+  if(user){
+    std::unique_lock<std::mutex> lock(relatedObjects[guildId].usersmtx);
+    auto guser = relatedObjects[guildId].users.get(id);
+    if(!guser || hrclk::now() - guser->made > ttl){
+      auto a = fetchGuildUser(guildId, id);
+      return a;
+    }
+    user->guild = guser->object;
+    return *user;
+  }
+  return fetchGuildUser(guildId, id);
+}
+
+std::expected<User, Error> GuildCache::fetchGuildUser(const std::string& guildId, const std::string& id)
+{
+  auto res = rest->get(std::format(APIURL "/guilds/{}/members/{}", guildId, id));
+    if(!res.has_value() || res->second != 200){
+      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+      Log::error("failed to get item " + id);
+      err.printErrors();
+      return std::unexpected(err);
+    }
+  auto j = nlohmann::json::parse(res.value().first);
+  User a(j["user"]);
+  a.guild = GuildUser(j);
+  bot->user.cache.insert(a.id, a);
+  insertGuildUser(guildId, a);
+  return a;
+}
+
+GuildApiRoutes::GuildApiRoutes(NyaBot *bot): cache{bot}{
   this->bot = bot;
 }
 
 std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
-  return getReq(std::format(APIURL "/guilds/{}", id))
-  .and_then([](std::expected<std::string, Error> a){
-    return std::expected<Guild, Error>(deserializeGuild(nlohmann::json::parse(a.value())));
-  });
+  return cache.get(std::string(id));
 }
 
 std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
@@ -202,6 +242,12 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeBan(const std::string
   return std::nullopt;
 }
 
+std::expected<User, Error> GuildApiRoutes::getMember(const std::string_view guildId,
+                                                     const std::string_view id)
+{
+  return cache.getGuildUser(std::string(guildId), std::string(id));
+}
+
 
 std::expected<std::nullopt_t, Error> GuildApiRoutes::removeMember(const std::string_view guildId,
                                                                        const std::string_view userId,
@@ -235,7 +281,9 @@ std::expected<User, Error> GuildApiRoutes::modifyMember(const std::string_view g
   }
   auto j = nlohmann::json::parse(res->first);
   User u(j["user"]);
-  u.guild = deserializeGuildUser(j);
+  bot->user.cache.insert(u.id, u);
+  u.guild = GuildUser(j);
+  bot->guild.cache.insertGuildUser(std::string(guildId), u);
   return u;
 }
 

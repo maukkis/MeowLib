@@ -32,7 +32,7 @@ std::expected<std::vector<Guild>, Error> UserApiRoutes::getCurrentUserGuilds(){
       std::vector<Guild> b;
       auto j = nlohmann::json::parse(a.value());
       for(const auto& c : j){
-        b.emplace_back(deserializeGuild(c));
+        b.emplace_back(c);
       }
       return std::expected<std::vector<Guild>, Error>(std::move(b));
     });
@@ -104,21 +104,19 @@ std::expected<std::string, Error> UserApiRoutes::getReq(const std::string& endpo
   return res->first;
 }
 
-GuildUser deserializeGuildUser(const nlohmann::json &j){
-  return {
-    .nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]),
-    .avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]),
-    .banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]),
-    .roles = j["roles"].get<std::vector<std::string>>(),
-    .permissions = j.contains("permissions") ? 
-      std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
-      : std::nullopt,
-    .communicationDisabledUntil = 
-      j.contains("communication_disabled_until")
-      && !j["communication_disabled_until"].is_null() ? 
-        std::make_optional(j["communication_disabled_until"])
-        : std::nullopt
-  };
+GuildUser::GuildUser(const nlohmann::json &j){
+  nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]);
+  avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]);
+  banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]);
+  roles = j["roles"].get<std::vector<std::string>>();
+  permissions = j.contains("permissions") ? 
+   std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
+   : std::nullopt;
+  communicationDisabledUntil = 
+   j.contains("communication_disabled_until")
+   && !j["communication_disabled_until"].is_null() ? 
+     std::make_optional(j["communication_disabled_until"])
+     : std::nullopt;
 }
 
 nlohmann::json serializeGuildUser(const GuildUser& a){

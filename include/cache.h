@@ -63,6 +63,13 @@ public:
     return i;
   }
 
+  std::optional<T> getFromCache(const std::string& id){
+    std::unique_lock<std::mutex> lock(mtx);
+    auto item = cache.get(id);
+    if(!item || hrclk::now() - item->made > ttl) return std::nullopt;
+    return item->object;
+  }
+
 protected:
   std::expected<T, Error> fetchItem(const std::string& id){
     auto res = rest->get(std::format(APIURL "{}/{}", path, id));
@@ -75,12 +82,7 @@ protected:
     return T(nlohmann::json::parse(res->first));
   }
 
-  std::optional<T> getFromCache(const std::string& id){
-    std::unique_lock<std::mutex> lock(mtx);
-    auto item = cache.get(id);
-    if(!item || hrclk::now() - item->made > ttl) return std::nullopt;
-    return item->object;
-  }
+
 
   RestClient *rest;
   int hits = 0;

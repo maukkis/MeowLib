@@ -9,7 +9,7 @@
 
 namespace {
 
-
+// TODO: cache these users i am eepy and too lazy to do it
 
 template<typename T>
 std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
@@ -20,7 +20,7 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
     for(auto& a : d["resolved"]["users"])
       map[a["id"]] = User(a);
     for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
-      map[it.key()].guild = deserializeGuildUser(d["resolved"]["members"][it.key()]);
+      map[it.key()].guild = GuildUser(d["resolved"]["members"][it.key()]);
     }
     return map;
   }
@@ -42,7 +42,8 @@ SlashCommandInteraction constructSlash(nlohmann::json& json, const std::string& 
   User user;
   if(json.contains("member")){
     user = User(json["member"]["user"]);
-    user.guild = deserializeGuildUser(json["member"]);
+    user.guild = GuildUser(json["member"]);
+    a->guild.cache.insertGuildUser(json["guild_id"], user);
   } else user = User(json["user"]);
   a->user.cache.insert(user.id, user); 
   const std::string commandName = json["data"]["name"];
@@ -69,7 +70,8 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   User user;
   if(j.contains("member")){
     user = User(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
   } else user = User(j["user"]);
 
   a->user.cache.insert(user.id, user); 
@@ -92,7 +94,8 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   User user;
   if(j.contains("member")){
     user = User(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
   } else user = User(j["user"]);
 
   a->user.cache.insert(user.id, user); 
@@ -147,7 +150,8 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   User user;
   if(j.contains("member")){
     user = User(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
   } else user = User(j["user"]);
   a->user.cache.insert(user.id, user); 
   const std::string& name = j["data"]["custom_id"];

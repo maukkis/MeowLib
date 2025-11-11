@@ -36,7 +36,7 @@ MessageReaction::MessageReaction(const nlohmann::json& j){
     guildId = j["guild_id"];
   if(j.contains("member")){
     member = User(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member->guild = GuildUser(j["member"]);
   }
   emoji = deserializeEmoji(j["emoji"]);
   if(j.contains("message_author_id"))
@@ -60,7 +60,7 @@ Message::Message(const nlohmann::json& j){
     webhookId = j["webhook_id"];
   author = User(j["author"]);
   if(j.contains("member"))
-    author.guild = deserializeGuildUser(j["member"]);
+    author.guild = GuildUser(j["member"]);
   if(j.contains("guild_id"))
     guildId = j["guild_id"];
   id = j["id"];

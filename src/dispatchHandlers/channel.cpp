@@ -9,7 +9,7 @@ TypingStart::TypingStart(const nlohmann::json& j){
   timestamp = j["timestamp"];
   if(j.contains("member")){
     member = User(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member->guild = GuildUser(j["member"]);
   }
 }
 
@@ -42,6 +42,10 @@ void NyaBot::channelUpdate(nlohmann::json j){
 void NyaBot::typingStart(nlohmann::json j){
   if(funs.onTypingStartF){
     TypingStart a(j["d"]);
+    if(a.member){
+      user.cache.insert(a.member->id, *a.member);
+      guild.cache.insertGuildUser(*a.guildId, *a.member);
+    }
     funs.onTypingStartF(a);
   }
 }

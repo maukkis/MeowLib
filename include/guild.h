@@ -5,11 +5,13 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include "cache.h"
 #include "emoji.h"
 #include "error.h"
 #include <expected>
 #include <string_view>
 #include <vector>
+#include "lrucache.h"
 #include "role.h"
 #include <coroutine>
 
@@ -66,6 +68,8 @@ struct GuildPreview{
 
 
 struct Guild {
+  Guild() = default;
+  Guild(const nlohmann::json& j);
   std::string id;
   std::string name;
   std::optional<std::string> icon = std::nullopt;
@@ -81,8 +85,29 @@ struct Guild {
   int nsfwLevel{};
 };
 
-Guild deserializeGuild(const nlohmann::json& j);
 GuildPreview deserializeGuildPreview(const nlohmann::json& j);
+
+
+struct RelatedGuildCache {
+  std::mutex usersmtx;
+  LruCache<std::string, CacheObject<GuildUser>> users{1000};
+};
+
+
+class GuildCache : public GenericDiscordCache<Guild> {
+public:
+  GuildCache(NyaBot *bot);
+  void insertGuildUser(const std::string& guildId, const User& a);
+
+  std::expected<User, Error> getGuildUser(const std::string& guildId, const std::string& userId);
+
+private:
+  std::expected<User, Error> fetchGuildUser(const std::string& guildId, const std::string& userId);
+  std::mutex relatedObjectsmtx;
+  NyaBot *bot;
+  std::unordered_map<std::string, RelatedGuildCache> relatedObjects;
+};
+
 
 
 class GuildApiRoutes {
@@ -101,6 +126,7 @@ public:
   std::expected<Channel, Error> createChannel(const std::string_view guildId, const Channel& a);
 
 
+
   std::expected<std::vector<GuildBan>, Error> getBans(const std::string_view id);
   
   std::expected<GuildBan, Error> getBan(const std::string_view guildId, const std::string_view userId);
@@ -112,6 +138,9 @@ public:
   
   std::expected<std::nullopt_t, Error> removeBan(const std::string_view guildId, const std::string_view userId,
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
+
+
+  std::expected<User, Error> getMember(const std::string_view guildId, const std::string_view userId);
 
   std::expected<std::nullopt_t, Error> removeMember(const std::string_view guildId, const std::string_view userId,
                                                          const std::optional<std::string>& auditLogReason = std::nullopt);
@@ -133,7 +162,7 @@ public:
                                                              const std::optional<std::string>& auditLogReason = std::nullopt);
 
 
-
+GuildCache cache;
 private:
   std::expected<std::string, Error> getReq(const std::string& endpoint);
   NyaBot* bot;

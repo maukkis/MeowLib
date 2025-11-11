@@ -27,7 +27,7 @@ ThreadMember::ThreadMember(const nlohmann::json& j){
   }
   if(j.contains("member")){
     member = User(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member->guild = GuildUser(j["member"]);
   }
 }
 

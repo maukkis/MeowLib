@@ -8,21 +8,24 @@
 void NyaBot::guildCreate(nlohmann::json j){
   while(api.state != GatewayStates::READY)
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  Guild a(j["d"]);
+  guild.cache.insert(a.id, a);
   if(api.unavailableGuildIds.contains(j["d"]["id"])){
     Log::dbg("Guild id: " + j["d"]["id"].get<std::string>() + " meant for caching. Caching the guild and returning");
     std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
     api.unavailableGuildIds.erase(j["d"]["id"]);
+
     return;
   }
   if(funs.onGuildCreateF){
-    Guild a = deserializeGuild(j["d"]);
     funs.onGuildCreateF(a);
   }
 }
 
 void NyaBot::guildUpdate(nlohmann::json j){
+  Guild a(j["d"]);
+  guild.cache.insert(a.id, a);
   if(funs.onGuildUpdateF){
-    Guild a = deserializeGuild(j["d"]);
     funs.onGuildUpdateF(a);
   }
 }
@@ -74,7 +77,9 @@ void NyaBot::guildMemberAdd(nlohmann::json j){
   if(funs.onGuildMemberAddF){
     User a(j["d"]["user"]);
     user.cache.insert(a.id, a);
-    a.guild = deserializeGuildUser(j["d"]);
+    a.guild = GuildUser(j["d"]);
+
+    guild.cache.insertGuildUser(a.id, a);
     a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberAddF(a);
   }
@@ -86,7 +91,8 @@ void NyaBot::guildMemberUpdate(nlohmann::json j){
   if(funs.onGuildMemberUpdateF){
     User a(j["d"]["user"]);
     user.cache.insert(a.id, a);
-    a.guild = deserializeGuildUser(j["d"]);
+    a.guild = GuildUser(j["d"]);
+    guild.cache.insertGuildUser(a.id, a);
     a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberUpdateF(a);
   }
@@ -138,7 +144,8 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
   for(const auto& a : j["members"]){
     User u(a["user"]);
     user.cache.insert(u.id, u);
-    u.guild = deserializeGuildUser(a);
+    u.guild = GuildUser(a);
+    guild.cache.insertGuildUser(j["guild_id"], u);
     guildMembersChunkTable[nonce].users.emplace_back(u);
   }
   lock.unlock();
