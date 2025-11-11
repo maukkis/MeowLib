@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: compile
         run: |
-          "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
-          "mkdir build"
-          "cd build"
-          "cmake -G Ninja .."
-          "cmake --build . --target Release"
+          & 'C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\Launch-VsDevShell.ps1' -Arch amd64
+          mkdir build
+          cd build
+          cmake -G Ninja ..
+          cmake --build . --config Release
