@@ -18,3 +18,14 @@ jobs:
           cd build
           cmake ..
           make -j$(nproc --all)
+  windows:
+    runs-on: host-windows
+    steps:
+      - uses: actions/checkout@v2
+      - name: compile
+        run: |
+          "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64
+          "mkdir build"
+          "cd build"
+          "cmake -G Ninja .."
+          "cmake --build . --target Release"
