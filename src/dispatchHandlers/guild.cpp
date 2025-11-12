@@ -74,26 +74,24 @@ void NyaBot::guildMemberRemove(nlohmann::json j){
 
 
 void NyaBot::guildMemberAdd(nlohmann::json j){
+  User a(j["d"]["user"]);
+  user.cache.insert(a.id, a);
+  a.guild = GuildUser(j["d"]);
+  guild.cache.insertGuildUser(j["d"]["guild_id"], a);
+  a.guild->guildId = j["d"]["guild_id"];
   if(funs.onGuildMemberAddF){
-    User a(j["d"]["user"]);
-    user.cache.insert(a.id, a);
-    a.guild = GuildUser(j["d"]);
-
-    guild.cache.insertGuildUser(a.id, a);
-    a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberAddF(a);
   }
-
 }
 
 
 void NyaBot::guildMemberUpdate(nlohmann::json j){
+  User a(j["d"]["user"]);
+  user.cache.insert(a.id, a);
+  a.guild = GuildUser(j["d"]);
+  guild.cache.insertGuildUser(j["d"]["guild_id"], a);
+  a.guild->guildId = j["d"]["guild_id"];
   if(funs.onGuildMemberUpdateF){
-    User a(j["d"]["user"]);
-    user.cache.insert(a.id, a);
-    a.guild = GuildUser(j["d"]);
-    guild.cache.insertGuildUser(a.id, a);
-    a.guild->guildId = j["d"]["guild_id"];
     funs.onGuildMemberUpdateF(a);
   }
 }
