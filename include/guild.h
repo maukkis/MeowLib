@@ -10,6 +10,7 @@
 #include "error.h"
 #include <expected>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 #include "lrucache.h"
 #include "role.h"
@@ -91,6 +92,8 @@ GuildPreview deserializeGuildPreview(const nlohmann::json& j);
 struct RelatedGuildCache {
   std::mutex usersmtx;
   LruCache<std::string, CacheObject<GuildUser>> users{1000};
+  std::mutex channelmtx;
+  std::unordered_set<std::string> channelIds;
 };
 
 
@@ -100,9 +103,10 @@ public:
   void insertGuildUser(const std::string& guildId, const User& a);
 
   std::expected<User, Error> getGuildUser(const std::string& guildId, const std::string& userId);
-
+  std::expected<std::vector<Channel>, Error> getGuildChannels(const std::string& guildId);
 private:
   std::expected<User, Error> fetchGuildUser(const std::string& guildId, const std::string& userId);
+  std::expected<std::vector<Channel>, Error> fetchGuildChannels(const std::string& guildId);
   std::mutex relatedObjectsmtx;
   NyaBot *bot;
   std::unordered_map<std::string, RelatedGuildCache> relatedObjects;

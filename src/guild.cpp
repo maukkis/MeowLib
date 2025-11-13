@@ -129,18 +129,65 @@ std::expected<User, Error> GuildCache::getGuildUser(const std::string& guildId, 
 std::expected<User, Error> GuildCache::fetchGuildUser(const std::string& guildId, const std::string& id)
 {
   auto res = rest->get(std::format(APIURL "/guilds/{}/members/{}", guildId, id));
-    if(!res.has_value() || res->second != 200){
-      auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
-      Log::error("failed to get item " + id);
-      err.printErrors();
-      return std::unexpected(err);
-    }
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get item " + id);
+    err.printErrors();
+    return std::unexpected(err);
+  }
   auto j = nlohmann::json::parse(res.value().first);
   User a(j["user"]);
   a.guild = GuildUser(j);
   bot->user.cache.insert(a.id, a);
   insertGuildUser(guildId, a);
   return a;
+}
+
+
+
+std::expected<std::vector<Channel>, Error> GuildCache::getGuildChannels(const std::string& guildId){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock<std::mutex> lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  auto channelIds = relatedObjects[guildId].channelIds;
+  std::vector<Channel> channels;
+  if(!channelIds.empty()){
+    std::unique_lock<std::mutex> lock(relatedObjects[guildId].channelmtx);
+    for(const auto& channelId : channelIds){
+      auto ch = bot->channel.cache.getFromCache(channelId);
+      if(!ch) {
+        lock.unlock();
+        return fetchGuildChannels(guildId);
+      }
+      channels.emplace_back(*ch);
+    }
+    return channels;
+  }
+  return fetchGuildChannels(guildId);
+}
+
+
+
+std::expected<std::vector<Channel>, Error> GuildCache::fetchGuildChannels(const std::string& guildId){
+  Log::dbg("cache miss from guild channels!!");
+  auto res = rest->get(std::format(APIURL "/guilds/{}/channels", guildId));
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get item " + guildId);
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  std::vector<Channel> vec;
+  auto j = nlohmann::json::parse(res->first);
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].channelmtx);
+  for(const auto& channel : j){
+    Channel a(channel);
+    relatedObjects[guildId].channelIds.emplace(a.id);
+    bot->channel.cache.insert(a.id, a);
+    vec.emplace_back(std::move(a));
+  }
+  return vec;
 }
 
 GuildApiRoutes::GuildApiRoutes(NyaBot *bot): cache{bot}{
@@ -161,17 +208,7 @@ std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_
 
 
 std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId){
-  return getReq(std::format(APIURL "/guilds/{}/channels", guildId))
-  .transform([this](std::string a){
-    std::vector<Channel> vec;
-    auto j = nlohmann::json::parse(a);
-    for(const auto& channel : j){
-      Channel a(channel);
-      bot->channel.cache.insert(a.id, a);
-      vec.emplace_back(std::move(a));
-    }
-    return vec;
-  });
+  return cache.getGuildChannels(std::string(guildId));
 }
 
 
