@@ -2,6 +2,7 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include "../../include/eventCodes.h"
 #include "../../include/guild.h"
 
 
@@ -157,4 +158,33 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
     return;
   }
   Log::dbg("expecting " + std::to_string(chunkCount - index) + " chunks");
+}
+
+
+void NyaBot::rateLimited(nlohmann::json j){
+  j = j["d"];
+  switch(j["opcode"].get<int>()){
+    case 8: [[likely]] {
+      const float retryAfter = j["retry_after"];
+      const std::string nonce = j["meta"]["nonce"];
+      const std::string guildId = j["meta"]["guild_id"];
+      Log::error("rate limit on request guild members in guild: " +
+                 guildId + " waiting for: "
+                 + std::to_string(retryAfter) + " seconds");
+      std::this_thread::sleep_for(
+        std::chrono::duration<float, std::chrono::seconds::period>(retryAfter));
+      Log::dbg("resending payload");
+      nlohmann::json a;
+      a["op"] = RequestGuildMember;
+      a["d"]["guild_id"] = guildId;
+      a["d"]["query"] = "";
+      a["d"]["limit"] = 0;
+      a["d"]["nonce"] = nonce;
+      queue.addToQueue(a.dump());
+      break;
+    }
+    default: [[unlikely]]
+      Log::error("rate limit for unknown opcode please make an issue about this as it is unimplemented");
+    break;
+  }
 }

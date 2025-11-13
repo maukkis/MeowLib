@@ -357,6 +357,8 @@ private:
 
   void typingStart(nlohmann::json j);
 
+  void rateLimited(nlohmann::json j);
+
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -402,6 +404,7 @@ private:
     {"THREAD_MEMBER_UPDATE", std::bind(&NyaBot::threadMemberUpdate, this, std::placeholders::_1)},
     {"THREAD_MEMBERS_UPDATE", std::bind(&NyaBot::threadMembersUpdate, this, std::placeholders::_1)},
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
+    {"RATE_LIMITED", std::bind(&NyaBot::rateLimited, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
