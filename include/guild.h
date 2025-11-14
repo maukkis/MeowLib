@@ -104,6 +104,8 @@ public:
 
   std::expected<User, Error> getGuildUser(const std::string& guildId, const std::string& userId);
   std::expected<std::vector<Channel>, Error> getGuildChannels(const std::string& guildId);
+  void insertGuildChannel(const Channel& a);
+  void removeGuildChannel(const std::string& guildId, const std::string& channelId);
 private:
   std::expected<User, Error> fetchGuildUser(const std::string& guildId, const std::string& userId);
   std::expected<std::vector<Channel>, Error> fetchGuildChannels(const std::string& guildId);

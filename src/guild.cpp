@@ -167,7 +167,22 @@ std::expected<std::vector<Channel>, Error> GuildCache::getGuildChannels(const st
   return fetchGuildChannels(guildId);
 }
 
+void GuildCache::insertGuildChannel(const Channel& a){
+  if(!relatedObjects.contains(*a.guildId)){
+    std::unique_lock lock(relatedObjectsmtx);
+    relatedObjects[*a.guildId];
+  }
+  std::unique_lock lock(relatedObjects[*a.guildId].channelmtx);
+  relatedObjects[*a.guildId].channelIds.emplace(a.id);
+}
 
+
+void GuildCache::removeGuildChannel(const std::string& guildId, const std::string& channelId){
+  if(!relatedObjects.contains(guildId) || 
+     !relatedObjects[guildId].channelIds.contains(channelId)) return;
+  std::unique_lock lock(relatedObjects[guildId].channelmtx);
+  relatedObjects[guildId].channelIds.erase(channelId);
+}
 
 std::expected<std::vector<Channel>, Error> GuildCache::fetchGuildChannels(const std::string& guildId){
   Log::dbg("cache miss from guild channels!!");

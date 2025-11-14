@@ -18,6 +18,8 @@ TypingStart::TypingStart(const nlohmann::json& j){
 void NyaBot::channelCreate(nlohmann::json j){
   Channel a(j["d"]);
   channel.cache.insert(a.id, a);
+  if(a.guildId)
+    guild.cache.insertGuildChannel(a);
   if(funs.onChannelCreateF){
     funs.onChannelCreateF(a);
   }
@@ -25,7 +27,9 @@ void NyaBot::channelCreate(nlohmann::json j){
 
 void NyaBot::channelDelete(nlohmann::json j){
   Channel a(j["d"]);
-  channel.cache.insert(a.id, a);
+  channel.cache.erase(a.id);
+  if(a.guildId)
+    guild.cache.removeGuildChannel(*a.guildId, a.id);
   if(funs.onChannelDeleteF){
     funs.onChannelDeleteF(a);
   }
@@ -34,6 +38,8 @@ void NyaBot::channelDelete(nlohmann::json j){
 void NyaBot::channelUpdate(nlohmann::json j){
   Channel a(j["d"]);
   channel.cache.insert(a.id, a);
+  if(a.guildId)
+    guild.cache.insertGuildChannel(a);
   if(funs.onChannelUpdateF){
     funs.onChannelUpdateF(a);
   }
