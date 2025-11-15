@@ -32,9 +32,9 @@ public:
 class SlashCommand {
 public:
   SlashCommand(const std::string_view name, const std::string_view desc, IntegrationTypes type);
-  SlashCommand& addParam(SlashCommandParameter a);
-  const std::string name;
-  const std::string desc;
+  SlashCommand& addParam(const SlashCommandParameter& a);
+  std::string name;
+  std::string desc;
   std::vector<SlashCommandParameter> params;
   IntegrationTypes types;
 };

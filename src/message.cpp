@@ -12,7 +12,7 @@ InteractionData deserializeInteractionData(const nlohmann::json& j){
     .id = j["id"],
     .type = j["type"],
     .name = j["name"],
-    .user = deserializeUser(j["user"])
+    .user = User(j["user"])
   };
 }
 
@@ -35,8 +35,8 @@ MessageReaction::MessageReaction(const nlohmann::json& j){
   if(j.contains("guild_id"))
     guildId = j["guild_id"];
   if(j.contains("member")){
-    member = deserializeUser(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member = User(j["member"]["user"]);
+    member->guild = GuildUser(j["member"]);
   }
   emoji = deserializeEmoji(j["emoji"]);
   if(j.contains("message_author_id"))
@@ -58,9 +58,9 @@ Message::Message(const nlohmann::json& j){
   }
   if(j.contains("webhook_id"))
     webhookId = j["webhook_id"];
-  author = deserializeUser(j["author"]);
+  author = User(j["author"]);
   if(j.contains("member"))
-    author.guild = deserializeGuildUser(j["member"]);
+    author.guild = GuildUser(j["member"]);
   if(j.contains("guild_id"))
     guildId = j["guild_id"];
   id = j["id"];

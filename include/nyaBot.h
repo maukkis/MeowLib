@@ -31,6 +31,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <string_view>
 #include "commandHandling.h"
 #include "thread.h"
 #include "typingstart.h"
@@ -121,6 +122,8 @@ void runOnce(F&& f, Args&&... a) {
   }();
 } 
 
+
+
 struct InteractionCallbacks {
   std::unordered_map<std::string, std::function<void(ButtonInteraction&)>> buttonInteractionTable;
   std::unordered_map<std::string, std::function<void(SelectInteraction&)>> selectInteractionTable;
@@ -176,6 +179,8 @@ public:
   /// @param slash SlashCommand object
   ///
   void addSlash(const SlashCommand& slash);
+
+  void removeSlash(const std::string_view name);
   ///
   /// @brief Registers a command handler with the library.
   /// @param commandName commands custom_id to handle
@@ -189,6 +194,11 @@ public:
   template<CommandHandler Command, typename... Args>
   void addCommandHandler(const std::string& commandName, Args&&... args){
     commands[commandName] = std::make_unique<Command>(std::forward<Args>(args)...);
+  }
+
+  void removeCommandHandler(const std::string& name){
+    if(commands.contains(name))
+      commands.erase(name);
   }
 
 
@@ -347,6 +357,8 @@ private:
 
   void typingStart(nlohmann::json j);
 
+  void rateLimited(nlohmann::json j);
+
   meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
@@ -392,10 +404,10 @@ private:
     {"THREAD_MEMBER_UPDATE", std::bind(&NyaBot::threadMemberUpdate, this, std::placeholders::_1)},
     {"THREAD_MEMBERS_UPDATE", std::bind(&NyaBot::threadMembersUpdate, this, std::placeholders::_1)},
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
+    {"RATE_LIMITED", std::bind(&NyaBot::rateLimited, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
-
   std::mutex guildMemberChunkmtx;
   std::unordered_map<std::string, GuildMemberRequestTask> guildMembersChunkTable;
   Funs funs;

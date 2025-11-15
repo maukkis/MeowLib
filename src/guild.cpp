@@ -19,7 +19,7 @@ GuildBan deserializeGuildBan(const nlohmann::json& j){
   return {
     .guildId = j.contains("guild_id") && !j["guild_id"].is_null() ? std::make_optional(j["guild_id"]) : std::nullopt,
     .reason = !j["reason"].is_null() ? std::make_optional(j["reason"]) : std::nullopt,
-    .user = deserializeUser(j["user"])
+    .user = User(j["user"])
   };
 }
 
@@ -44,39 +44,36 @@ MeowAsync<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view 
 }
 
 
-Guild deserializeGuild(const nlohmann::json& j){
-  Guild g;
-  g.id = j["id"];
-  g.name = j["name"];
+Guild::Guild(const nlohmann::json& j){
+  id = j["id"];
+  name = j["name"];
   if(!j["icon"].is_null())
-    g.icon = j["icon"];
+    icon = j["icon"];
   if(j.contains("icon_hash") && !j["icon_hash"].is_null())
-    g.iconHash = j["icon_hash"];
+    iconHash = j["icon_hash"];
   if(j.contains("splash") && !j["splash"].is_null())
-    g.splash = j["splash"];
+    splash = j["splash"];
   if(j.contains("discovery_splash") && !j["discovery_splash"].is_null())
-    g.discoverySplash = j["discovery_splash"];
+    discoverySplash = j["discovery_splash"];
   if(j.contains("owner"))
-    g.owner = j["owner"];
+    owner = j["owner"];
   if(j.contains("owner_id"))
-    g.ownerId = j["owner_id"];
+    ownerId = j["owner_id"];
   if(j.contains("permissions"))
-    g.permissions = j["permissions"];
+    permissions = j["permissions"];
   if(!j["banner"].is_null())
-    g.banner = j["banner"];
+    banner = j["banner"];
   if(j.contains("nsfw_level"))
-    g.nsfwLevel = j["nsfw_level"].get<int>();
+    nsfwLevel = j["nsfw_level"].get<int>();
 
   if(j.contains("roles")){
     for(const auto& a : j["roles"])
-      g.roles.emplace_back(a);
+      roles.emplace_back(a);
   }
   if(j.contains("emojis")){
     for(const auto& a : j["emojis"])
-      g.emojis.emplace_back(deserializeEmoji(a));
+      emojis.emplace_back(deserializeEmoji(a));
   }
-
-  return g;
 }
 
 GuildPreview deserializeGuildPreview(const nlohmann::json& j){
@@ -100,15 +97,120 @@ GuildPreview deserializeGuildPreview(const nlohmann::json& j){
 }
 
 
-GuildApiRoutes::GuildApiRoutes(NyaBot *bot){
+GuildCache::GuildCache(NyaBot *bot)
+  : GenericDiscordCache("/guilds", &bot->rest), bot{bot} {}
+
+
+void GuildCache::insertGuildUser(const std::string& guildId, const User& a){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock<std::mutex> lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].usersmtx);
+  relatedObjects[guildId].users.insert(a.id, *a.guild);
+}
+
+std::expected<User, Error> GuildCache::getGuildUser(const std::string& guildId, const std::string& id)
+{
+  auto user = bot->user.cache.getFromCache(id);
+  if(user){
+    std::unique_lock<std::mutex> lock(relatedObjects[guildId].usersmtx);
+    auto guser = relatedObjects[guildId].users.get(id);
+    if(!guser || hrclk::now() - guser->made > ttl){
+      auto a = fetchGuildUser(guildId, id);
+      return a;
+    }
+    user->guild = guser->object;
+    return *user;
+  }
+  return fetchGuildUser(guildId, id);
+}
+
+std::expected<User, Error> GuildCache::fetchGuildUser(const std::string& guildId, const std::string& id)
+{
+  auto res = rest->get(std::format(APIURL "/guilds/{}/members/{}", guildId, id));
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get item " + id);
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  auto j = nlohmann::json::parse(res.value().first);
+  User a(j["user"]);
+  a.guild = GuildUser(j);
+  bot->user.cache.insert(a.id, a);
+  insertGuildUser(guildId, a);
+  return a;
+}
+
+
+
+std::expected<std::vector<Channel>, Error> GuildCache::getGuildChannels(const std::string& guildId){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock<std::mutex> lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  auto channelIds = relatedObjects[guildId].channelIds;
+  std::vector<Channel> channels;
+  if(!channelIds.empty()){
+    std::unique_lock<std::mutex> lock(relatedObjects[guildId].channelmtx);
+    for(const auto& channelId : channelIds){
+      auto ch = bot->channel.cache.getFromCache(channelId);
+      if(!ch) {
+        lock.unlock();
+        return fetchGuildChannels(guildId);
+      }
+      channels.emplace_back(*ch);
+    }
+    return channels;
+  }
+  return fetchGuildChannels(guildId);
+}
+
+void GuildCache::insertGuildChannel(const Channel& a){
+  if(!relatedObjects.contains(*a.guildId)){
+    std::unique_lock lock(relatedObjectsmtx);
+    relatedObjects[*a.guildId];
+  }
+  std::unique_lock lock(relatedObjects[*a.guildId].channelmtx);
+  relatedObjects[*a.guildId].channelIds.emplace(a.id);
+}
+
+
+void GuildCache::removeGuildChannel(const std::string& guildId, const std::string& channelId){
+  if(!relatedObjects.contains(guildId) || 
+     !relatedObjects[guildId].channelIds.contains(channelId)) return;
+  std::unique_lock lock(relatedObjects[guildId].channelmtx);
+  relatedObjects[guildId].channelIds.erase(channelId);
+}
+
+std::expected<std::vector<Channel>, Error> GuildCache::fetchGuildChannels(const std::string& guildId){
+  Log::dbg("cache miss from guild channels!!");
+  auto res = rest->get(std::format(APIURL "/guilds/{}/channels", guildId));
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get item " + guildId);
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  std::vector<Channel> vec;
+  auto j = nlohmann::json::parse(res->first);
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].channelmtx);
+  for(const auto& channel : j){
+    Channel a(channel);
+    relatedObjects[guildId].channelIds.emplace(a.id);
+    bot->channel.cache.insert(a.id, a);
+    vec.emplace_back(std::move(a));
+  }
+  return vec;
+}
+
+GuildApiRoutes::GuildApiRoutes(NyaBot *bot): cache{bot}{
   this->bot = bot;
 }
 
 std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
-  return getReq(std::format(APIURL "/guilds/{}", id))
-  .and_then([](std::expected<std::string, Error> a){
-    return std::expected<Guild, Error>(deserializeGuild(nlohmann::json::parse(a.value())));
-  });
+  return cache.get(std::string(id));
 }
 
 std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
@@ -121,26 +223,21 @@ std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_
 
 
 std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId){
-  return getReq(std::format(APIURL "/guilds/{}/channels", guildId))
-  .transform([](std::string a){
-    std::vector<Channel> vec;
-    auto j = nlohmann::json::parse(a);
-    for(const auto& channel : j)
-      vec.emplace_back(deserializeChannel(channel));
-    return vec;
-  });
+  return cache.getGuildChannels(std::string(guildId));
 }
 
 
 std::expected<Channel, Error> GuildApiRoutes::createChannel(const std::string_view guildId, const Channel& a){
-  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/channels", guildId), serializeChannel(a).dump());
+  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/channels", guildId), a.generate().dump());
   if(!res.has_value() || res->second != 201){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to create guild channel");
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeChannel(nlohmann::json::parse(res->first));
+  Channel b(nlohmann::json::parse(res->first));
+  bot->channel.cache.insert(b.id, b);
+  return b;
 }
 
 
@@ -197,6 +294,12 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeBan(const std::string
   return std::nullopt;
 }
 
+std::expected<User, Error> GuildApiRoutes::getMember(const std::string_view guildId,
+                                                     const std::string_view id)
+{
+  return cache.getGuildUser(std::string(guildId), std::string(id));
+}
+
 
 std::expected<std::nullopt_t, Error> GuildApiRoutes::removeMember(const std::string_view guildId,
                                                                        const std::string_view userId,
@@ -229,8 +332,10 @@ std::expected<User, Error> GuildApiRoutes::modifyMember(const std::string_view g
     return std::unexpected(err);
   }
   auto j = nlohmann::json::parse(res->first);
-  auto u = deserializeUser(j["user"]);
-  u.guild = deserializeGuildUser(j);
+  User u(j["user"]);
+  bot->user.cache.insert(u.id, u);
+  u.guild = GuildUser(j);
+  bot->guild.cache.insertGuildUser(std::string(guildId), u);
   return u;
 }
 

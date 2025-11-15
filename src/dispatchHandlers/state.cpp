@@ -7,6 +7,9 @@ void NyaBot::ready(nlohmann::json j){
   j = j["d"];
   api.sesId = j["session_id"];
   api.resumeUrl = j["resume_gateway_url"];
+  User a(j["user"]);
+  user.cache.insert(a.id, a);
+  user.cache.setCurrentUser(a);
   if(api.resumeUrl.back() != '/')
     api.resumeUrl.append("/?v=10&encoding=json");
   else api.resumeUrl.append("?v=10&encoding=json");

@@ -10,24 +10,19 @@
 #include "../include/helpers.h"
 
 UserApiRoutes::UserApiRoutes(NyaBot *bot)
-  : bot{bot}{}
+  : cache{"/users", &bot->rest}, bot{bot}{
+}
 
 
 
 std::expected<User, Error> UserApiRoutes::get(const std::string_view id){
-  return getReq(std::format(APIURL "/users/{}", id))
-    .and_then([](std::expected<std::string, Error> a){
-      return std::expected<User, Error>(deserializeUser(nlohmann::json::parse(a.value())));
-    });
+  return cache.get(std::string(id));
 }
 
 
 
 std::expected<User, Error> UserApiRoutes::getCurrent(){
-  return getReq(APIURL "/users/@me")
-    .and_then([](std::expected<std::string, Error> a){
-      return std::expected<User, Error>(deserializeUser(nlohmann::json::parse(a.value())));
-    });
+  return cache.getCurrentUser();
 }
 
 
@@ -37,7 +32,7 @@ std::expected<std::vector<Guild>, Error> UserApiRoutes::getCurrentUserGuilds(){
       std::vector<Guild> b;
       auto j = nlohmann::json::parse(a.value());
       for(const auto& c : j){
-        b.emplace_back(deserializeGuild(c));
+        b.emplace_back(c);
       }
       return std::expected<std::vector<Guild>, Error>(std::move(b));
     });
@@ -68,8 +63,9 @@ std::expected<Channel, Error> UserApiRoutes::createDM(const std::string_view id)
     err.printErrors();
     return std::unexpected(err);
   }
-  auto i = nlohmann::json::parse(res->first);
-  return deserializeChannel(i);
+  Channel a(nlohmann::json::parse(res->first));
+  bot->channel.cache.insert(a.id, a);
+  return a;
 }
 
 
@@ -92,7 +88,9 @@ std::expected<User, Error> UserApiRoutes::modifyCurrentUser(std::optional<std::s
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeUser(nlohmann::json::parse(res->first));
+  User a(nlohmann::json::parse(res->first));
+  cache.insert(a.id, a);
+  return a;
 }
  
 std::expected<std::string, Error> UserApiRoutes::getReq(const std::string& endpoint){
@@ -106,21 +104,19 @@ std::expected<std::string, Error> UserApiRoutes::getReq(const std::string& endpo
   return res->first;
 }
 
-GuildUser deserializeGuildUser(const nlohmann::json &j){
-  return {
-    .nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]),
-    .avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]),
-    .banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]),
-    .roles = j["roles"].get<std::vector<std::string>>(),
-    .permissions = j.contains("permissions") ? 
-      std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
-      : std::nullopt,
-    .communicationDisabledUntil = 
-      j.contains("communication_disabled_until")
-      && !j["communication_disabled_until"].is_null() ? 
-        std::make_optional(j["communication_disabled_until"])
-        : std::nullopt
-  };
+GuildUser::GuildUser(const nlohmann::json &j){
+  nick = j["nick"].is_null() ? std::nullopt : std::make_optional(j["nick"]);
+  avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]);
+  banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]);
+  roles = j["roles"].get<std::vector<std::string>>();
+  permissions = j.contains("permissions") ? 
+   std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
+   : std::nullopt;
+  communicationDisabledUntil = 
+   j.contains("communication_disabled_until")
+   && !j["communication_disabled_until"].is_null() ? 
+     std::make_optional(j["communication_disabled_until"])
+     : std::nullopt;
 }
 
 nlohmann::json serializeGuildUser(const GuildUser& a){
@@ -143,22 +139,20 @@ nlohmann::json serializeGuildUser(const GuildUser& a){
 }
 
 
-
-User deserializeUser(const nlohmann::json& j){
-  return {
-    .id = j["id"],
-    .avatar = j["avatar"].is_null() ? "" : j["avatar"],
-    .discriminator = j["discriminator"],
-    .globalName = j["global_name"].is_null() ? "" : j["global_name"],
-    .username = j["username"],
-    .bot = j.contains("bot") ? j["bot"].get<bool>() : false,
-    .primaryGuild = j.contains("primary_guild") &&
-      !j["primary_guild"].is_null() &&
-      !j["primary_guild"]["identity_guild_id"].is_null() ?
-        std::make_optional(deserializePrimaryGuild(j["primary_guild"]))
-      : std::nullopt
-  };
+User::User(const nlohmann::json& j){
+  id = j["id"],
+  avatar = j["avatar"].is_null() ? "" : j["avatar"],
+  discriminator = j["discriminator"],
+  globalName = j["global_name"].is_null() ? "" : j["global_name"],
+  username = j["username"],
+  bot = j.contains("bot") ? j["bot"].get<bool>() : false,
+  primaryGuild = j.contains("primary_guild") &&
+    !j["primary_guild"].is_null() &&
+    !j["primary_guild"]["identity_guild_id"].is_null() ?
+      std::make_optional(deserializePrimaryGuild(j["primary_guild"]))
+    : std::nullopt;
 }
+
 
 PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j){
   return {

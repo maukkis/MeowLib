@@ -94,6 +94,6 @@ Emoji deserializeEmoji(const nlohmann::json& j){
     .id = !j["id"].is_null() ? j["id"] : "0",
     .name = j["name"],
     .animated = j.contains("animated") ? std::make_optional(j["animated"].get<bool>()) : std::nullopt,
-    .user = j.contains("user") ? std::make_optional(deserializeUser(j["user"])) : std::nullopt
+    .user = j.contains("user") ? std::make_optional(User(j["user"])) : std::nullopt
   };
 }

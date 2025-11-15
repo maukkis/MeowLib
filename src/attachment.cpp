@@ -39,6 +39,6 @@ Attachment readFile(const std::string& a){
   c << b.rdbuf();
   return Attachment{
     .data = c.str(),
-    .name = a.substr(a.rfind("/")+1)
+    .name = name
   };
 }

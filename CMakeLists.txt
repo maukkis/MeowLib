@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25.1)
 
 project(MeowLib
 DESCRIPTION "simple discord bot library written in C++"
-VERSION 0.3.0)
+VERSION 0.4.0)
 if(CMAKE_SYSTEM_NAME STREQUAL "AIX")
   add_compile_options(-pthread)
 endif()

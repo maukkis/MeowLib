@@ -8,30 +8,39 @@ TypingStart::TypingStart(const nlohmann::json& j){
   userId = j["user_id"];
   timestamp = j["timestamp"];
   if(j.contains("member")){
-    member = deserializeUser(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member = User(j["member"]["user"]);
+    member->guild = GuildUser(j["member"]);
   }
 }
 
 
 
 void NyaBot::channelCreate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
+  if(a.guildId)
+    guild.cache.insertGuildChannel(a);
   if(funs.onChannelCreateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelCreateF(a);
   }
 }
 
 void NyaBot::channelDelete(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.erase(a.id);
+  if(a.guildId)
+    guild.cache.removeGuildChannel(*a.guildId, a.id);
   if(funs.onChannelDeleteF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelDeleteF(a);
   }
 }
 
 void NyaBot::channelUpdate(nlohmann::json j){
+  Channel a(j["d"]);
+  channel.cache.insert(a.id, a);
+  if(a.guildId)
+    guild.cache.insertGuildChannel(a);
   if(funs.onChannelUpdateF){
-    Channel a = deserializeChannel(j["d"]);
     funs.onChannelUpdateF(a);
   }
 }
@@ -39,6 +48,10 @@ void NyaBot::channelUpdate(nlohmann::json j){
 void NyaBot::typingStart(nlohmann::json j){
   if(funs.onTypingStartF){
     TypingStart a(j["d"]);
+    if(a.member){
+      user.cache.insert(a.member->id, *a.member);
+      guild.cache.insertGuildUser(*a.guildId, *a.member);
+    }
     funs.onTypingStartF(a);
   }
 }

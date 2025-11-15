@@ -1,68 +1,74 @@
 #include "../include/channel.h"
 #include "../include/nyaBot.h"
 
-Channel deserializeChannel(const nlohmann::json& j) {
-  Channel a;
-  a.id = j["id"];
-  a.type = static_cast<ChannelType>(j["type"]);
+Channel::Channel(const nlohmann::json& j) {
+  id = j["id"];
+  type = static_cast<ChannelType>(j["type"]);
   if(j.contains("guild_id"))
-    a.guildId = j["guild_id"];
+    guildId = j["guild_id"];
   if(j.contains("position"))
-    a.position = j["position"];
+    position = j["position"];
   if(j.contains("name") && !j["name"].is_null())
-    a.name = j["name"];
+    name = j["name"];
   if(j.contains("topic") && !j["topic"].is_null())
-    a.topic = j["topic"];
+    topic = j["topic"];
   if(j.contains("newly_created")){
-    a.newlyCreated = j["newly_created"];
+    newlyCreated = j["newly_created"];
   }
   if(j.contains("last_message_id") && !j["last_message_id"].is_null())
-    a.lastMessageId = j["last_message_id"];
+    lastMessageId = j["last_message_id"];
   if(j.contains("parent_id") && !j["parent_id"].is_null())
-    a.parentId = j["parent_id"];
+    parentId = j["parent_id"];
   if(j.contains("last_pin_timestamp") && !j["last_pin_timestamp"].is_null())
-    a.lastPinTimestamp = j["last_pin_timestamp"];
+    lastPinTimestamp = j["last_pin_timestamp"];
   if(j.contains("nsfw"))
-    a.nsfw = j["nsfw"];
+    nsfw = j["nsfw"];
   if(j.contains("thread_metadata"))
-    a.threadMetadata = ThreadMetadata(j["thread_metadata"]);
-  return a;
+    threadMetadata = ThreadMetadata(j["thread_metadata"]);
 }
 
 
 
-nlohmann::json serializeChannel(const Channel& a){
+nlohmann::json Channel::generate() const {
   nlohmann::json j;
-  if(!a.id.empty())
-    j["id"] = a.id;
+  if(!id.empty())
+    j["id"] = id;
 
-  j["type"] = static_cast<int>(a.type);
+  j["type"] = static_cast<int>(type);
 
-  if(a.guildId)
-    j["guild_id"] = *a.guildId;
+  if(guildId)
+    j["guild_id"] = *guildId;
   
-  if(a.position)
-    j["position"] = *a.position;
+  if(position)
+    j["position"] = *position;
 
-  if(a.name)
-    j["name"] = *a.name;
+  if(name)
+    j["name"] = *name;
 
-  if(a.topic)
-    j["topic"] = *a.topic;
+  if(topic)
+    j["topic"] = *topic;
   return j;
 }
 
-ChannelApiRoutes::ChannelApiRoutes(NyaBot *bot) : bot{bot} {}
+ChannelApiRoutes::ChannelApiRoutes(NyaBot *bot) : cache{"/channels", &bot->rest}, bot{bot} {}
+
+
+std::expected<Channel, Error> ChannelApiRoutes::get(const std::string_view id){
+  return cache.get(std::string(id));
+}
+
 
 std::expected<Channel, Error> ChannelApiRoutes::modify(const std::string_view id, const Channel& ch){
-  auto res = bot->rest.patch(std::format(APIURL "/channels/{}", id), serializeChannel(ch).dump());
+  auto res = bot->rest.patch(std::format(APIURL "/channels/{}", id), ch.generate().dump());
   if(!res.has_value() || res->second != 200){
     auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
     Log::error("failed to modify channel");
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeChannel(nlohmann::json::parse(res->first));
+  Channel a(nlohmann::json::parse(res->first));
+  cache.insert(a.id, a);
+  return a;
 }
 
 
@@ -74,7 +80,7 @@ std::expected<Channel, Error> ChannelApiRoutes::close(const std::string_view id)
     err.printErrors();
     return std::unexpected(err);
   }
-  return deserializeChannel(nlohmann::json::parse(res->first));
+  return Channel(nlohmann::json::parse(res->first));
 }
 
 

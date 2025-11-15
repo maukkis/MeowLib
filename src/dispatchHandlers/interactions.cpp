@@ -9,7 +9,7 @@
 
 namespace {
 
-
+// TODO: cache these users i am eepy and too lazy to do it
 
 template<typename T>
 std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
@@ -18,9 +18,9 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
     std::unordered_map<std::string, T> map;
     if(!d["resolved"].contains("users")) return map;
     for(auto& a : d["resolved"]["users"])
-      map[a["id"]] = deserializeUser(a);
+      map[a["id"]] = User(a);
     for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
-      map[it.key()].guild = deserializeGuildUser(d["resolved"]["members"][it.key()]);
+      map[it.key()].guild = GuildUser(d["resolved"]["members"][it.key()]);
     }
     return map;
   }
@@ -41,10 +41,11 @@ SlashCommandInteraction constructSlash(nlohmann::json& json, const std::string& 
   const std::string interactionToken = json["token"];
   User user;
   if(json.contains("member")){
-    user = deserializeUser(json["member"]["user"]);
-    user.guild = deserializeGuildUser(json["member"]);
-  } else user = deserializeUser(json["user"]);
-  
+    user = User(json["member"]["user"]);
+    user.guild = GuildUser(json["member"]);
+    a->guild.cache.insertGuildUser(json["guild_id"], user);
+  } else user = User(json["user"]);
+  a->user.cache.insert(user.id, user); 
   const std::string commandName = json["data"]["name"];
   SlashCommandInteraction slash(id, interactionToken, commandName, user, appId, a);
 
@@ -68,9 +69,12 @@ ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
   std::string userId;
   User user;
   if(j.contains("member")){
-    user = deserializeUser(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
-  } else user = deserializeUser(j["user"]);
+    user = User(j["member"]["user"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
+  } else user = User(j["user"]);
+
+  a->user.cache.insert(user.id, user); 
   const std::string& name = j["data"]["custom_id"];
   ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a, j["message"]);
 
@@ -89,14 +93,20 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
   std::string userId; 
   User user;
   if(j.contains("member")){
-    user = deserializeUser(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
-  } else user = deserializeUser(j["user"]);
+    user = User(j["member"]["user"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
+  } else user = User(j["user"]);
+
+  a->user.cache.insert(user.id, user); 
   const std::string& name = j["data"]["custom_id"];
   ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
 
   modal.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
-  modal.guildId = j["guild_id"];
+
+  if(j.contains("guild_id"))
+    modal.guildId = j["guild_id"];
+
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   modal.resolvedAttachments = deserializeResolved<ResolvedAttachment>(j["data"]);
   for(auto& a : j["data"]["components"]){
@@ -139,9 +149,11 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   const std::string& token = j["token"];
   User user;
   if(j.contains("member")){
-    user = deserializeUser(j["member"]["user"]);
-    user.guild = deserializeGuildUser(j["member"]);
-  } else user = deserializeUser(j["user"]);
+    user = User(j["member"]["user"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
+  } else user = User(j["user"]);
+  a->user.cache.insert(user.id, user); 
   const std::string& name = j["data"]["custom_id"];
   SelectInteraction select(id, token, name, user, j["application_id"], a, j["message"]);
 

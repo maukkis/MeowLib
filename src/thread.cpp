@@ -26,8 +26,8 @@ ThreadMember::ThreadMember(const nlohmann::json& j){
     guildId = j["guild_id"];
   }
   if(j.contains("member")){
-    member = deserializeUser(j["member"]["user"]);
-    member->guild = deserializeGuildUser(j["member"]);
+    member = User(j["member"]["user"]);
+    member->guild = GuildUser(j["member"]);
   }
 }
 
@@ -39,7 +39,7 @@ ThreadListSync::ThreadListSync(const nlohmann::json& j){
     }
   }
   for(const auto& a : j["threads"]){
-    threads.emplace_back(deserializeChannel(a));
+    threads.emplace_back(Channel(a));
   }
   for(const auto& a : j["members"]){
     members.emplace_back(ThreadMember(a));
