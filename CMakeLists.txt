@@ -17,7 +17,7 @@ endif()
 if(WIN32 AND MSVC)
   # msvc gives stupid warnings that dont really matter and causes this to not compile fuck msvc
   set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
-  set(CMAKE_CXX_FLAGS_RELEASE "/02")
+  set(CMAKE_CXX_FLAGS_RELEASE "/04")
 else()
   set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -Werror -fsanitize=address -O0 -DJSON_DIAGNOSTICS")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
