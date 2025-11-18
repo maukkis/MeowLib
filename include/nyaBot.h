@@ -228,6 +228,12 @@ public:
   ///
   void changePresence(const Presence& p);
 
+  ///
+  /// @brief sets the presence to be used when identifying
+  /// @param p presence object
+  ///
+  void setPresence(const Presence& p);
+
   void onAutoModerationRuleCreate(std::function<void(AutoModRule&)> f);
   void onAutoModerationRuleUpdate(std::function<void(AutoModRule&)> f);
   void onAutoModerationRuleDelete(std::function<void(AutoModRule&)> f);
@@ -415,6 +421,7 @@ private:
   InteractionCallbacks iCallbacks;
   ThreadSafeQueue<std::string> queue;
   int retryAmount = 5;
+  std::optional<Presence> presence = std::nullopt;
   std::vector<SlashCommand> slashs;
   friend RestClient;
   friend EmojiApiRoutes;

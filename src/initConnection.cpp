@@ -113,9 +113,20 @@ void NyaBot::connect(){
 
 void NyaBot::sendIdent(){
   Log::dbg("sending ident");
-  // TODO: REWORK THIS IDENT PAYLOAD WHAT THE FUCK IS THIS
-  std::string ident {R"({"op": 2, "d": {"token": ")" + api.token + R"(" , "intents": )" + std::to_string(api.intents) + R"(, "properties": {"os": "linux", "browser": "MeowLib", "device": "MeowLib"}}})"};
-  if (handle.wsSend(ident, meowWs::meowWS_TEXT) > 0){
+  nlohmann::json j;
+  j["op"] = Identify;
+  nlohmann::json d;
+  d["token"] = api.token;
+  d["intents"] = api.intents;
+  if(presence)
+    d["presence"] = serializePresence(*presence);
+  nlohmann::json p;
+  p["os"] = "linux";
+  p["browser"] = "MeowLib";
+  p["device"] = "MeowLib";
+  d["properties"] = std::move(p);
+  j["d"] = std::move(d);
+  if (handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
     Log::dbg("ident sent!");
     api.state = GatewayStates::AUTHENTICATION_SENT;
   }

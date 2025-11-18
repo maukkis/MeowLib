@@ -33,3 +33,7 @@ void NyaBot::changePresence(const Presence& p){
   j["d"] = serializePresence(p);
   queue.addToQueue(j.dump());
 }
+
+void NyaBot::setPresence(const Presence& p){
+  presence = p;
+}
