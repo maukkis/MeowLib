@@ -28,7 +28,11 @@ endif()
 
 file(GLOB_RECURSE MeowLib_src "src/*.cpp")
 add_library(MeowLib ${MeowLib_src})
-  
+
+# discord requires us to specify what os we use
+target_compile_definitions(MeowLib PRIVATE OS="${CMAKE_SYSTEM_NAME}")
+
+
 target_compile_definitions(MeowLib PRIVATE MEOWLIB_VERSION="${PROJECT_VERSION}")
 target_link_libraries(MeowLib PUBLIC nlohmann_json::nlohmann_json meowHttp Threads::Threads)
 

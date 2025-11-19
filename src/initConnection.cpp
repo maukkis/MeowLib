@@ -18,6 +18,13 @@
 #define demangle(x) x
 #endif
 
+#ifndef OS
+#define OS "unknown"
+#endif
+
+
+
+
 NyaBot::NyaBot(int intents){
   api.intents = intents;
   a = this;
@@ -133,7 +140,7 @@ void NyaBot::sendIdent(){
   if(presence)
     d["presence"] = serializePresence(*presence);
   nlohmann::json p;
-  p["os"] = "linux";
+  p["os"] = OS;
   p["browser"] = "MeowLib";
   p["device"] = "MeowLib";
   d["properties"] = std::move(p);
