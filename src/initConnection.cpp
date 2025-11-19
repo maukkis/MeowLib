@@ -1,4 +1,5 @@
 #include <exception>
+#include <expected>
 #include <meowHttp/websocket.h>
 #include <csignal>
 #include <nlohmann/json_fwd.hpp>
@@ -47,7 +48,11 @@ meow NyaBot::reconnect(bool resume){
     api.resumeUrl.replace(0, 3, "https");
 
   handle.setUrl(resume ? api.resumeUrl : api.defaultUrl);
-  connect();
+  if(!connect()){
+    Log::error("failed to connect to the gateway");
+    stop = true;
+    return meow::ERR_CONNECT_FAILED;
+  }
   getHeartbeatInterval();
   if(resume){
     nlohmann::json j;
@@ -70,6 +75,8 @@ void NyaBot::run(const std::string_view token){
   Log::dbg("fetching /gateway/bot :3");
   auto res = rest.get(APIURL "/gateway/bot");
   if(!res.has_value() || res->second != 200){
+    if(res->second == 401)
+      Log::error("invalid token!! *wags tail*");
     Log::error("failed to get /gateway/bot exiting :(");
     return;
   }
@@ -82,7 +89,10 @@ void NyaBot::run(const std::string_view token){
   }
   api.defaultUrl = j["url"].get<std::string>().replace(0, 3, "https") + "/?v=10&encoding=json";
   handle.setUrl(api.defaultUrl);
-  connect();
+  if(auto res = connect(); !res){
+    Log::error("we failed to connect to the gateway due to: " + std::to_string(res.error()));
+    return;
+  }
   getHeartbeatInterval();
   Log::dbg("interval is " + std::to_string(api.interval));
   sendIdent();
@@ -96,12 +106,13 @@ NyaBot::~NyaBot(){
 }
 
 
-void NyaBot::connect(){
+std::expected<std::nullopt_t, meow> NyaBot::connect(){
   int timeToWait = 5;
+  meow mraow{};
   for(int attempts = 0; attempts < retryAmount && !stop; ++attempts, timeToWait *= 2){
-    if(handle.perform() == OK){
+    if(mraow = handle.perform(); mraow == OK){
       Log::dbg("connected to the websocket succesfully!");
-      return;
+      return std::nullopt;
     }
     else {
       if(timeToWait > 300) timeToWait = 300;
@@ -109,6 +120,7 @@ void NyaBot::connect(){
       std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
     }
   }
+  return std::unexpected(mraow);
 }
 
 void NyaBot::sendIdent(){

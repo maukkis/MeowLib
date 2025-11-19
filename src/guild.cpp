@@ -110,10 +110,10 @@ void GuildCache::insertGuildUser(const std::string& guildId, const User& a){
   relatedObjects[guildId].users.insert(a.id, *a.guild);
 }
 
-std::expected<User, Error> GuildCache::getGuildUser(const std::string& guildId, const std::string& id)
+std::expected<User, Error> GuildCache::getGuildUser(const std::string& guildId, const std::string& id, const bool force)
 {
   auto user = bot->user.cache.getFromCache(id);
-  if(user){
+  if(user && !force){
     std::unique_lock<std::mutex> lock(relatedObjects[guildId].usersmtx);
     auto guser = relatedObjects[guildId].users.get(id);
     if(!guser || hrclk::now() - guser->made > ttl){
@@ -145,7 +145,8 @@ std::expected<User, Error> GuildCache::fetchGuildUser(const std::string& guildId
 
 
 
-std::expected<std::vector<Channel>, Error> GuildCache::getGuildChannels(const std::string& guildId){
+std::expected<std::vector<Channel>, Error> GuildCache::getGuildChannels(const std::string& guildId, const bool force){
+  if(force) return fetchGuildChannels(guildId);
   if(!relatedObjects.contains(guildId)){
     std::unique_lock<std::mutex> lock(relatedObjectsmtx);
     relatedObjects[guildId];
@@ -209,8 +210,8 @@ GuildApiRoutes::GuildApiRoutes(NyaBot *bot): cache{bot}{
   this->bot = bot;
 }
 
-std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id){
-  return cache.get(std::string(id));
+std::expected<Guild, Error> GuildApiRoutes::get(const std::string_view id, const bool force){
+  return cache.get(std::string(id), force);
 }
 
 std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_view id){
@@ -222,8 +223,8 @@ std::expected<GuildPreview, Error> GuildApiRoutes::getPreview(const std::string_
 
 
 
-std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId){
-  return cache.getGuildChannels(std::string(guildId));
+std::expected<std::vector<Channel>, Error> GuildApiRoutes::getChannels(const std::string_view guildId, const bool force){
+  return cache.getGuildChannels(std::string(guildId), force);
 }
 
 
@@ -295,9 +296,10 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeBan(const std::string
 }
 
 std::expected<User, Error> GuildApiRoutes::getMember(const std::string_view guildId,
-                                                     const std::string_view id)
+                                                     const std::string_view id,
+                                                     const bool force)
 {
-  return cache.getGuildUser(std::string(guildId), std::string(id));
+  return cache.getGuildUser(std::string(guildId), std::string(id), force);
 }
 
 

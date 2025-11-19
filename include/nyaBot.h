@@ -311,7 +311,7 @@ public:
   ChannelApiRoutes channel{this};
 private:
   void listen();
-  void connect();
+  std::expected<std::nullopt_t, meow> connect();
   void sendIdent();
   void getHeartbeatInterval();
   void routeInteraction(ButtonInteraction& interaction);

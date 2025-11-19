@@ -74,7 +74,7 @@ class ChannelApiRoutes {
 public:
   ChannelApiRoutes(NyaBot *bot);
  
-  std::expected<Channel, Error> get(const std::string_view id);
+  std::expected<Channel, Error> get(const std::string_view id, const bool force = false);
   /// @brief modifies a channel
   /// @param id channel id
   /// @param ch Channel object

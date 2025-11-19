@@ -15,8 +15,8 @@ UserApiRoutes::UserApiRoutes(NyaBot *bot)
 
 
 
-std::expected<User, Error> UserApiRoutes::get(const std::string_view id){
-  return cache.get(std::string(id));
+std::expected<User, Error> UserApiRoutes::get(const std::string_view id, const bool force){
+  return cache.get(std::string(id), force);
 }
 
 

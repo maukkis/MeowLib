@@ -53,8 +53,8 @@ nlohmann::json Channel::generate() const {
 ChannelApiRoutes::ChannelApiRoutes(NyaBot *bot) : cache{"/channels", &bot->rest}, bot{bot} {}
 
 
-std::expected<Channel, Error> ChannelApiRoutes::get(const std::string_view id){
-  return cache.get(std::string(id));
+std::expected<Channel, Error> ChannelApiRoutes::get(const std::string_view id, const bool force){
+  return cache.get(std::string(id), force);
 }
 
 

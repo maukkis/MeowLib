@@ -102,8 +102,8 @@ public:
   GuildCache(NyaBot *bot);
   void insertGuildUser(const std::string& guildId, const User& a);
 
-  std::expected<User, Error> getGuildUser(const std::string& guildId, const std::string& userId);
-  std::expected<std::vector<Channel>, Error> getGuildChannels(const std::string& guildId);
+  std::expected<User, Error> getGuildUser(const std::string& guildId, const std::string& userId, const bool force = false);
+  std::expected<std::vector<Channel>, Error> getGuildChannels(const std::string& guildId, const bool force = false);
   void insertGuildChannel(const Channel& a);
   void removeGuildChannel(const std::string& guildId, const std::string& channelId);
 private:
@@ -121,13 +121,13 @@ public:
   GuildApiRoutes(NyaBot *bot);
   /// @brief fetches a guild by its id
   /// @param id guild id
-  std::expected<Guild, Error> get(const std::string_view id);
+  std::expected<Guild, Error> get(const std::string_view id, const bool force = false);
 
   /// @brief fetches a guild preview by its id
   /// @param id guild id
   std::expected<GuildPreview, Error> getPreview(const std::string_view id);
   
-  std::expected<std::vector<Channel>, Error> getChannels(const std::string_view guildId);
+  std::expected<std::vector<Channel>, Error> getChannels(const std::string_view guildId, const bool force = false);
 
   std::expected<Channel, Error> createChannel(const std::string_view guildId, const Channel& a);
 
@@ -146,7 +146,7 @@ public:
                                                       const std::optional<std::string>& auditLogReason = std::nullopt);
 
 
-  std::expected<User, Error> getMember(const std::string_view guildId, const std::string_view userId);
+  std::expected<User, Error> getMember(const std::string_view guildId, const std::string_view userId, const bool force = false);
 
   std::expected<std::nullopt_t, Error> removeMember(const std::string_view guildId, const std::string_view userId,
                                                          const std::optional<std::string>& auditLogReason = std::nullopt);
