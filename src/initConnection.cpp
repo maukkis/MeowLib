@@ -83,7 +83,7 @@ void NyaBot::run(const std::string_view token){
   auto res = rest.get(APIURL "/gateway/bot");
   if(!res.has_value() || res->second != 200){
     if(res->second == 401)
-      Log::error("invalid token!! *wags tail*");
+      Log::error("invalid bot token!! *wags tail*");
     Log::error("failed to get /gateway/bot exiting :(");
     return;
   }
