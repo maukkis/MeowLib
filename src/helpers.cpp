@@ -20,7 +20,12 @@ std::string makeFormData(const nlohmann::json j, const std::string_view boundary
   return data;
 }
 
-
+auto ISO8601ToTimepoint(const std::string& str){
+  std::chrono::time_point<std::chrono::system_clock> a;
+  std::istringstream b{str};
+  b >> std::chrono::parse("{:%FT%TZ}", a);
+  return a;
+}
 
 std::string attachmentToDataUri(const Attachment& file){
   std::string type = file.name.substr(file.name.rfind(".")+1);
