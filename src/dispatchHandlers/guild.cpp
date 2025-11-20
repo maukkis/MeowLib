@@ -98,38 +98,85 @@ void NyaBot::guildMemberUpdate(nlohmann::json j){
 }
 
 void NyaBot::guildRoleCreate(nlohmann::json j){
-  if(funs.onGuiildRoleCreateF){
+  if(funs.onGuildRoleCreateF){
     RoleEvent a
       {
         .guildId = j["d"]["guild_id"], 
         .role = Role(j["d"]["role"])
       };
-    funs.onGuiildRoleCreateF(a);
+    funs.onGuildRoleCreateF(a);
   }
 }
 
 
 void NyaBot::guildRoleUpdate(nlohmann::json j){
-  if(funs.onGuiildRoleUpdateF){
+  if(funs.onGuildRoleUpdateF){
     RoleEvent a
       {
         .guildId = j["d"]["guild_id"], 
         .role = Role(j["d"]["role"])
       };
-    funs.onGuiildRoleUpdateF(a);
+    funs.onGuildRoleUpdateF(a);
   }
 }
 
 void NyaBot::guildRoleDelete(nlohmann::json j){
-  if(funs.onGuiildRoleDeleteF){
+  if(funs.onGuildRoleDeleteF){
     RoleDeleteEvent a
       {
         .guildId = j["d"]["guild_id"], 
         .roleId = j["d"]["role_id"]
       };
-    funs.onGuiildRoleDeleteF(a);
+    funs.onGuildRoleDeleteF(a);
   }
 }
+
+void NyaBot::guildSchedCreate(nlohmann::json j){
+  if(funs.onGuildScheduledEventCreateF){
+    GuildScheduledEvent a(j["d"]);
+    funs.onGuildScheduledEventCreateF(a);
+  }
+}
+
+
+void NyaBot::guildSchedUpdate(nlohmann::json j){
+  if(funs.onGuildScheduledEventUpdateF){
+    GuildScheduledEvent a(j["d"]);
+    funs.onGuildScheduledEventUpdateF(a);
+  }
+}
+
+
+void NyaBot::guildSchedDelete(nlohmann::json j){
+  if(funs.onGuildScheduledEventDeleteF){
+    GuildScheduledEvent a(j["d"]);
+    funs.onGuildScheduledEventDeleteF(a);
+  }
+}
+
+void NyaBot::guildSchedUserAdd(nlohmann::json j){
+  if(funs.onGuildScheduledEventUserAddF){
+    GuildScheduledEventUser a{
+      .guildScheduledEventId = j["d"]["guild_scheduled_event_id"],
+      .userId = j["d"]["user_id"],
+      .guildId = j["d"]["guild_id"],
+    };
+    funs.onGuildScheduledEventUserAddF(a);
+  }
+}
+
+
+void NyaBot::guildSchedUserRemove(nlohmann::json j){
+  if(funs.onGuildScheduledEventUserRemoveF){
+    GuildScheduledEventUser a{
+      .guildScheduledEventId = j["d"]["guild_scheduled_event_id"],
+      .userId = j["d"]["user_id"],
+      .guildId = j["d"]["guild_id"],
+    };
+    funs.onGuildScheduledEventUserRemoveF(a);
+  }
+}
+
 
 void NyaBot::guildMemberChunk(nlohmann::json j){
   Log::dbg("got a chunk");

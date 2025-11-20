@@ -14,6 +14,7 @@
 #include <vector>
 #include "lrucache.h"
 #include "role.h"
+#include "guildScheduledEvent.h"
 #include <coroutine>
 
 class NyaBot;
@@ -115,7 +116,6 @@ private:
 };
 
 
-
 class GuildApiRoutes {
 public:
   GuildApiRoutes(NyaBot *bot);
@@ -166,6 +166,22 @@ public:
                                                              const std::string_view userId,
                                                              const std::string_view roleId,
                                                              const std::optional<std::string>& auditLogReason = std::nullopt);
+  std::expected<std::vector<GuildScheduledEvent>, Error> listScheduledEvents(const std::string_view guildId);
+
+  std::expected<GuildScheduledEvent, Error> getScheduledEvent(const std::string_view guildId,
+                                                              const std::string_view schedId);
+  
+  std::expected<GuildScheduledEvent, Error> createScheduledEvent(const std::string_view guildId,
+                                                                 const GuildScheduledEvent& a);
+
+
+  std::expected<GuildScheduledEvent, Error> modifyScheduledEvent(const std::string_view guildId,
+                                                                 const std::string_view schedId,
+                                                                 const GuildScheduledEvent& a);
+
+  
+  std::expected<std::nullopt_t, Error> deleteScheduledEvent(const std::string_view guildId,
+                                                          const std::string_view schedId);
 
 
 GuildCache cache;

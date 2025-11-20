@@ -2,6 +2,7 @@
 #define _INCLUDE_HELPERS_H
 #include <chrono>
 #include <format>
+#include <sstream>
 #include <string>
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -11,6 +12,8 @@ template<typename T>
 std::string timepointToISO8601(const std::chrono::time_point<T>& time){
   return std::format("{:%FT%TZ}", time);
 }
+
+auto ISO8601ToTimepoint(const std::string& str);
 
 std::string makeFormData(const nlohmann::json j, const std::string_view boundary, const std::vector<Attachment>& a);
 std::string& lower(std::string& a);

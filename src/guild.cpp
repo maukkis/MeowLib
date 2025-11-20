@@ -378,6 +378,79 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::removeMemberRole(const std:
   return std::nullopt;
 }
 
+std::expected<std::vector<GuildScheduledEvent>, Error>
+GuildApiRoutes::listScheduledEvents(const std::string_view guildId){
+  return getReq(std::format(APIURL "/guilds/{}/scheduled-events", guildId))
+  .transform([](std::string a){
+    auto j = nlohmann::json::parse(a);
+    std::vector<GuildScheduledEvent> events;
+    for(const auto& b : j){
+      events.emplace_back(b); 
+    }
+    return events;
+  });
+}
+
+
+std::expected<GuildScheduledEvent, Error>
+GuildApiRoutes::getScheduledEvent(const std::string_view guildId,
+                                  const std::string_view schedId)
+{
+  return getReq(std::format(APIURL "/guilds/{}/scheduled-events/{}", guildId, schedId))
+  .transform([](std::string a){
+    return GuildScheduledEvent(nlohmann::json::parse(a));
+  });
+}
+
+
+
+std::expected<GuildScheduledEvent, Error>
+GuildApiRoutes::createScheduledEvent(const std::string_view guildId,
+                             const GuildScheduledEvent& a)
+{
+  auto res = bot->rest.post(std::format(APIURL "/guilds/{}/scheduled-events", guildId), a.generate().dump());
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to create scheduled event");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return GuildScheduledEvent(nlohmann::json::parse(res->first));
+}
+
+
+std::expected<GuildScheduledEvent, Error>
+GuildApiRoutes::modifyScheduledEvent(const std::string_view guildId,
+                                     const std::string_view schedId,
+                                     const GuildScheduledEvent& a)
+{
+  auto res = bot->rest.patch(std::format(APIURL "/guilds/{}/scheduled-events/{}", guildId, schedId), a.generate().dump());
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to modify scheduled event");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return GuildScheduledEvent(nlohmann::json::parse(res->first));
+}
+
+
+
+
+std::expected<std::nullopt_t, Error> 
+GuildApiRoutes::deleteScheduledEvent(const std::string_view guildId,
+                                     const std::string_view schedId)
+{
+  auto res = bot->rest.deletereq(std::format(APIURL "/guilds/{}/scheduled-events/{}", guildId, schedId));
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to delete scheduled event");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+
+}
 
 
 std::expected<std::string, Error> GuildApiRoutes::getReq(const std::string& endpoint){
