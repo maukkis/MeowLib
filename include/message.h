@@ -32,8 +32,11 @@ struct InteractionData{
   User user;
 };
 
-class NyaBot;
-
+struct SelectComponent;
+class LabelComponent;
+class ButtonComponent;
+class TextInputComponent;
+class FileUploadComponent;
 
 struct MessageDelete {
   std::string id;
@@ -75,6 +78,30 @@ struct MessageReaction {
 };
 
 
+
+// we should actually check if it is a top level component
+template<typename T, typename = void>
+struct TopLevelComponent : std::true_type {};
+
+template<typename T>
+struct TopLevelComponent<T, std::enable_if_t<std::is_base_of_v<SelectComponent, T>, void>> : std::false_type {};
+
+template<>
+struct TopLevelComponent<ButtonComponent> : std::false_type {};
+
+template<>
+struct TopLevelComponent<LabelComponent> : std::false_type {};
+
+template<>
+struct TopLevelComponent<TextInputComponent> : std::false_type {};
+
+template<>
+struct TopLevelComponent<FileUploadComponent> : std::false_type {};
+
+template<typename T>
+concept topLevelComponent = TopLevelComponent<std::remove_cvref_t<T>>::value;
+
+
 class Message {
 public:
   nlohmann::json generate() const;
@@ -85,8 +112,7 @@ public:
   Message& replyTo();
   /// @brief sets the current message in this object to be forwarded
   Message& forward();
-  template<typename T>
-  requires(std::is_base_of_v<Component, std::remove_reference_t<T>>)
+  template<topLevelComponent T>
   Message& addComponent(T&& comp){
     msgflags |= MsgFlags::IS_COMPONENTS_V2;
     components.emplace_back(std::make_unique<std::remove_cvref_t<T>>(std::forward<T>(comp)));
