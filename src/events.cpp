@@ -114,15 +114,38 @@ void NyaBot::onGuildMemberUpdate(std::function<void(User&)> f){
 
 
 void NyaBot::onGuildRoleCreate(std::function<void(RoleEvent&)> f){
-  funs.onGuiildRoleCreateF = f; 
+  funs.onGuildRoleCreateF = f; 
 }
 
 void NyaBot::onGuildRoleUpdate(std::function<void(RoleEvent&)> f){
-  funs.onGuiildRoleUpdateF = f; 
+  funs.onGuildRoleUpdateF = f; 
 }
 
 void NyaBot::onGuildRoleDelete(std::function<void(RoleDeleteEvent&)> f){
-  funs.onGuiildRoleDeleteF = f; 
+  funs.onGuildRoleDeleteF = f; 
+}
+
+void NyaBot::onGuildScheduledEventCreate(std::function<void(GuildScheduledEvent&)> f){
+  funs.onGuildScheduledEventCreateF = f;
+}
+
+void NyaBot::onGuildScheduledEventUpdate(std::function<void(GuildScheduledEvent&)> f){
+  funs.onGuildScheduledEventUpdateF = f;
+}
+
+
+void NyaBot::onGuildScheduledEventDelete(std::function<void(GuildScheduledEvent&)> f){
+  funs.onGuildScheduledEventDeleteF = f;
+}
+
+
+void NyaBot::onGuildScheduledEventUserAdd(std::function<void(GuildScheduledEventUser&)> f){
+  funs.onGuildScheduledEventUserAddF = f;
+}
+
+
+void NyaBot::onGuildScheduledEventUserRemove(std::function<void(GuildScheduledEventUser&)> f){
+  funs.onGuildScheduledEventUserRemoveF = f;
 }
 
 

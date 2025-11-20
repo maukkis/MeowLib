@@ -6,6 +6,7 @@
 #include "channel.h"
 #include "emoji.h"
 #include "guild.h"
+#include "guildScheduledEvent.h"
 #include "message.h"
 #include "modalInteraction.h"
 #include "poll.h"
@@ -93,10 +94,17 @@ struct Funs {
   std::function<void(User&)> onGuildMemberRemoveF = {};
   std::function<void(User&)> onGuildMemberAddF = {};
   std::function<void(User&)> onGuildMemberUpdateF = {};
-  std::function<void(RoleEvent&)> onGuiildRoleCreateF = {};
-  std::function<void(RoleEvent&)> onGuiildRoleUpdateF = {};
-  std::function<void(RoleDeleteEvent&)> onGuiildRoleDeleteF = {};
+  std::function<void(RoleEvent&)> onGuildRoleCreateF = {};
+  std::function<void(RoleEvent&)> onGuildRoleUpdateF = {};
+  std::function<void(RoleDeleteEvent&)> onGuildRoleDeleteF = {};
   
+  std::function<void(GuildScheduledEvent&)> onGuildScheduledEventCreateF = {};
+  std::function<void(GuildScheduledEvent&)> onGuildScheduledEventUpdateF = {};
+  std::function<void(GuildScheduledEvent&)> onGuildScheduledEventDeleteF = {};
+
+  std::function<void(GuildScheduledEventUser&)> onGuildScheduledEventUserAddF = {};
+  std::function<void(GuildScheduledEventUser&)> onGuildScheduledEventUserRemoveF = {};
+
   std::function<void(Channel&)> onChannelCreateF = {};
   std::function<void(Channel&)> onChannelUpdateF = {};
   std::function<void(Channel&)> onChannelDeleteF = {};
@@ -268,6 +276,13 @@ public:
   void onGuildRoleUpdate(std::function<void(RoleEvent&)> f);
   void onGuildRoleDelete(std::function<void(RoleDeleteEvent&)> f);
   
+  void onGuildScheduledEventCreate(std::function<void(GuildScheduledEvent&)> f);
+  void onGuildScheduledEventUpdate(std::function<void(GuildScheduledEvent&)> f);
+  void onGuildScheduledEventDelete(std::function<void(GuildScheduledEvent&)> f);
+
+  void onGuildScheduledEventUserAdd(std::function<void(GuildScheduledEventUser&)> f);
+  void onGuildScheduledEventUserRemove(std::function<void(GuildScheduledEventUser&)> f);
+
   void onChannelCreate(std::function<void(Channel&)> f);
   void onChannelUpdate(std::function<void(Channel&)> f);
   void onChannelDelete(std::function<void(Channel&)> f);
@@ -350,6 +365,14 @@ private:
   void guildRoleUpdate(nlohmann::json j);
   void guildRoleDelete(nlohmann::json j);
   
+  void guildSchedCreate(nlohmann::json j);
+  void guildSchedUpdate(nlohmann::json j);
+  void guildSchedDelete(nlohmann::json j);
+
+  void guildSchedUserAdd(nlohmann::json j);
+  void guildSchedUserRemove(nlohmann::json j);
+
+
   void channelCreate(nlohmann::json j);
   void channelUpdate(nlohmann::json j);
   void channelDelete(nlohmann::json j);
@@ -398,6 +421,11 @@ private:
     {"GUILD_ROLE_CREATE", std::bind(&NyaBot::guildRoleCreate, this, std::placeholders::_1)},
     {"GUILD_ROLE_UPDATE", std::bind(&NyaBot::guildRoleUpdate, this, std::placeholders::_1)},
     {"GUILD_ROLE_DELETE", std::bind(&NyaBot::guildRoleDelete, this, std::placeholders::_1)},
+    {"GUILD_SCHEDULED_EVENT_CREATE", std::bind(&NyaBot::guildSchedCreate, this, std::placeholders::_1)},
+    {"GUILD_SCHEDULED_EVENT_UPDATE", std::bind(&NyaBot::guildSchedUpdate, this, std::placeholders::_1)},
+    {"GUILD_SCHEDULED_EVENT_DELETE", std::bind(&NyaBot::guildSchedDelete, this, std::placeholders::_1)},
+    {"GUILD_SCHEDULED_EVENT_USER_ADD", std::bind(&NyaBot::guildSchedUserAdd, this, std::placeholders::_1)},
+    {"GUILD_SCHEDULED_EVENT_USER_REMOVE", std::bind(&NyaBot::guildSchedUserRemove, this, std::placeholders::_1)},
     {"MESSAGE_REACTION_ADD", std::bind(&NyaBot::messageReactionAdd, this, std::placeholders::_1)},
     {"MESSAGE_REACTION_REMOVE", std::bind(&NyaBot::messageReactionRemove, this, std::placeholders::_1)},
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
