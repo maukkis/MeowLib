@@ -1,8 +1,10 @@
 #ifndef _INCLUDE_ASYNC_H
 #define _INCLUDE_ASYNC_H
 #include <chrono>
+#include <condition_variable>
 #include <coroutine>
 #include <exception>
+#include <mutex>
 #include <thread>
 
 template<class T>
@@ -13,6 +15,8 @@ public:
   }
   struct promise_type {
     T value;
+    std::mutex mtx;
+    std::condition_variable cv;
     MeowAsync get_return_object() { 
       return MeowAsync{
         std::coroutine_handle<promise_type>::from_promise(*this)
@@ -21,7 +25,10 @@ public:
     std::suspend_never initial_suspend() noexcept { return {}; }
     std::suspend_always final_suspend() noexcept { return {}; }
     void return_value(T&& meow) noexcept { 
+      std::unique_lock<std::mutex> lock(mtx);
       value = std::move(std::forward<T>(meow));
+      lock.unlock();
+      cv.notify_one();
     }
 
     void unhandled_exception() {
@@ -30,9 +37,10 @@ public:
   };
   /// @brief awaits till the value is available and returns it
   T await(){
-    while(!handle.done()){
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    std::unique_lock<std::mutex> lock(handle.promise().mtx);
+    handle.promise().cv.wait(lock, [this](){
+      return handle.done();
+    });
     return handle.promise().value;
   }
 
