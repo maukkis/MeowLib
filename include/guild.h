@@ -95,6 +95,9 @@ struct RelatedGuildCache {
   LruCache<std::string, CacheObject<GuildUser>> users{1000};
   std::mutex channelmtx;
   std::unordered_set<std::string> channelIds;
+  std::mutex rolesmtx;
+  std::unordered_set<std::string> roles;
+  LruCache<std::string, CacheObject<Role>> roleCache{1000};
 };
 
 
@@ -107,9 +110,16 @@ public:
   std::expected<std::vector<Channel>, Error> getGuildChannels(const std::string& guildId, const bool force = false);
   void insertGuildChannel(const Channel& a);
   void removeGuildChannel(const std::string& guildId, const std::string& channelId);
+  void insertGuildRole(const std::string& guildId, const Role& role);
+  void insertGuildRole(const std::string& guildId, const std::vector<Role>& roles);
+  void removeGuildRole(const std::string& guildId, const std::string& roleId);
+  std::expected<std::vector<Role>, Error> getGuildRoles(const std::string& guildId, const bool force = false);
+  std::expected<Role, Error> getGuildRole(const std::string& guildId, const std::string& roleId, const bool force = false);
 private:
   std::expected<User, Error> fetchGuildUser(const std::string& guildId, const std::string& userId);
   std::expected<std::vector<Channel>, Error> fetchGuildChannels(const std::string& guildId);
+  std::expected<std::vector<Role>, Error> fetchGuildRoles(const std::string& guildId);
+  std::expected<Role, Error> fetchGuildRole(const std::string& guildId, const std::string& roleId);
   std::mutex relatedObjectsmtx;
   NyaBot *bot;
   std::unordered_map<std::string, RelatedGuildCache> relatedObjects;
@@ -150,6 +160,10 @@ public:
 
   std::expected<std::nullopt_t, Error> removeMember(const std::string_view guildId, const std::string_view userId,
                                                          const std::optional<std::string>& auditLogReason = std::nullopt);
+
+  std::expected<std::vector<Role>, Error> getRoles(const std::string& guildId, const bool force = false);
+
+  std::expected<Role, Error> getRole(const std::string& guildId, const std::string& roleId, const bool force = false);
 
   std::expected<User, Error> modifyMember(const std::string_view guildId,
                                                const std::string_view userId,

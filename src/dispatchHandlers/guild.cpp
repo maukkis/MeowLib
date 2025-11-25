@@ -10,6 +10,7 @@ void NyaBot::guildCreate(nlohmann::json j){
   while(api.state != GatewayStates::READY)
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   Guild a(j["d"]);
+  guild.cache.insertGuildRole(a.id, a.roles);
   guild.cache.insert(a.id, a);
   if(api.unavailableGuildIds.contains(j["d"]["id"])){
     Log::dbg("Guild id: " + j["d"]["id"].get<std::string>() + " meant for caching. Caching the guild and returning");
@@ -26,6 +27,7 @@ void NyaBot::guildCreate(nlohmann::json j){
 void NyaBot::guildUpdate(nlohmann::json j){
   Guild a(j["d"]);
   guild.cache.insert(a.id, a);
+  guild.cache.insertGuildRole(a.id, a.roles);
   if(funs.onGuildUpdateF){
     funs.onGuildUpdateF(a);
   }
@@ -104,6 +106,7 @@ void NyaBot::guildRoleCreate(nlohmann::json j){
         .guildId = j["d"]["guild_id"], 
         .role = Role(j["d"]["role"])
       };
+    guild.cache.insertGuildRole(a.guildId, a.role);
     funs.onGuildRoleCreateF(a);
   }
 }
@@ -116,6 +119,7 @@ void NyaBot::guildRoleUpdate(nlohmann::json j){
         .guildId = j["d"]["guild_id"], 
         .role = Role(j["d"]["role"])
       };
+    guild.cache.insertGuildRole(a.guildId, a.role);
     funs.onGuildRoleUpdateF(a);
   }
 }
@@ -127,6 +131,7 @@ void NyaBot::guildRoleDelete(nlohmann::json j){
         .guildId = j["d"]["guild_id"], 
         .roleId = j["d"]["role_id"]
       };
+    guild.cache.removeGuildRole(a.guildId, a.roleId);
     funs.onGuildRoleDeleteF(a);
   }
 }

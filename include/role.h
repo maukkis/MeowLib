@@ -14,6 +14,7 @@ struct RoleColors{
 
 
 struct Role {
+  Role() = default;
   Role(const nlohmann::json& j);
   std::string id;
   std::string name;

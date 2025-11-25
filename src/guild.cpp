@@ -178,6 +178,62 @@ void GuildCache::insertGuildChannel(const Channel& a){
 }
 
 
+void GuildCache::insertGuildRole(const std::string& guildId, const Role& role){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  std::unique_lock lock(relatedObjects[guildId].rolesmtx);
+  relatedObjects[guildId].roles.insert(role.id);
+  relatedObjects[guildId].roleCache.insert(role.id, role);
+}
+
+void GuildCache::insertGuildRole(const std::string& guildId, const std::vector<Role>& roles){
+  if(!relatedObjects.contains(guildId)){
+    std::unique_lock lock(relatedObjectsmtx);
+    relatedObjects[guildId];
+  }
+  std::unique_lock lock(relatedObjects[guildId].rolesmtx);
+  for(const auto& role : roles){
+    relatedObjects[guildId].roles.insert(role.id);
+    relatedObjects[guildId].roleCache.insert(role.id, role);
+  }
+}
+
+void GuildCache::removeGuildRole(const std::string& guildId, const std::string& roleId){
+  if(!relatedObjects.contains(guildId)) return;
+  std::unique_lock lock(relatedObjects[guildId].rolesmtx);
+  relatedObjects[guildId].roles.erase(roleId);
+  relatedObjects[guildId].roleCache.erase(roleId);
+
+}
+
+std::expected<std::vector<Role>, Error> GuildCache::getGuildRoles(const std::string& guildId, const bool force){
+  if(force) return fetchGuildRoles(guildId);
+  if(!relatedObjects.contains(guildId)) return fetchGuildRoles(guildId);
+  std::unique_lock lock(relatedObjects[guildId].rolesmtx);
+  std::vector<Role> roles;
+  if(relatedObjects[guildId].roles.empty()) return fetchGuildRoles(guildId);
+  for(const auto& a : relatedObjects[guildId].roles){
+    auto b = relatedObjects[guildId].roleCache.get(a);
+    if(!b || hrclk::now() - b->made > ttl){
+      lock.unlock();
+      return fetchGuildRoles(guildId);
+    }
+    roles.emplace_back(b->object);
+  }
+  return roles;
+}
+
+std::expected<Role, Error> GuildCache::getGuildRole(const std::string& guildId, const std::string& roleId, const bool force){
+  if(force || !relatedObjects.contains(guildId) || !relatedObjects[guildId].roles.contains(roleId)) return fetchGuildRole(guildId, roleId);
+  std::unique_lock lock(relatedObjects[guildId].rolesmtx);
+  auto a = relatedObjects[guildId].roleCache.get(roleId);
+  lock.unlock();
+  return !a || hrclk::now() - a->made > ttl ? fetchGuildRole(guildId, roleId) : a->object;
+}
+
+
 void GuildCache::removeGuildChannel(const std::string& guildId, const std::string& channelId){
   if(!relatedObjects.contains(guildId) || 
      !relatedObjects[guildId].channelIds.contains(channelId)) return;
@@ -205,6 +261,47 @@ std::expected<std::vector<Channel>, Error> GuildCache::fetchGuildChannels(const 
   }
   return vec;
 }
+
+
+std::expected<std::vector<Role>, Error> GuildCache::fetchGuildRoles(const std::string& guildId){
+  auto res = rest->get(std::format(APIURL "/guilds/{}/roles", guildId));
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get roles from guild " + guildId);
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  std::vector<Role> roles;
+  auto j = nlohmann::json::parse(res->first);
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].rolesmtx);
+  for(const auto& role : j){
+    Role a(role);
+    relatedObjects[guildId].roles.emplace(a.id);
+    relatedObjects[guildId].roleCache.insert(a.id, a);
+    roles.emplace_back(std::move(a));
+  }
+  return roles;
+}
+
+
+std::expected<Role, Error> GuildCache::fetchGuildRole(const std::string& guildId, const std::string& roleId){
+  auto res = rest->get(std::format(APIURL "/guilds/{}/roles/{}", guildId, roleId));
+  if(!res.has_value() || res->second != 200){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to get role " + roleId);
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  auto j = nlohmann::json::parse(res->first);
+  std::unique_lock<std::mutex> lock(relatedObjects[guildId].rolesmtx);
+  Role a(j);
+  relatedObjects[guildId].roles.emplace(a.id);
+  relatedObjects[guildId].roleCache.insert(a.id, a);
+  return a;
+}
+
+
+
 
 GuildApiRoutes::GuildApiRoutes(NyaBot *bot): cache{bot}{
   this->bot = bot;
@@ -341,6 +438,14 @@ std::expected<User, Error> GuildApiRoutes::modifyMember(const std::string_view g
   return u;
 }
 
+
+std::expected<std::vector<Role>, Error> GuildApiRoutes::getRoles(const std::string& guildId, const bool force){
+  return cache.getGuildRoles(guildId, force);
+}
+
+std::expected<Role, Error> GuildApiRoutes::getRole(const std::string& guildId, const std::string& roleId, const bool force){
+  return cache.getGuildRole(guildId, roleId, force);
+}
 
 
 std::expected<std::nullopt_t, Error> GuildApiRoutes::addMemberRole(const std::string_view guildId,
