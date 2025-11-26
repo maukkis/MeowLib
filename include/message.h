@@ -1,6 +1,8 @@
 #ifndef _INCLUDE_MESSAGE_H
 #define _INCLUDE_MESSAGE_H
 #include "componentsv2/componentsv2.h"
+#include "helpers.h"
+#include "componentsv2/actionRowComponent.h"
 #include "attachment.h"
 #include <expected>
 #include <nlohmann/json.hpp>
@@ -32,11 +34,7 @@ struct InteractionData{
   User user;
 };
 
-struct SelectComponent;
-class LabelComponent;
-class ButtonComponent;
-class TextInputComponent;
-class FileUploadComponent;
+
 
 struct MessageDelete {
   std::string id;
@@ -80,26 +78,7 @@ struct MessageReaction {
 
 
 // we should actually check if it is a top level component
-template<typename T, typename = void>
-struct TopLevelComponent : std::true_type {};
 
-template<typename T>
-struct TopLevelComponent<T, std::enable_if_t<std::is_base_of_v<SelectComponent, T>, void>> : std::false_type {};
-
-template<>
-struct TopLevelComponent<ButtonComponent> : std::false_type {};
-
-template<>
-struct TopLevelComponent<LabelComponent> : std::false_type {};
-
-template<>
-struct TopLevelComponent<TextInputComponent> : std::false_type {};
-
-template<>
-struct TopLevelComponent<FileUploadComponent> : std::false_type {};
-
-template<typename T>
-concept topLevelComponent = TopLevelComponent<std::remove_cvref_t<T>>::value;
 
 
 class Message {

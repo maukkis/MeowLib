@@ -1,6 +1,6 @@
 #ifndef COMPONENTS_V2_H
 #define COMPONENTS_V2_H
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 enum ComponentTypes {
   ACTION_ROW = 1,
@@ -21,6 +21,8 @@ enum ComponentTypes {
   LABEL,
   FILE_UPLOAD = 19,
 };
+
+
 
 class Component {
 public:

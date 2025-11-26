@@ -13,19 +13,34 @@
 template<typename T>
 using buttons = std::is_same<std::remove_reference_t<T>, ButtonComponent>;
 
+enum ActionRowComponentStates {
+  NONE,
+  BUTTONS,
+  SELECT,
+};
 
-
-template<bool state = false>
+template<ActionRowComponentStates state = NONE>
 class ActionRowComponent : public Component{
 public:
-  nlohmann::json generate() override;
+
+  nlohmann::json generate() override{
+    // we cant really check if its empty at compile time :( unless i do stateful metaprogramming which.... isnt really conformant
+    Log::error("you didnt set child components to action row this will error");
+    nlohmann::json j;
+    j["type"] = type;
+    j["components"] = nlohmann::json::array();
+    for (const auto& a : components){
+      j["components"].emplace_back(a->generate());
+    }
+    return j;
+  }
   ActionRowComponent() = default;
   template<typename... E>
   requires (std::conjunction<buttons<E>...>::value)
-  ActionRowComponent<true> addComponents(E&&... comps){
-    static_assert(state != true, "this component can only have 1 type of component");
+  ActionRowComponent<BUTTONS> addComponents(E&&... comps){
+    static_assert(state == NONE || state == BUTTONS, "this component can only have 1 type of component");
     static_assert(sizeof...(comps) <= 5, "cannot have more than 5 buttons");
-    ActionRowComponent<true> arf;
+    ActionRowComponent<BUTTONS> arf;
     (arf.components.push_back(std::make_unique<ButtonComponent>(std::forward<E>(comps))), ...);
     return arf;
   }
@@ -33,13 +48,12 @@ public:
 
   template<typename E>
   requires (std::is_base_of<SelectComponent, std::remove_reference_t<E>>::value)
-  ActionRowComponent<true> addComponents(E&& comps){
-    static_assert(state != true, "this component can only have 1 type of component");
-    ActionRowComponent<true> arf;
+  ActionRowComponent<SELECT> addComponents(E&& comps){
+    static_assert(state == NONE || state == SELECT, "this component can only have 1 type of component");
+    ActionRowComponent<SELECT> arf;
     arf.components.push_back(std::make_unique<std::remove_cvref_t<E>>(std::forward<E>(comps)));
     return arf;
   }
-  
   std::vector<std::unique_ptr<Component>> components;
 private:
   ComponentTypes type = ACTION_ROW;

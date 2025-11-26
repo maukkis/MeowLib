@@ -35,8 +35,8 @@ public:
       std::terminate();
     }
   };
-  /// @brief awaits till the value is available and returns it
-  T await(){
+  /// @brief waits till the value is available and returns it
+  T join(){
     std::unique_lock<std::mutex> lock(handle.promise().mtx);
     handle.promise().cv.wait(lock, [this](){
       return handle.done();
