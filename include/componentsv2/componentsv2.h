@@ -1,6 +1,6 @@
 #ifndef COMPONENTS_V2_H
 #define COMPONENTS_V2_H
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 enum ComponentTypes {
   ACTION_ROW = 1,
