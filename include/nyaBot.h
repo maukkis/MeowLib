@@ -7,6 +7,7 @@
 #include "emoji.h"
 #include "guild.h"
 #include "guildScheduledEvent.h"
+#include "invite.h"
 #include "message.h"
 #include "modalInteraction.h"
 #include "poll.h"
@@ -115,6 +116,8 @@ struct Funs {
   std::function<void(ThreadListSync&)> onThreadListSyncF = {};
   std::function<void(ThreadMember&)> onThreadMemberUpdateF = {};
   std::function<void(ThreadMembersUpdate&)> onThreadMembersUpdateF = {}; 
+  std::function<void(InviteCreateEvent&)> onInviteCreateF = {};
+  std::function<void(InviteDeleteEvent&)> onInviteDeleteF = {};
 
   std::function<void(TypingStart&)> onTypingStartF = {};
 };
@@ -294,6 +297,9 @@ public:
   void onThreadMemberUpdate(std::function<void(ThreadMember&)> f);
   void onThreadMembersUpdate(std::function<void(ThreadMembersUpdate&)> f);
 
+  void onInviteCreate(std::function<void(InviteCreateEvent&)> f);
+  void onInviteDelete(std::function<void(InviteDeleteEvent&)> f);
+
   void onTypingStart(std::function<void(TypingStart&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
@@ -324,6 +330,7 @@ public:
   MessageApiRoutes message{this};
   AutoModApiRoutes automod{this};
   ChannelApiRoutes channel{this};
+  InviteApiRoutes invite{this};
 private:
   void listen();
   std::expected<std::nullopt_t, meow> connect();
@@ -384,6 +391,9 @@ private:
   void threadMemberUpdate(nlohmann::json j);
   void threadMembersUpdate(nlohmann::json j);
 
+  void inviteCreate(nlohmann::json j);
+  void inviteDelete(nlohmann::json j);
+
   void typingStart(nlohmann::json j);
 
   void rateLimited(nlohmann::json j);
@@ -431,6 +441,8 @@ private:
     {"CHANNEL_CREATE", std::bind(&NyaBot::channelCreate, this, std::placeholders::_1)},
     {"CHANNEL_UPDATE", std::bind(&NyaBot::channelUpdate, this, std::placeholders::_1)},
     {"CHANNEL_DELETE", std::bind(&NyaBot::channelDelete, this, std::placeholders::_1)},
+    {"INVITE_CREATE", std::bind(&NyaBot::inviteCreate, this, std::placeholders::_1)},
+    {"INVITE_DELETE", std::bind(&NyaBot::inviteDelete, this, std::placeholders::_1)},
     {"THREAD_CREATE", std::bind(&NyaBot::threadCreate, this, std::placeholders::_1)},
     {"THREAD_UPDATE", std::bind(&NyaBot::threadUpdate, this, std::placeholders::_1)},
     {"THREAD_DELETE", std::bind(&NyaBot::threadDelete, this, std::placeholders::_1)},

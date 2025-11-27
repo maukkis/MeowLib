@@ -2,6 +2,7 @@
 #define _INCLUDE_HELPERS_H
 #include <chrono>
 #include <format>
+#include <ranges>
 #include <sstream>
 #include "componentsv2/actionRowComponent.h"
 #include <string>
@@ -12,6 +13,12 @@
 template<typename T>
 std::string timepointToISO8601(const std::chrono::time_point<T>& time){
   return std::format("{:%FT%TZ}", time);
+}
+
+template<typename T>
+void jsonToOptional(std::optional<T>& opt, const nlohmann::json& j, const std::string_view keyName){
+  if(j.contains(keyName) && !j[keyName].is_null())
+    opt = T(j[keyName]);
 }
 
 

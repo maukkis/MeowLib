@@ -12,6 +12,12 @@ enum class InviteTypes {
   FRIEND,
 };
 
+enum class InviteTargetTypes {
+  STREAM = 1,
+  EMBEDDED_APPLICATION,
+};
+
+
 struct Invite {
   Invite() = default;
   Invite(const nlohmann::json& j);
@@ -20,6 +26,8 @@ struct Invite {
   std::optional<Guild> guild = std::nullopt;
   std::optional<Channel> channel = std::nullopt;
   std::optional<User> inviter = std::nullopt;
+  std::optional<InviteTargetTypes> targetType = std::nullopt;
+  std::optional<User> targetUser = std::nullopt;
   std::optional<int> approximatePresenceCount = std::nullopt;
   std::optional<int> approximateMemberCount = std::nullopt;
   std::optional<std::string> expiresAt = std::nullopt;
@@ -27,5 +35,38 @@ struct Invite {
   std::optional<int> flags = std::nullopt;
 };
 
+struct InviteCreateEvent {
+  InviteCreateEvent() = default;
+  InviteCreateEvent(const nlohmann::json& j);
+  std::string code;
+  std::string createdAt;
+  std::optional<std::string> guildId = std::nullopt;
+  std::optional<std::string> channelId = std::nullopt;
+  std::optional<User> inviter = std::nullopt;
+  int maxAge{};
+  int maxUses{};
+  std::optional<InviteTargetTypes> targetType = std::nullopt;
+  std::optional<User> targetUser = std::nullopt;
+  bool temporary{};
+  int uses{};
+  std::optional<std::string> expiresAt = std::nullopt;
+};
+
+struct InviteDeleteEvent {
+  InviteDeleteEvent() = default;
+  InviteDeleteEvent(const nlohmann::json& j);
+  std::string channelId;
+  std::optional<std::string> guildId = std::nullopt;
+  std::string code;
+};
+
+class InviteApiRoutes {
+public:
+  InviteApiRoutes(NyaBot *bot);
+  std::expected<Invite, Error> get(const std::string_view code, const bool withCounts = false);
+  std::expected<Invite, Error> remove(const std::string_view code);
+private:
+  NyaBot *bot;
+};
 
 #endif
