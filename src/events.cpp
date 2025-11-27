@@ -186,6 +186,15 @@ void NyaBot::onThreadMembersUpdate(std::function<void(ThreadMembersUpdate&)> f){
 }
 
 
+void NyaBot::onInviteCreate(std::function<void(InviteCreateEvent&)> f){
+  funs.onInviteCreateF = f;
+}
+
+
+void NyaBot::onInviteDelete(std::function<void(InviteDeleteEvent&)> f){
+  funs.onInviteDeleteF = f;
+}
+
 
 void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
   funs.onTypingStartF = f;
