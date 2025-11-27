@@ -49,7 +49,9 @@ void NyaBot::listen(){
         Log::dbg("sending heartbeat :3");
         nlohmann::json j;
         j["op"] = Heartbeat;
-        j["d"] = api.sequence;
+        if(api.sequence == 0)
+          j["d"] = nullptr;
+        else j["d"] = api.sequence;
         if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
           Log::dbg("sent heartbeat :3");
           sentHB = std::chrono::steady_clock::now();
