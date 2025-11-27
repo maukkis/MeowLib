@@ -25,7 +25,8 @@ public:
 
   nlohmann::json generate() override{
     // we cant really check if its empty at compile time :( unless i do stateful metaprogramming which.... isnt really conformant
-    Log::error("you didnt set child components to action row this will error");
+    if(state == NONE)
+      Log::error("you didnt set child components to action row this will error");
     nlohmann::json j;
     j["type"] = type;
     j["components"] = nlohmann::json::array();
