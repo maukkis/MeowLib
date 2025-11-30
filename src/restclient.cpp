@@ -156,6 +156,7 @@ RestClient::sendRawData(const std::string& endpoint,
         std::this_thread::sleep_for(std::chrono::seconds(rtl.userRateLimitTable[endpoint].resetAfter));
         lock.lock();
         rtl.userRateLimitTable.erase(endpoint);
+        Log::dbg("trying to send again");
         continue;
       }
 

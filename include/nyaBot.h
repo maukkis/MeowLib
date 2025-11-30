@@ -189,8 +189,8 @@ public:
   /// @brief Registers a slash command with the bot.
   /// @param slash SlashCommand object
   ///
-  void addSlash(const SlashCommand& slash);
-
+  void addSlash(SlashCommand& slash);
+  void addSlash(SlashCommand&& slash);
   void removeSlash(const std::string_view name);
   ///
   /// @brief Registers a command handler with the library.

@@ -27,8 +27,15 @@ SlashCommandParameter::SlashCommandParameter(const std::string_view name, const 
     required{required} {} 
 
 
-void NyaBot::addSlash(const SlashCommand& slash){
-  slashs.emplace_back(slash);
+void NyaBot::addSlash(SlashCommand& slash){
+  if(slash.handler)
+    addCommandHandler(slash.name, std::move(slash.handler));
+  slashs.push_back(std::move(slash));
+}
+
+
+void NyaBot::addSlash(SlashCommand&& slash){
+  slashs.push_back(std::move(slash));
 }
 
 void NyaBot::removeSlash(const std::string_view name){

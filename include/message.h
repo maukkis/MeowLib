@@ -77,7 +77,6 @@ struct MessageReaction {
 
 
 
-// we should actually check if it is a top level component
 
 
 
@@ -119,7 +118,8 @@ private:
   std::vector<std::unique_ptr<Component>> components;
 };
 
-// TODO: create proper error parser and change the return values
+
+
 class MessageApiRoutes {
 public:
   MessageApiRoutes(NyaBot* bot);
