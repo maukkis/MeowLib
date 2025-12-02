@@ -186,6 +186,10 @@ public:
   ///
   void run(const std::string_view token);
   ///
+  /// @brief closes the gateway connection effectively stopping the bot
+  ///
+  void close();
+  ///
   /// @brief Registers a slash command with the bot.
   /// @param slash SlashCommand object
   ///

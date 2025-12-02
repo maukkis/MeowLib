@@ -106,9 +106,17 @@ void NyaBot::run(const std::string_view token){
   listen();
 }
 
-NyaBot::~NyaBot(){
+
+
+void NyaBot::close(){
   stop = true;
-  handle.wsClose(1000, "going away :3");
+  handle.wsClose(1000, "arff *tail wags*");
+}
+
+
+
+NyaBot::~NyaBot(){
+  close();
   Log::dbg("closed!"); 
 }
 

@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <cstring>
 #include <ctime>
-#include <fstream>
-#include <iostream>
 #include "../include/nyaBot.h"
 #include "../include/eventCodes.h"
 #include "../include/queue.h"
@@ -27,7 +25,6 @@ GatewayStates NyaBot::getCurrentState(){
 
 void NyaBot::listen(){
   using namespace std::chrono_literals;
-  std::ofstream meowlog{"meow.log"};
   auto sentHB = std::chrono::steady_clock::now();
   auto lastHB = std::chrono::steady_clock::now();
   srand(std::time(0));
@@ -66,6 +63,7 @@ void NyaBot::listen(){
       }
       Log::dbg("received: " + std::to_string(frame.payloadLen) + " bytes");
       if(frame.opcode == meowWs::meowWS_CLOSE) {
+        if(stop) return;
         Log::warn("connection closed");
         uint16_t arf;
         memcpy(&arf, buf.data(), 2);
@@ -117,8 +115,7 @@ void NyaBot::listen(){
               std::thread{dispatchHandlers[meow], meowJson}.detach();
             }
             else {
-              Log::warn("unknown dispatch printing to log");
-              meowlog << buf << std::endl;
+              Log::warn("unknown dispatch");
             }
           }
         break;
@@ -128,17 +125,15 @@ void NyaBot::listen(){
         break;
         default:
           Log::dbg("barks?");
-          meowlog << buf << std::endl;
         break;
       }
     }
     catch(nlohmann::json::exception& e){
-      Log::warn("got parse error printing to log");
-      meowlog << buf << std::endl;
+      Log::warn("got parse error");
     }
     catch(meowHttp::Exception &e){
       Log::error(e.what());
-      if(e.closed()){
+      if(e.closed() && !stop){
         reconnect(true);
         // same thing here as in zombified connections we have to reset clocks to avoid a potential unnecessary reconnect
         sentHB = std::chrono::steady_clock::now();
