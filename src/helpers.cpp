@@ -1,3 +1,4 @@
+#include <chrono>
 #include <random>
 #include <string>
 #include <string_view>
@@ -20,10 +21,11 @@ std::string makeFormData(const nlohmann::json j, const std::string_view boundary
   return data;
 }
 
-auto ISO8601ToTimepoint(const std::string& str){
+std::chrono::time_point<std::chrono::system_clock> ISO8601ToTimepoint(const std::string& str){
   std::chrono::time_point<std::chrono::system_clock> a;
   std::istringstream b{str};
-  b >> std::chrono::parse("{:%FT%TZ}", a);
+  // discord usually sends in this format
+  b >> std::chrono::parse("%FT%T%Ez", a);
   return a;
 }
 

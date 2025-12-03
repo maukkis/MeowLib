@@ -53,7 +53,7 @@ template<typename T>
 concept topLevelComponent = TopLevelComponent<std::remove_cvref_t<T>>::value;
 
 
-auto ISO8601ToTimepoint(const std::string& str);
+std::chrono::time_point<std::chrono::system_clock> ISO8601ToTimepoint(const std::string& str);
 
 std::string makeFormData(const nlohmann::json j, const std::string_view boundary, const std::vector<Attachment>& a);
 std::string& lower(std::string& a);
