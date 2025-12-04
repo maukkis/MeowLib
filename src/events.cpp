@@ -24,6 +24,12 @@ void NyaBot::onAutoModerationActionExecution(std::function<void(AutoModActionExe
 }
 
 void NyaBot::onReady(std::function<void ()> f) {
+  funs.onReadyF = [f](Ready&){
+    f();
+  };
+}
+
+void NyaBot::onReady(std::function<void (Ready&)> f) {
   funs.onReadyF = f;
 }
 

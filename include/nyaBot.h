@@ -1,5 +1,6 @@
 #ifndef nyaBot_H
 #define nyaBot_H
+#include <meowHttp/enum.h>
 #include <meowHttp/websocket.h>
 #include "async.h"
 #include "buttonInteraction.h"
@@ -62,6 +63,16 @@ struct ImportantApiStuff {
   int intents = 0;
 };
 
+struct Ready {
+  Ready(const nlohmann::json& j);
+  int v{};
+  User user;
+  std::vector<UnavailableGuild> guilds;
+  int shardId{};
+  int numShards{};
+};
+
+
 struct Funs {
   std::function<void(AutoModRule&)> onAutoModerationRuleCreateF = {};
   std::function<void(AutoModRule&)> onAutoModerationRuleUpdateF = {};
@@ -70,7 +81,7 @@ struct Funs {
 
 
   std::function<void(SlashCommandInteraction&)> onSlashF = {};
-  std::function<void()> onReadyF = {};
+  std::function<void(Ready&)> onReadyF = {};
   std::function<void()> onAutocompleteF = {};
   std::function<void(ButtonInteraction&)> onButtonF = {};
   std::function<void(SelectInteraction&)> onSelectF = {};
@@ -259,6 +270,7 @@ public:
 
 
   void onReady(std::function<void()> f);
+  void onReady(std::function<void(Ready&)> f);
   void onSlash(std::function<void(SlashCommandInteraction&)> f);
   void onAutocomplete(std::function<void()> f);
   void onButtonPress(std::function<void(ButtonInteraction&)> f);
