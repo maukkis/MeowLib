@@ -17,7 +17,7 @@ std::expected<std::pair<std::string, int>, RestErrors> RestClient::get(const std
 }
 
 std::expected<std::pair<std::string, int>, RestErrors> RestClient::post(const std::string& endpoint,
-                                                                        const std::string& data,
+                                                                        const std::optional<std::string>& data,
                                                                         const std::optional<std::vector<std::string>>& headers)
 {
   std::vector<std::string> headerss {

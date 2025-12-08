@@ -47,7 +47,7 @@ public:
   /// @param endpoint endpoint to send the request to
   /// @param data postdata to be sent
   std::expected<std::pair<std::string, int>, RestErrors> post(const std::string& endpoint,
-                                                              const std::string& data,
+                                                              const std::optional<std::string>& data = std::nullopt,
                                                               const std::optional<std::vector<std::string>>& headers = std::nullopt);
 
   /// @brief send a patch request to a discord api endpoint

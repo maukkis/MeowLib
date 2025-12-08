@@ -94,3 +94,15 @@ std::expected<std::nullopt_t, Error> ChannelApiRoutes::joinThread(const std::str
   }
   return std::nullopt;
 }
+
+
+std::expected<std::nullopt_t, Error> ChannelApiRoutes::triggerTypingIndicator(const std::string_view id){
+  auto res = bot->rest.post(std::format(APIURL "/channels/{}/typing", id));
+  if(!res.has_value() || res->second != 204){
+    auto err = Error(res.value_or(std::make_pair("meowHttp IO error", 0)).first);
+    Log::error("failed to trigger typing indicator");
+    err.printErrors();
+    return std::unexpected(err);
+  }
+  return std::nullopt;
+}

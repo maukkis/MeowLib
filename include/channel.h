@@ -86,6 +86,9 @@ public:
   /// @brief joins a thread
   /// @param id id of the thread
   std::expected<std::nullopt_t, Error> joinThread(const std::string_view id);
+  /// @brief triggers the typing indicator for 10 seconds
+  /// @param id channel id
+  std::expected<std::nullopt_t, Error> triggerTypingIndicator(const std::string_view id);
   ChannelCache cache;
 private:
   NyaBot *bot;
