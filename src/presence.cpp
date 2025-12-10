@@ -1,5 +1,6 @@
 #include "../include/presence.h"
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include "../include/nyaBot.h"
 #include "../include/eventCodes.h"
 
@@ -9,6 +10,7 @@ nlohmann::json serializePresence(const Presence& p){
   if(p.since)
     j["since"] = *p.since;
   else j["since"] = nullptr;
+  j["activities"] = nlohmann::json::array();
   if(p.activity)
     j["activities"].emplace_back(serializeActivity(*p.activity));
   j["status"] = p.status;
@@ -27,11 +29,15 @@ nlohmann::json serializeActivity(const Activity& a) {
   return j;
 }
 
-void NyaBot::changePresence(const Presence& p){
+void NyaBot::changePresence(const Presence& p, std::optional<std::string> guildId){
   nlohmann::json j;
   j["op"] = eventCodes::PresenceUpdate;
   j["d"] = serializePresence(p);
-  queue.addToQueue(j.dump());
+  if(!guildId || api.numShards == 1) {
+    globalSend(j.dump());
+    return;
+  }
+  shards.at(calculateShardId(*guildId, api.numShards)).queue.addToQueue(j.dump());
 }
 
 void NyaBot::setPresence(const Presence& p){

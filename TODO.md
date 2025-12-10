@@ -9,7 +9,7 @@
 - [ ] audit log
 - [x] forwarding
 - [x] replying
-- [ ] sharding
+- [x] sharding
 - [ ] guild templates!
 - [x] caching
 - [x] basic guild gateway events
