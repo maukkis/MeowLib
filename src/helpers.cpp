@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdint>
 #include <random>
 #include <string>
 #include <string_view>
@@ -62,4 +63,10 @@ std::string generate32ByteASCIINonce(){
     a += (distrib(rnd));
   }
   return a;
+}
+
+
+int calculateShardId(const std::string& guildId, int numShards){
+  uint64_t guildIdInt = std::stoull(guildId, nullptr, 10);
+  return (guildIdInt >> 22) % numShards;
 }

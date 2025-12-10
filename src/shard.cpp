@@ -103,9 +103,8 @@ void Shard::sendIdent(){
   nlohmann::json d;
   d["token"] = bot->api.token;
   d["intents"] = bot->api.intents;
-  if(!api.noShard){
+  if(!api.noShard)
     d["shard"] = {api.shardId, bot->api.numShards};
-  }
   if(bot->presence)
     d["presence"] = serializePresence(*bot->presence);
   nlohmann::json p;
@@ -114,7 +113,6 @@ void Shard::sendIdent(){
   p["device"] = "MeowLib";
   d["properties"] = std::move(p);
   j["d"] = std::move(d);
-  Log::dbg(j.dump());
   if (handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
     Log::dbg("ident sent on shard: " + std::to_string(api.shardId));
     api.state = GatewayStates::AUTHENTICATION_SENT;
@@ -144,4 +142,12 @@ void Shard::getHeartbeatInterval(){
 
 void Shard::close(){
   handle.wsClose(1000, "arff *tail wags*");
+}
+
+
+
+void NyaBot::globalSend(const std::string& payload){
+  for(auto& shard : shards){
+    shard.queue.addToQueue(payload);
+  }
 }

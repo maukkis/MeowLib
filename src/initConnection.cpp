@@ -75,11 +75,12 @@ void NyaBot::run(const std::string_view token){
   if(api.numShards == 1){
     shards.emplace_back(this, 0, true);
   } else {
-    for(int i = 0; i < api.numShards; ++i){
+    for(int i = 0; i < api.numShards && !stop; ++i){
       shards.emplace_back(this, i);
       //this is stupid rn but idc
-      while(shards.at(i).getState() != GatewayStates::READY){
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      if((i != 0 && i % maxConc == 0) && !stop){
+        Log::dbg("waiting 5 seconds until spinning up a new shard");
+        std::this_thread::sleep_for(std::chrono::seconds(5));
       }
     }
   }

@@ -11,13 +11,13 @@
 #include <string>
 
 
-int NyaBot::getPing(){
-  return shards.at(0).api.ping;
+int NyaBot::getPing(int sid){
+  return shards.at(sid).api.ping;
 }
 
 
-GatewayStates NyaBot::getCurrentState(){
-  return shards.at(0).api.state;
+GatewayStates NyaBot::getCurrentState(int sid){
+  return shards.at(sid).api.state;
 }
 
 

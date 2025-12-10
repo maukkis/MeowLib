@@ -230,18 +230,18 @@ public:
   ///
   /// @brief gets the current ping with the gateway in ms
   /// @returns integer that has the ping in ms
-  int getPing();
+  int getPing(int shardId = 0);
 
   ///
   /// @brief gets the current gateway state
   ///
-  GatewayStates getCurrentState();
+  GatewayStates getCurrentState(int shardId = 0);
 
   ///
   /// @brief changes the presence of the bot user the gateway connection must be on ready state for this to be called
   /// @param p presence object
   ///
-  void changePresence(const Presence& p);
+  void changePresence(const Presence& p, std::optional<std::string> guildId = std::nullopt);
 
   ///
   /// @brief sets the presence to be used when identifying
@@ -392,7 +392,6 @@ private:
   void threadListSync(nlohmann::json j);
   void threadMemberUpdate(nlohmann::json j);
   void threadMembersUpdate(nlohmann::json j);
-
   void inviteCreate(nlohmann::json j);
   void inviteDelete(nlohmann::json j);
 
@@ -403,6 +402,8 @@ private:
   static void signalHandler(int){
     a->stop = true;
   }
+
+  void globalSend(const std::string& payload);
   inline static NyaBot *a = nullptr;
   std::atomic<bool> stop;
   meowWs::Websocket handle;

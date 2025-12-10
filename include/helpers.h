@@ -60,4 +60,5 @@ std::string& lower(std::string& a);
 std::string attachmentToDataUri(const Attachment& a);
 std::string asciiToURLEncoded(const std::string_view a);
 std::string generate32ByteASCIINonce();
+int calculateShardId(const std::string& guildId, int numShards);
 #endif
