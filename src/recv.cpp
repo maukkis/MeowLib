@@ -9,28 +9,27 @@
 #include <stdio.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <thread>
 
 
 int NyaBot::getPing(){
-  return api.ping;
+  return shards.at(0).api.ping;
 }
 
 
 GatewayStates NyaBot::getCurrentState(){
-  return api.state;
+  return shards.at(0).api.state;
 }
 
 
 
-void NyaBot::listen(){
+void Shard::listen(){
   using namespace std::chrono_literals;
   auto sentHB = std::chrono::steady_clock::now();
   auto lastHB = std::chrono::steady_clock::now();
   srand(std::time(0));
   float random = ((float) rand()) / (float) RAND_MAX;
-  Log::info("starting to heartbeat with jitter of: " + std::to_string(random)); 
-  while (!stop){
+  Log::info("starting to heartbeat with jitter of: " + std::to_string(random) + " on shard: " + std::to_string(api.shardId)); 
+  while (!bot->stop){
     std::string buf;
     try {
       if(std::chrono::steady_clock::now() - lastHB >= 60s){
@@ -63,7 +62,7 @@ void NyaBot::listen(){
       }
       Log::dbg("received: " + std::to_string(frame.payloadLen) + " bytes");
       if(frame.opcode == meowWs::meowWS_CLOSE) {
-        if(stop) return;
+        if(bot->stop) return;
         Log::warn("connection closed");
         uint16_t arf;
         memcpy(&arf, buf.data(), 2);
@@ -89,7 +88,7 @@ void NyaBot::listen(){
             reconnect(false);
           break;
           default:
-            stop = true;
+            bot->stop = true;
             Log::error("something went horribly wrong");
             return;
         }
@@ -109,14 +108,8 @@ void NyaBot::listen(){
         break; 
         case Dispatch:
           {
-            std::string meow = meowJson["t"];
             api.sequence = meowJson["s"];
-            if(dispatchHandlers.contains(meow)){
-              std::thread{dispatchHandlers[meow], meowJson}.detach();
-            }
-            else {
-              Log::warn("unknown dispatch");
-            }
+            routeEvent(meowJson);
           }
         break;
         case InvalidSession:
@@ -133,7 +126,7 @@ void NyaBot::listen(){
     }
     catch(meowHttp::Exception &e){
       Log::error(e.what());
-      if(e.closed() && !stop){
+      if(e.closed() && !bot->stop){
         reconnect(true);
         // same thing here as in zombified connections we have to reset clocks to avoid a potential unnecessary reconnect
         sentHB = std::chrono::steady_clock::now();
@@ -145,5 +138,6 @@ void NyaBot::listen(){
       }
     }
   }
+  if(api.shardId == 0) bot->runCv.notify_all();
 }
 

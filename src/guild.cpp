@@ -38,7 +38,7 @@ MeowAsync<std::vector<User>> NyaBot::requestGuildMembers(const std::string_view 
   std::unique_lock<std::mutex> lock(guildMemberChunkmtx);
   guildMembersChunkTable[nonce] = GuildMemberRequestTask{};
   lock.unlock();
-  queue.addToQueue(j.dump());
+  shards.at(0).queue.addToQueue(j.dump());
   Log::dbg("request guild members sent off to the gateway");
   co_return co_await guildMembersChunkTable[nonce];
 }

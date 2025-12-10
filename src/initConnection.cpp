@@ -1,13 +1,13 @@
+#include <chrono>
 #include <exception>
 #include <expected>
 #include <meowHttp/websocket.h>
 #include <csignal>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
-#include <thread>
-#include "../include/eventCodes.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
+#include <thread>
 #if defined(__GNUC__)
 #include <cxxabi.h>
 #define demangle(x) abi::__cxa_demangle(x, nullptr, nullptr, nullptr)
@@ -18,10 +18,11 @@
 #define demangle(x) x
 #endif
 
-#ifndef OS
-#define OS "unknown"
-#endif
 
+
+void NyaBot::forceShardCount(int count){
+  api.numShards = count;
+}
 
 
 
@@ -45,37 +46,6 @@ NyaBot::NyaBot(int intents){
   });
 }
 
-meow NyaBot::reconnect(bool resume){
-  api.state = GatewayStates::UNAUTHENTICATED;
-  if(handle.wsClose(1012, "arf") != OK){
-    Log::dbg("woof?");
-  }
-
-  if(api.resumeUrl.find("wss") != std::string::npos)
-    api.resumeUrl.replace(0, 3, "https");
-
-  handle.setUrl(resume ? api.resumeUrl : api.defaultUrl);
-  if(!connect()){
-    Log::error("failed to connect to the gateway");
-    stop = true;
-    return meow::ERR_CONNECT_FAILED;
-  }
-  getHeartbeatInterval();
-  if(resume){
-    nlohmann::json j;
-    j["op"] = Resume;
-    j["d"]["token"] = api.token;
-    j["d"]["session_id"] = api.sesId;
-    j["d"]["seq"] = api.sequence;
-    if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0 ){
-      Log::dbg("sent resume!");
-      api.state = GatewayStates::RESUME_SENT;
-    }
-  } else {
-    sendIdent();
-  }
-  return OK;
-}
 
 void NyaBot::run(const std::string_view token){
   api.token = token;
@@ -94,23 +64,38 @@ void NyaBot::run(const std::string_view token){
                " milliseconds");
     return;
   }
-  api.defaultUrl = j["url"].get<std::string>().replace(0, 3, "https") + "/?v=10&encoding=json";
-  handle.setUrl(api.defaultUrl);
-  if(auto res = connect(); !res){
-    Log::error("we failed to connect to the gateway due to: " + std::to_string(res.error()));
-    return;
+  if(api.numShards == -1){
+    api.numShards = j["shards"];
   }
-  getHeartbeatInterval();
-  Log::dbg("interval is " + std::to_string(api.interval));
-  sendIdent();
-  listen();
+  int maxConc = j["session_start_limit"]["max_concurrency"];
+  Log::dbg("max conc: " + std::to_string(maxConc));
+  api.defaultUrl = j["url"].get<std::string>().replace(0, 3, "https") + "/?v=10&encoding=json";
+  Log::dbg("starting up " + std::to_string(api.numShards) + " shards");
+  shards.reserve(api.numShards);
+  if(api.numShards == 1){
+    shards.emplace_back(this, 0, true);
+  } else {
+    for(int i = 0; i < api.numShards; ++i){
+      shards.emplace_back(this, i);
+      //this is stupid rn but idc
+      while(shards.at(i).getState() != GatewayStates::READY){
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    }
+  }
+  std::unique_lock<std::mutex> lock(runMtx);
+  runCv.wait(lock, [this]{
+    return stop.load();
+  });
 }
 
 
 
 void NyaBot::close(){
   stop = true;
-  handle.wsClose(1000, "arff *tail wags*");
+  for(auto& shard : shards){
+    shard.close();
+  }
 }
 
 
@@ -121,64 +106,9 @@ NyaBot::~NyaBot(){
 }
 
 
-std::expected<std::nullopt_t, meow> NyaBot::connect(){
-  int timeToWait = 5;
-  meow mraow{};
-  for(int attempts = 0; attempts < retryAmount && !stop; ++attempts, timeToWait *= 2){
-    if(mraow = handle.perform(); mraow == OK){
-      Log::dbg("connected to the websocket succesfully!");
-      return std::nullopt;
-    }
-    else {
-      if(timeToWait > 300) timeToWait = 300;
-      Log::error("failed to connect to the gateway waiting " + std::to_string(timeToWait) + " seconds");
-      std::this_thread::sleep_for(std::chrono::seconds(timeToWait));
-    }
-  }
-  return std::unexpected(mraow);
-}
-
-void NyaBot::sendIdent(){
-  Log::dbg("sending ident");
-  nlohmann::json j;
-  j["op"] = Identify;
-  nlohmann::json d;
-  d["token"] = api.token;
-  d["intents"] = api.intents;
-  if(presence)
-    d["presence"] = serializePresence(*presence);
-  nlohmann::json p;
-  p["os"] = OS;
-  p["browser"] = "MeowLib";
-  p["device"] = "MeowLib";
-  d["properties"] = std::move(p);
-  j["d"] = std::move(d);
-  if (handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
-    Log::dbg("ident sent!");
-    api.state = GatewayStates::AUTHENTICATION_SENT;
-  }
-  else {
-    Log::error("something went wrong");
-  }
-}
 
 
-void NyaBot::getHeartbeatInterval(){
-  std::string buf;
-  // receive data from websocket
-  try{
-    meowWs::meowWsFrame frame;
-    handle.wsRecv(buf, &frame);
-    // initialize a json object with the data of buffer
-    auto meowJson = nlohmann::json::parse(buf);
-    // parse the data of heartbeat_interval into uint64_t and return it
-    api.interval = meowJson["d"]["heartbeat_interval"];
-  }
-  catch(nlohmann::json::exception& e){
-    Log::dbg("failed to parse buffer");
-    Log::dbg("buffer is " + buf);
-    std::exit(1);
-  }
 
-}
+
+
 

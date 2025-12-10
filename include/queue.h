@@ -7,6 +7,7 @@
 template<class T>
 class ThreadSafeQueue {
 public:
+  ThreadSafeQueue() = default;
   void addToQueue(const T& a){
     std::unique_lock<std::mutex> lock(mtx);
     arf.emplace(a);
@@ -19,6 +20,15 @@ public:
     T val = std::move(arf.front());
     arf.pop();
     return val;
+  }
+  ThreadSafeQueue(const ThreadSafeQueue& a){
+    std::unique_lock<std::mutex> lock(mtx);
+    arf = a.arf;
+  }
+  ThreadSafeQueue& operator=(const ThreadSafeQueue& a){
+    std::unique_lock<std::mutex> lock(mtx);
+    arf = a.arf;
+    return *this;
   }
 private:
   std::mutex mtx;

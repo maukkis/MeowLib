@@ -7,7 +7,7 @@
 
 
 void NyaBot::guildCreate(nlohmann::json j){
-  while(api.state != GatewayStates::READY)
+  while(shards.at(0).api.state != GatewayStates::READY)
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   Guild a(j["d"]);
   guild.cache.insertGuildRole(a.id, a.roles);
@@ -34,7 +34,7 @@ void NyaBot::guildUpdate(nlohmann::json j){
 }
 
 void NyaBot::guildDelete(nlohmann::json j){
-  while(api.state != GatewayStates::READY){
+  while(shards.at(0).api.state != GatewayStates::READY){
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   if(api.unavailableGuildIds.contains(j["d"]["id"])){
@@ -232,7 +232,7 @@ void NyaBot::rateLimited(nlohmann::json j){
       a["d"]["query"] = "";
       a["d"]["limit"] = 0;
       a["d"]["nonce"] = nonce;
-      queue.addToQueue(a.dump());
+      shards.at(0).queue.addToQueue(a.dump());
       break;
     }
     default: [[unlikely]]

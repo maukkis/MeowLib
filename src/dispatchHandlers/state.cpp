@@ -14,13 +14,15 @@ Ready::Ready(const nlohmann::json& j){
 void NyaBot::ready(nlohmann::json j){
   j = j["d"];
   Ready ready(j);
-  api.sesId = j["session_id"];
-  api.resumeUrl = j["resume_gateway_url"];
+  int shard = ready.shardId;
+
+  shards.at(shard).api.sesId = j["session_id"];
+  shards.at(shard).api.resumeUrl = j["resume_gateway_url"];
   user.cache.insert(ready.user.id, ready.user);
   user.cache.setCurrentUser(ready.user);
-  if(api.resumeUrl.back() != '/')
-    api.resumeUrl.append("/?v=10&encoding=json");
-  else api.resumeUrl.append("?v=10&encoding=json");
+  if(shards.at(shard).api.resumeUrl.back() != '/')
+    shards.at(shard).api.resumeUrl.append("/?v=10&encoding=json");
+  else shards.at(shard).api.resumeUrl.append("?v=10&encoding=json");
   std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx); 
   for(const auto& a : j["guilds"]){
     ready.guilds.emplace_back(UnavailableGuild{.id = a["id"], .unavailable = a["unavailable"]});
@@ -28,13 +30,12 @@ void NyaBot::ready(nlohmann::json j){
   }
   lock.unlock();
   api.appId = ready.user.id;
-  api.state = GatewayStates::READY;
-  if(funs.onReadyF)
+  shards.at(shard).api.state = GatewayStates::READY;
+  if(funs.onReadyF && shard == 0)
     funs.onReadyF(ready);
 }
 
 void NyaBot::resumed(nlohmann::json j){
-  api.state = GatewayStates::READY;
   Log::info("connection resumed with sequence " + std::to_string(j["s"].get<long>()));
 }
 

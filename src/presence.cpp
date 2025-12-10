@@ -31,7 +31,7 @@ void NyaBot::changePresence(const Presence& p){
   nlohmann::json j;
   j["op"] = eventCodes::PresenceUpdate;
   j["d"] = serializePresence(p);
-  queue.addToQueue(j.dump());
+  shards.at(0).queue.addToQueue(j.dump());
 }
 
 void NyaBot::setPresence(const Presence& p){

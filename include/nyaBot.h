@@ -1,5 +1,6 @@
 #ifndef nyaBot_H
 #define nyaBot_H
+#include <condition_variable>
 #include <meowHttp/enum.h>
 #include <meowHttp/websocket.h>
 #include "async.h"
@@ -7,6 +8,7 @@
 #include "channel.h"
 #include "emoji.h"
 #include "guild.h"
+#include "shard.h"
 #include "guildScheduledEvent.h"
 #include "invite.h"
 #include "message.h"
@@ -23,7 +25,6 @@
 #include <cstdint>
 #include <expected>
 #include <functional>
-#include <future>
 #include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include "error.h"
@@ -40,27 +41,14 @@
 #include "typingstart.h"
 #include "user.h"
 
-enum class GatewayStates {
-  UNAUTHENTICATED,
-  AUTHENTICATION_SENT,
-  RESUME_SENT,
-  READY,
-};
-
-
 struct ImportantApiStuff {
   std::string token;
-  uint64_t interval;
-  size_t sequence{0};
-  std::atomic<int> ping = -1;
-  std::atomic<GatewayStates> state = GatewayStates::UNAUTHENTICATED;
   std::mutex UnavailableGuildIdsmtx;
   std::unordered_set<std::string> unavailableGuildIds;
   std::string appId;
-  std::string sesId;
-  std::string resumeUrl;
   std::string defaultUrl;
   int intents = 0;
+  int numShards = -1;
 };
 
 struct Ready {
@@ -226,7 +214,8 @@ public:
     if(commands.contains(name))
       commands.erase(name);
   }
-
+  
+  void forceShardCount(int count);
 
   void enableDebugLogging(){
     Log::enabled = true;
@@ -348,10 +337,7 @@ public:
   ChannelApiRoutes channel{this};
   InviteApiRoutes invite{this};
 private:
-  void listen();
-  std::expected<std::nullopt_t, meow> connect();
-  void sendIdent();
-  void getHeartbeatInterval();
+
   void routeInteraction(ButtonInteraction& interaction);
   void routeInteraction(SelectInteraction& interaction);
   void routeInteraction(ModalInteraction& interaction);
@@ -414,7 +400,6 @@ private:
 
   void rateLimited(nlohmann::json j);
 
-  meow reconnect(bool resume);
   static void signalHandler(int){
     a->stop = true;
   }
@@ -474,12 +459,15 @@ private:
   std::unordered_map<std::string, GuildMemberRequestTask> guildMembersChunkTable;
   Funs funs;
   ImportantApiStuff api;
+  std::mutex runMtx;
+  std::condition_variable runCv;
+  std::vector<Shard> shards;
   InteractionCallbacks iCallbacks;
-  ThreadSafeQueue<std::string> queue;
   int retryAmount = 5;
   std::optional<Presence> presence = std::nullopt;
   std::vector<SlashCommand> slashs;
   friend RestClient;
   friend EmojiApiRoutes;
+  friend Shard;
 };
 #endif
