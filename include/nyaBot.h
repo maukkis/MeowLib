@@ -119,6 +119,8 @@ struct Funs {
   std::function<void(InviteDeleteEvent&)> onInviteDeleteF = {};
 
   std::function<void(TypingStart&)> onTypingStartF = {};
+
+  std::function<void(User&)> onUserUpdateF = {};
 };
 
 
@@ -306,6 +308,8 @@ public:
   void onInviteDelete(std::function<void(InviteDeleteEvent&)> f);
 
   void onTypingStart(std::function<void(TypingStart&)> f);
+
+  void onUserUpdate(std::function<void(User&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -398,6 +402,8 @@ private:
   void typingStart(nlohmann::json j);
 
   void rateLimited(nlohmann::json j);
+  
+  void userUpdate(nlohmann::json j);
 
   static void signalHandler(int){
     a->stop = true;
@@ -453,6 +459,7 @@ private:
     {"THREAD_MEMBERS_UPDATE", std::bind(&NyaBot::threadMembersUpdate, this, std::placeholders::_1)},
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
     {"RATE_LIMITED", std::bind(&NyaBot::rateLimited, this, std::placeholders::_1)},
+    {"USER_UPDATE", std::bind(&NyaBot::userUpdate, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;

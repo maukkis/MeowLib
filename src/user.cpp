@@ -9,6 +9,28 @@
 #include "../include/nyaBot.h"
 #include "../include/helpers.h"
 
+
+
+void UserCache::setCurrentUser(const User& u){
+  currentUser = u;
+}
+
+std::expected<User, Error> UserCache::getCurrentUser(){
+  if(!currentUser){
+    auto a = get("@me");
+    if(!a){
+      Log::error("failed to get current user?");
+      return a;
+    }
+    setCurrentUser(*a);
+    return a;
+  }
+  return *currentUser;
+}
+
+
+
+
 UserApiRoutes::UserApiRoutes(NyaBot *bot)
   : cache{"/users", &bot->rest}, bot{bot}{
 }

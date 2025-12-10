@@ -201,6 +201,9 @@ void NyaBot::onInviteDelete(std::function<void(InviteDeleteEvent&)> f){
   funs.onInviteDeleteF = f;
 }
 
+void NyaBot::onUserUpdate(std::function<void(User&)> f){
+  funs.onUserUpdateF = f;
+}
 
 void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
   funs.onTypingStartF = f;

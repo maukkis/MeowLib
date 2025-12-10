@@ -56,32 +56,16 @@ struct User {
 class UserCache : public GenericDiscordCache<User> {
 public:
   using GenericDiscordCache::GenericDiscordCache;
+
   ~UserCache(){
     Log::dbg("cache hits: " + std::to_string(hits) + " misses: " + std::to_string(misses));
   }
-  void setCurrentUser(const User& u){
-    if(!currentUser){
-      currentUser = CacheObject(u);
-    }
-    currentUser->object = u;
-    currentUser->made = hrclk::now();
-  }
-  
-  std::expected<User, Error> getCurrentUser(){
-    if(!currentUser || hrclk::now() - currentUser->made > ttl){
-      auto a = get("@me");
-      if(!a){
-        Log::error("failed to get current user?");
-        return a;
-      }
-      setCurrentUser(*a);
-      return a;
-    }
-    return currentUser->object;
-  }
 
+
+  void setCurrentUser(const User& u);
+  std::expected<User, Error> getCurrentUser();
 private:
-  std::optional<CacheObject<User>> currentUser;
+  std::optional<User> currentUser;
 };
 
 
