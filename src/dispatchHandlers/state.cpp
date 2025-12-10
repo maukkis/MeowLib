@@ -23,12 +23,13 @@ void NyaBot::ready(nlohmann::json j){
   if(shards.at(shard).api.resumeUrl.back() != '/')
     shards.at(shard).api.resumeUrl.append("/?v=10&encoding=json");
   else shards.at(shard).api.resumeUrl.append("?v=10&encoding=json");
-  std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx); 
-  for(const auto& a : j["guilds"]){
-    ready.guilds.emplace_back(UnavailableGuild{.id = a["id"], .unavailable = a["unavailable"]});
-    api.unavailableGuildIds.insert(a["id"]);
+  if(shard == 0){
+    std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
+    for(const auto& a : j["guilds"]){
+      ready.guilds.emplace_back(UnavailableGuild{.id = a["id"], .unavailable = a["unavailable"]});
+      api.unavailableGuildIds.insert(a["id"]);
+    }
   }
-  lock.unlock();
   api.appId = ready.user.id;
   shards.at(shard).api.state = GatewayStates::READY;
   if(funs.onReadyF && shard == 0)
