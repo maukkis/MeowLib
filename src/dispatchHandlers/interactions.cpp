@@ -19,8 +19,10 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
     if(!d["resolved"].contains("users")) return map;
     for(auto& a : d["resolved"]["users"])
       map[a["id"]] = User(a);
-    for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
-      map[it.key()].guild = GuildUser(d["resolved"]["members"][it.key()]);
+    if(d["resolved"].contains("members")){
+      for(auto it = d["resolved"]["members"].begin(); it != d["resolved"]["members"].end(); ++it){
+        map[it.key()].guild = GuildUser(d["resolved"]["members"][it.key()]);
+      }
     }
     return map;
   }
