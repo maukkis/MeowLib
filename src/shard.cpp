@@ -33,6 +33,11 @@ GatewayStates Shard::getState(){
   return api.state;
 }
 
+
+int NyaBot::getNumShards(){
+  return api.numShards;
+}
+
 void Shard::routeEvent(const nlohmann::json& j){
   std::string meow = j["t"];
   if(meow == "RESUMED"){

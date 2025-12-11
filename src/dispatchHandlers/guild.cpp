@@ -4,12 +4,14 @@
 #include <thread>
 #include "../../include/eventCodes.h"
 #include "../../include/guild.h"
+#include "../../include/helpers.h"
 
 
 void NyaBot::guildCreate(nlohmann::json j){
-  while(shards.at(0).api.state != GatewayStates::READY)
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   Guild a(j["d"]);
+  int shard = calculateShardId(a.id, api.numShards);
+  while(shards.at(shard).api.state != GatewayStates::READY)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   guild.cache.insertGuildRole(a.id, a.roles);
   guild.cache.insert(a.id, a);
   if(api.unavailableGuildIds.contains(j["d"]["id"])){
@@ -34,16 +36,18 @@ void NyaBot::guildUpdate(nlohmann::json j){
 }
 
 void NyaBot::guildDelete(nlohmann::json j){
-  while(shards.at(0).api.state != GatewayStates::READY){
+
+  UnavailableGuild a = deserializeUnavailableGuild(j["d"]);
+  int shard = calculateShardId(a.id, api.numShards);
+  while(shards.at(shard).api.state != GatewayStates::READY){
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  if(api.unavailableGuildIds.contains(j["d"]["id"])){
+  if(api.unavailableGuildIds.contains(a.id)){
     std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
-    api.unavailableGuildIds.erase(j["d"]["id"]);
+    api.unavailableGuildIds.erase(a.id);
     return;
   }
   if(funs.onGuildDeleteF){
-    UnavailableGuild a = deserializeUnavailableGuild(j["d"]);
     funs.onGuildDeleteF(a);
   }
 }

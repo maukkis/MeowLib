@@ -57,7 +57,8 @@ struct Ready {
   User user;
   std::vector<UnavailableGuild> guilds;
   int shardId{};
-  int numShards{};
+  //this should be 1 because number of shards cannot be below 1
+  int numShards = 1;
 };
 
 
@@ -238,7 +239,10 @@ public:
   /// @brief gets the current gateway state
   ///
   GatewayStates getCurrentState(int shardId = 0);
-
+  ///
+  /// @brief gets the number of shards
+  ///
+  int getNumShards();
   ///
   /// @brief changes the presence of the bot user the gateway connection must be on ready state for this to be called
   /// @param p presence object

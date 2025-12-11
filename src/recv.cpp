@@ -6,7 +6,6 @@
 #include "../include/nyaBot.h"
 #include "../include/eventCodes.h"
 #include "../include/queue.h"
-#include <stdio.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -17,7 +16,7 @@ int NyaBot::getPing(int sid){
 
 
 GatewayStates NyaBot::getCurrentState(int sid){
-  return shards.at(sid).api.state;
+  return shards.at(sid).getState();
 }
 
 
@@ -65,7 +64,7 @@ void Shard::listen(){
         if(bot->stop) return;
         Log::warn("connection closed");
         uint16_t arf;
-        memcpy(&arf, buf.data(), 2);
+        std::memcpy(&arf, buf.data(), 2);
         arf = ntohs(arf);
         Log::dbg("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));

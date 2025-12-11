@@ -10,6 +10,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(Threads REQUIRED)
 find_package(meowHttp REQUIRED)
 set(CMAKE_CXX_STANDARD 23)
+set(srcdir "${PROJECT_SOURCE_DIR}/src")
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -26,7 +27,7 @@ else()
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror -DNDEBUG")
 endif()
 
-file(GLOB_RECURSE MeowLib_src "src/*.cpp")
+file(GLOB MeowLib_src "${srcdir}/*.cpp" "${srcdir}/dispatchHandlers/*.cpp" "${srcdir}/componentsv2/*.cpp")
 add_library(MeowLib ${MeowLib_src})
 
 # discord requires us to specify what os we use
