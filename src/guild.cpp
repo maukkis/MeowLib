@@ -570,3 +570,17 @@ std::expected<std::string, Error> GuildApiRoutes::getReq(const std::string& endp
   }
   return res->first;
 }
+
+
+std::expected<std::unordered_map<std::string, int>, Error>
+GuildApiRoutes::getRoleMemberCounts(const std::string_view guildId){
+  return getReq(std::format(APIURL "/guilds/{}/roles/member-counts", guildId))
+  .transform([](std::string a){
+    auto j = nlohmann::json::parse(a);
+    std::unordered_map<std::string, int> map;
+    for(const auto& a : j.items()){
+      map.insert({a.key(), a.value().get<int>()});
+    }
+    return map;
+  });
+}

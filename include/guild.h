@@ -197,6 +197,8 @@ public:
   std::expected<std::nullopt_t, Error> deleteScheduledEvent(const std::string_view guildId,
                                                           const std::string_view schedId);
 
+  std::expected<std::unordered_map<std::string, int>, Error> getRoleMemberCounts(const std::string_view guildId);
+
 
 GuildCache cache;
 private:
