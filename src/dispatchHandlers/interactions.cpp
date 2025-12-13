@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <type_traits>
 
 
 namespace {
@@ -35,25 +36,68 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
     }
     return map;
   }
+  else if constexpr(std::is_same_v<T, Message>){
+    std::unordered_map<std::string, Message> map;
+    if(!d["resolved"].contains("messages")) return map;
+    for(const auto& a : d["resolved"]["messages"].items()){
+      Message b(a.value());
+      map.insert({a.key(), std::move(b)});
+    }
+    return map;
+  }
+}
+
+template<typename T>
+concept isInteraction = std::is_base_of_v<Interaction, T>;
+
+template<isInteraction T>
+T deserializeInteraction(nlohmann::json& j, NyaBot *a){
+  const std::string id = j["id"];
+  const std::string interactionToken = j["token"];
+  User user;
+  if(j.contains("member")){
+    user = User(j["member"]["user"]);
+    user.guild = GuildUser(j["member"]);
+    a->guild.cache.insertGuildUser(j["guild_id"], user);
+  } 
+  else user = User(j["user"]);
+    a->user.cache.insert(user.id, user); 
+
+  std::string name;
+
+  if constexpr(std::is_same_v<T, SlashCommandInteraction> || std::is_same_v<T, ContextMenuInteraction>)
+    name = j["data"]["name"];
+  else
+    name = j["data"]["custom_id"];
+
+  if constexpr(std::is_base_of_v<ComponentInteraction, T>){
+    T interaction(id, interactionToken, name, user, j["application_id"], a, j["message"]);
+    interaction.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
+    if(j.contains("guild_id"))
+      interaction.guildId = j["guild_id"];
+
+    if(j.contains("channel_id")) 
+      interaction.channelId = j["channel_id"];
+
+    return interaction;
+  }
+
+  else {
+    T interaction(id, interactionToken, name, user, j["application_id"], a);
+    interaction.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
+    if(j.contains("guild_id"))
+      interaction.guildId = j["guild_id"];
+
+    if(j.contains("channel_id")) 
+      interaction.channelId = j["channel_id"];
+
+    return interaction;
+  }
 }
 
 
-SlashCommandInteraction constructSlash(nlohmann::json& json, const std::string& appId, NyaBot *a){
-  const std::string id = json["id"];
-  const std::string interactionToken = json["token"];
-  User user;
-  if(json.contains("member")){
-    user = User(json["member"]["user"]);
-    user.guild = GuildUser(json["member"]);
-    a->guild.cache.insertGuildUser(json["guild_id"], user);
-  } else user = User(json["user"]);
-  a->user.cache.insert(user.id, user); 
-  const std::string commandName = json["data"]["name"];
-  SlashCommandInteraction slash(id, interactionToken, commandName, user, appId, a);
-
-  slash.appPermissions = std::stoull(json["app_permissions"].get<std::string>(), nullptr, 10);
-  if(json.contains("guild_id"))
-    slash.guildId = json["guild_id"];
+SlashCommandInteraction constructSlash(nlohmann::json& json, NyaBot *a){
+  auto slash = deserializeInteraction<SlashCommandInteraction>(json, a);
   slash.resolvedUsers = deserializeResolved<User>(json["data"]);
   slash.resolvedAttachments = deserializeResolved<ResolvedAttachment>(json["data"]);
   if(json["data"].contains("options")){
@@ -66,49 +110,13 @@ SlashCommandInteraction constructSlash(nlohmann::json& json, const std::string& 
 
 
 ButtonInteraction constructButton(nlohmann::json& j, NyaBot *a){
-  const std::string& id = j["id"];
-  const std::string& interactionToken = j["token"];
-  std::string userId;
-  User user;
-  if(j.contains("member")){
-    user = User(j["member"]["user"]);
-    user.guild = GuildUser(j["member"]);
-    a->guild.cache.insertGuildUser(j["guild_id"], user);
-  } else user = User(j["user"]);
-
-  a->user.cache.insert(user.id, user); 
-  const std::string& name = j["data"]["custom_id"];
-  ButtonInteraction button(id, interactionToken, name, user, j["application_id"], a, j["message"]);
-
-  button.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
-
-  if(j.contains("guild_id"))
-    button.guildId = j["guild_id"];
-  
+  auto button = deserializeInteraction<ButtonInteraction>(j, a);
   button.id = j["data"]["id"].get<int>();
   return button;
 }
 
 ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
-  const std::string& id = j["id"];
-  const std::string& interactionToken = j["token"];
-  std::string userId; 
-  User user;
-  if(j.contains("member")){
-    user = User(j["member"]["user"]);
-    user.guild = GuildUser(j["member"]);
-    a->guild.cache.insertGuildUser(j["guild_id"], user);
-  } else user = User(j["user"]);
-
-  a->user.cache.insert(user.id, user); 
-  const std::string& name = j["data"]["custom_id"];
-  ModalInteraction modal(id, interactionToken, name, user, j["application_id"], a);
-
-  modal.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
-
-  if(j.contains("guild_id"))
-    modal.guildId = j["guild_id"];
-
+  auto modal = deserializeInteraction<ModalInteraction>(j, a);
   modal.resolvedUsers = deserializeResolved<User>(j["data"]);
   modal.resolvedAttachments = deserializeResolved<ResolvedAttachment>(j["data"]);
   for(auto& a : j["data"]["components"]){
@@ -147,21 +155,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
 
 
 SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
-  const std::string& id = j["id"];
-  const std::string& token = j["token"];
-  User user;
-  if(j.contains("member")){
-    user = User(j["member"]["user"]);
-    user.guild = GuildUser(j["member"]);
-    a->guild.cache.insertGuildUser(j["guild_id"], user);
-  } else user = User(j["user"]);
-  a->user.cache.insert(user.id, user); 
-  const std::string& name = j["data"]["custom_id"];
-  SelectInteraction select(id, token, name, user, j["application_id"], a, j["message"]);
-
-  select.appPermissions = std::stoull(j["app_permissions"].get<std::string>(), nullptr, 10);
-  if(j.contains("guild_id"))
-    select.guildId = j["guild_id"];
+  auto select = deserializeInteraction<SelectInteraction>(j, a);
   select.resolvedUsers = deserializeResolved<User>(j["data"]);
   select.type = j["data"]["component_type"];
   for(const auto& a : j["data"]["values"]){
@@ -169,6 +163,16 @@ SelectInteraction constructSelect(nlohmann::json& j, NyaBot *a){
   }
   return select;
 }
+
+ContextMenuInteraction constructCtxMenuInteraction(nlohmann::json& j, NyaBot *a){
+  auto interaction = deserializeInteraction<ContextMenuInteraction>(j, a);
+  interaction.type = j["data"]["type"];
+  interaction.targetId = j["data"]["target_id"];
+  interaction.resolvedUsers = deserializeResolved<User>(j["data"]);
+  interaction.resolvedMessages = deserializeResolved<Message>(j["data"]);
+  return interaction;
+}
+
 
 }
 
@@ -181,13 +185,19 @@ void NyaBot::interaction(nlohmann::json j){
   switch(type){
     case APPLICATION_COMMAND:
       {
-        auto slash = constructSlash(j, api.appId, this);
-        if(commands.contains(slash.commandName)){
-          commands[slash.commandName]->onCommand(slash);
-        }
-        else if(funs.onSlashF) { // command doesnt have a command handler sending it to the default handler
+        if(j["data"]["type"] == 1){
+          auto slash = constructSlash(j, this);
+          if(commands.contains(slash.commandName)){
+            commands[slash.commandName]->onCommand(slash);
+          }
+          else if(funs.onSlashF) { // command doesnt have a command handler sending it to the default handler
 
-          funs.onSlashF(slash);
+            funs.onSlashF(slash);
+          }
+          
+        } else {
+          auto ctxmenu = constructCtxMenuInteraction(j, this);
+          routeInteraction(ctxmenu);
         }
         break;
       }

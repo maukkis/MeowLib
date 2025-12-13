@@ -6,6 +6,7 @@
 #include "async.h"
 #include "buttonInteraction.h"
 #include "channel.h"
+#include "contextMenuCommand.h"
 #include "emoji.h"
 #include "guild.h"
 #include "shard.h"
@@ -13,6 +14,7 @@
 #include "invite.h"
 #include "message.h"
 #include "modalInteraction.h"
+#include "contextMenuInteraction.h"
 #include "poll.h"
 #include "queue.h"
 #include "restclient.h"
@@ -75,6 +77,7 @@ struct Funs {
   std::function<void(ButtonInteraction&)> onButtonF = {};
   std::function<void(SelectInteraction&)> onSelectF = {};
   std::function<void(ModalInteraction&)> onModalF = {};
+  std::function<void(ContextMenuInteraction&)> onContextMenuF = {};
 
 
   std::function<void(Message&)> onMessageCreateF = {};
@@ -141,6 +144,7 @@ struct InteractionCallbacks {
   std::unordered_map<std::string, std::function<void(ButtonInteraction&)>> buttonInteractionTable;
   std::unordered_map<std::string, std::function<void(SelectInteraction&)>> selectInteractionTable;
   std::unordered_map<std::string, std::function<void(ModalInteraction&)>> modalInteractionTable;
+  std::unordered_map<std::string, std::function<void(ContextMenuInteraction&)>> contextMenuInteractionTable;
 };
 
 namespace Intents{
@@ -198,6 +202,7 @@ public:
   void addSlash(SlashCommand& slash);
   void addSlash(SlashCommand&& slash);
   void removeSlash(const std::string_view name);
+  void addContextMenuCommand(const ContextMenuCommand& cmd);
   ///
   /// @brief Registers a command handler with the library.
   /// @param commandName commands custom_id to handle
@@ -314,6 +319,7 @@ public:
   void onTypingStart(std::function<void(TypingStart&)> f);
 
   void onUserUpdate(std::function<void(User&)> f);
+  void onContextMenuCommand(std::function<void(ContextMenuInteraction&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
   /// @param s interaction's custom_id
@@ -326,8 +332,12 @@ public:
   void addInteractionCallback(const std::string_view s, std::function<void(SelectInteraction&)> f);
   
   void addInteractionCallback(const std::string_view s, std::function<void(ModalInteraction&)> f);
+
+  void addInteractionCallback(const std::string_view s, std::function<void(ContextMenuInteraction&)> f);
+  [[deprecated("use syncApplicationCommands")]]
   std::expected<std::nullopt_t, Error> syncSlashCommands();
 
+  std::expected<std::nullopt_t, Error> syncApplicationCommands();
   /// @brief request guild members from a guild from the gw
   /// @param guildId guild to request from
   /// @param query what the username has to start with leave as "" for all
@@ -349,6 +359,7 @@ private:
   void routeInteraction(ButtonInteraction& interaction);
   void routeInteraction(SelectInteraction& interaction);
   void routeInteraction(ModalInteraction& interaction);
+  void routeInteraction(ContextMenuInteraction& interaction);
 
 
   void autoModerationRuleCreate(nlohmann::json j);
@@ -478,6 +489,7 @@ private:
   int retryAmount = 5;
   std::optional<Presence> presence = std::nullopt;
   std::vector<SlashCommand> slashs;
+  std::vector<ContextMenuCommand> ctxMenuCommands;
   friend RestClient;
   friend EmojiApiRoutes;
   friend Shard;

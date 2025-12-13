@@ -6,7 +6,7 @@
 
 class ComponentInteraction : public Interaction {
 public:
-
+  
   ComponentInteraction(const std::string_view id,
               const std::string_view token,
               const std::string_view commandName,

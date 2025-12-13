@@ -48,45 +48,60 @@ void NyaBot::removeSlash(const std::string_view name){
   return;
 }
 
+nlohmann::json SlashCommandParameter::generate() const {
+  nlohmann::json p;
+  p["name"] = name;
+  p["description"] = desc;
+  p["type"] = type;
+  p["required"] = required;
+  p["choices"] = nlohmann::json::array();
+  for(const auto& choice : choices){
+    nlohmann::json c;
+    c["name"] = choice;
+    c["value"] = choice;
+    p["choices"].emplace_back(c);
+  }
+  return p;
+}
+
+
+nlohmann::json SlashCommand::generate() const {
+  nlohmann::json j;
+  j["name"] = name;
+  j["type"] = 1;
+  j["description"] = desc;
+  if(types == IntegrationTypes::BOTH){
+    j["integration_types"] = {0,1};
+    j["contexts"] = {0,1,2};
+  } else {
+    j["integration_types"] = {types};
+    if(types == IntegrationTypes::USER_INSTALL){
+      j["contexts"] = {2};
+    }
+    else{
+      j["contexts"] = {0};
+    }
+  }
+  j["options"] = nlohmann::json::array();
+  for(const auto& param : params){
+    j["options"].emplace_back(param.generate());
+  }
+  return j;
+}
+
 std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
+  return syncApplicationCommands();
+}
+
+std::expected<std::nullopt_t, Error> NyaBot::syncApplicationCommands(){
   nlohmann::json json;
   json = nlohmann::json::array();
   for(const auto& it : slashs){
-    nlohmann::json a;
-    a["name"] = it.name;
-    a["type"] = 1;
-    a["description"] = it.desc;
-    if(it.types == IntegrationTypes::BOTH){
-      a["integration_types"] = {0,1};
-      a["contexts"] = {0,1,2};
-    } else {
-      a["integration_types"] = {it.types};
-      if(it.types == IntegrationTypes::USER_INSTALL){
-        a["contexts"] = {2};
-      }
-      else{
-        a["contexts"] = {0};
-      }
-    }
-    a["options"] = nlohmann::json::array();
-    for(const auto& opt : it.params){
-      nlohmann::json p;
-      p["name"] = opt.name;
-      p["description"] = opt.desc;
-      p["type"] = opt.type;
-      p["required"] = opt.required;
-      p["choices"] = nlohmann::json::array();
-      for(const auto& choice : opt.choices){
-        nlohmann::json c;
-        c["name"] = choice;
-        c["value"] = choice;
-        p["choices"].emplace_back(c);
-      }
-      a["options"].emplace_back(p);
-    }
-    json.emplace_back(a);
+    json.emplace_back(it.generate());
   }
-  std::string write;
+  for(const auto& it : ctxMenuCommands){
+    json.emplace_back(it.generate());
+  }
   auto meow = rest.put(std::format(APIURL "/applications/{}/commands",
                                    api.appId),
                        json.dump());

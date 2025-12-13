@@ -23,6 +23,13 @@ void NyaBot::routeInteraction(ModalInteraction& interaction){
     funs.onModalF(interaction);
 }
 
+void NyaBot::routeInteraction(ContextMenuInteraction& interaction){
+  if(iCallbacks.contextMenuInteractionTable.contains(interaction.commandName))
+    iCallbacks.contextMenuInteractionTable[interaction.commandName](interaction);
+  else if(funs.onContextMenuF)
+    funs.onContextMenuF(interaction);
+}
+
 void NyaBot::addInteractionCallback(const std::string_view s,
                                     std::function<void(ButtonInteraction&)> f){
   iCallbacks.buttonInteractionTable.insert({std::string(s), f});
@@ -39,3 +46,8 @@ void NyaBot::addInteractionCallback(const std::string_view s,
   iCallbacks.modalInteractionTable.insert({std::string(s), f});
 }
 
+
+void NyaBot::addInteractionCallback(const std::string_view s,
+                                    std::function<void(ContextMenuInteraction&)> f){
+  iCallbacks.contextMenuInteractionTable.insert({std::string(s), f});
+}

@@ -23,6 +23,7 @@ class SlashCommandParameter{
 public:
   SlashCommandParameter(const std::string_view name, const std::string_view desc, Types type, bool required);
   SlashCommandParameter& addChoice(const std::string_view choice);
+  nlohmann::json generate() const;
   const std::string name;
   const std::string desc;
   const int type;
@@ -43,6 +44,7 @@ public:
     handler = std::make_unique<T>(std::forward<Args>(args)...);
     return *this;
   }
+  nlohmann::json generate() const;
   std::string name;
   std::string desc;
   std::vector<SlashCommandParameter> params;

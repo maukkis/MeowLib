@@ -85,6 +85,7 @@ public:
   const std::string commandName;
   const User user;
   std::optional<std::string> guildId;
+  std::optional<std::string> channelId;
   NyaBot *bot;
   const std::string interactionId;
   uint64_t appPermissions;
