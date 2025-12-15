@@ -1,0 +1,78 @@
+#include "../../include/nyaBot.h"
+#include "../../include/voice/voiceconnection.h"
+#include "../../include/eventCodes.h"
+#include <exception>
+#include <meowHttp/websocket.h>
+#include <unistd.h>
+
+VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {}
+
+VoiceConnection::~VoiceConnection(){
+  api.stop = true;
+  if(th.joinable())
+    th.join();
+  close();
+}
+
+MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
+  if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
+    Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
+    co_return;
+  }
+  auto info = co_await getConnectInfo(std::string(guildId), channelId);
+  handle.setUrl("https://" + info.endpoint + "/?v=8");
+  if(handle.perform() != OK){
+    Log::dbg("failed to connect");
+    co_return;
+  }
+  getHello();
+  sendIdentify(info);
+  th = std::thread(&VoiceConnection::listen, this);
+}
+
+void VoiceConnection::close(){
+  handle.wsClose(1000, "bye :3");
+  ::close(uSockfd);
+}
+
+void VoiceConnection::sendIdentify(const VoiceInfo& info){
+  nlohmann::json j;
+  j["op"] = VoiceOpcodes::IDENTIFY;
+  nlohmann::json e;
+  e["server_id"] = info.guildId;
+  e["user_id"] = bot->api.appId;
+  e["session_id"] = info.sessionId;
+  e["token"] = info.token;
+  j["d"] = e;
+  handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
+}
+
+
+VoiceTask& VoiceConnection::getConnectInfo(const std::string& guildId, const std::string_view channelId){
+  nlohmann::json j;
+  j["op"] = VoiceStateUpdate;
+  nlohmann::json d;
+  d["guild_id"] = guildId;
+  d["channel_id"] = channelId;
+  d["self_mute"] = false;
+  d["self_deaf"] = false;
+  j["d"] = d;
+  int shard = calculateShardId(guildId, bot->getNumShards());
+  bot->voiceTaskList[guildId] = VoiceTask{};
+  bot->shards.at(shard).queue.addToQueue(j.dump());
+  return bot->voiceTaskList[guildId];
+}
+
+void VoiceConnection::getHello(){
+  meowWs::meowWsFrame frame;
+  std::string data;
+  size_t rlen = handle.wsRecv(data, &frame);
+  if(rlen <= 0){
+    std::terminate();
+  }
+  auto j = nlohmann::json::parse(data);
+  Log::dbg(j.dump());
+  api.heartbeatInterval = j["d"]["heartbeat_interval"];
+}
+
+

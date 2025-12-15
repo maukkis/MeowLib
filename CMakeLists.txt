@@ -27,7 +27,7 @@ else()
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror -DNDEBUG")
 endif()
 
-file(GLOB MeowLib_src "${srcdir}/*.cpp" "${srcdir}/dispatchHandlers/*.cpp" "${srcdir}/componentsv2/*.cpp")
+file(GLOB MeowLib_src "${srcdir}/*.cpp" "${srcdir}/dispatchHandlers/*.cpp" "${srcdir}/componentsv2/*.cpp" "${srcdir}/voice/*.cpp")
 add_library(MeowLib ${MeowLib_src})
 
 # discord requires us to specify what os we use

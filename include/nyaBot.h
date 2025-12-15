@@ -43,6 +43,11 @@
 #include "typingstart.h"
 #include "user.h"
 
+
+// REMOVE THIS YOU IDIOT
+#include "voice/voiceconnection.h"
+//
+
 struct ImportantApiStuff {
   std::string token;
   std::mutex UnavailableGuildIdsmtx;
@@ -179,7 +184,7 @@ concept HasOnCommandImplemented = !std::is_same_v<decltype(&Command::onCommand),
 template<typename T>
 concept CommandHandler = std::is_base_of_v<Command, T> && HasOnCommandImplemented<T>;
 
-
+struct VoiceTask;
 
 
 class NyaBot {
@@ -420,6 +425,9 @@ private:
   
   void userUpdate(nlohmann::json j);
 
+  void voiceServerUpdate(nlohmann::json j);
+  void voiceStateUpdate(nlohmann::json j);
+
   static void signalHandler(int){
     a->stop = true;
   }
@@ -475,6 +483,8 @@ private:
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
     {"RATE_LIMITED", std::bind(&NyaBot::rateLimited, this, std::placeholders::_1)},
     {"USER_UPDATE", std::bind(&NyaBot::userUpdate, this, std::placeholders::_1)},
+    {"VOICE_SERVER_UPDATE", std::bind(&NyaBot::voiceServerUpdate, this, std::placeholders::_1)},
+    {"VOICE_STATE_UPDATE", std::bind(&NyaBot::voiceStateUpdate, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
@@ -490,8 +500,10 @@ private:
   std::optional<Presence> presence = std::nullopt;
   std::vector<SlashCommand> slashs;
   std::vector<ContextMenuCommand> ctxMenuCommands;
+  std::unordered_map<std::string, VoiceTask> voiceTaskList;
   friend RestClient;
   friend EmojiApiRoutes;
   friend Shard;
+  friend class VoiceConnection;
 };
 #endif
