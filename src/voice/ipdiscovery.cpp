@@ -12,7 +12,7 @@
 
 namespace {
 
-enum IpDiscoveryCodes : uint8_t {
+enum IpDiscoveryCodes : uint16_t {
   SEND = 0x1,
   RECV = 0x2,
 };
@@ -27,14 +27,14 @@ constexpr uint8_t ssrcStart = 4;
 
 
 
-IpDiscovery parseIpDiscovery(char *buf){
+std::optional<IpDiscovery> parseIpDiscovery(char *buf){
   uint16_t type;
   std::memcpy(&type, &buf[typeStart], sizeof(type));
   type = ntohs(type);
   if(type != IpDiscoveryCodes::RECV){
     //make this optionally return an error
     Log::error("something went horribly wrong when doing ip discovery");
-    return {};
+    return std::nullopt;
   }
   IpDiscovery a;
   for(size_t i = 0; i < ipLen; ++i){
@@ -76,6 +76,7 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
     Log::error("nothing got sent for ip discovery *bites*");
     return std::unexpected(std::nullopt);
   }
+
   Log::dbg("sent " + std::to_string(slen) + " bytes");
   char buff[bufSize];
   size_t rlen = recv(uSockfd, buff, sizeof(buff), 0);
@@ -87,7 +88,8 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
 
   Log::dbg("received: " + std::to_string(rlen) + " bytes");
   auto ip = parseIpDiscovery(buff);
-  Log::dbg("ip: " + ip.ip);
-  Log::dbg("port: " + std::to_string(ip.port));
-  return ip;
+  if(!ip) return std::unexpected(std::nullopt);
+  Log::dbg("ip: " + ip->ip);
+  Log::dbg("port: " + std::to_string(ip->port));
+  return *ip;
 }

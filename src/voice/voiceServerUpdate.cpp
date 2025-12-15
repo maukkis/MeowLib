@@ -10,7 +10,7 @@ void setSessionId(std::unordered_map<std::string, VoiceTask>& arf, const nlohman
   auto& task = arf.at(j["d"]["guild_id"]);
   std::unique_lock<std::mutex> lock(task.mtx);
   task.info.sessionId = j["d"]["session_id"];
-  Log::dbg("woof!!");
+  lock.unlock();
   if(task.await_ready()) task.hp.resume();
 }
 
@@ -25,6 +25,6 @@ void NyaBot::voiceServerUpdate(nlohmann::json j){
   task.info.token = j["d"]["token"];
   task.info.endpoint = j["d"]["endpoint"];
   task.info.guildId = j["d"]["guild_id"];
-  Log::dbg("bark!!");
+  lock.unlock();
   if(task.await_ready()) task.hp.resume();
 }

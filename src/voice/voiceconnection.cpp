@@ -3,6 +3,7 @@
 #include "../../include/eventCodes.h"
 #include <exception>
 #include <meowHttp/websocket.h>
+#include <mutex>
 #include <unistd.h>
 
 VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {}
@@ -15,6 +16,7 @@ VoiceConnection::~VoiceConnection(){
 }
 
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
+  api.guildId = guildId;
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
     co_return;
@@ -30,9 +32,28 @@ MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const s
   th = std::thread(&VoiceConnection::listen, this);
 }
 
+void VoiceConnection::disconnect(){
+  close();
+}
+
 void VoiceConnection::close(){
+  if(bot->voiceTaskList.contains(api.guildId)){
+    std::unique_lock lock(bot->voiceTaskmtx);
+    bot->voiceTaskList.erase(api.guildId);
+  }
   handle.wsClose(1000, "bye :3");
   ::close(uSockfd);
+  nlohmann::json j;
+  j["op"] = VoiceStateUpdate;
+  nlohmann::json d;
+  d["guild_id"] = api.guildId;
+  d["channel_id"] = nullptr;
+  d["self_mute"] = false;
+  d["self_deaf"] = true;
+  j["d"] = d;
+  int shard = calculateShardId(api.guildId, bot->getNumShards());
+  bot->shards.at(shard).queue.addToQueue(j.dump());
+
 }
 
 void VoiceConnection::sendIdentify(const VoiceInfo& info){
@@ -55,10 +76,12 @@ VoiceTask& VoiceConnection::getConnectInfo(const std::string& guildId, const std
   d["guild_id"] = guildId;
   d["channel_id"] = channelId;
   d["self_mute"] = false;
-  d["self_deaf"] = false;
+  d["self_deaf"] = true;
   j["d"] = d;
   int shard = calculateShardId(guildId, bot->getNumShards());
+  std::unique_lock lock(bot->voiceTaskmtx);
   bot->voiceTaskList[guildId] = VoiceTask{};
+  lock.unlock();
   bot->shards.at(shard).queue.addToQueue(j.dump());
   return bot->voiceTaskList[guildId];
 }

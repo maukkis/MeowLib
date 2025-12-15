@@ -70,7 +70,9 @@ public:
     }
     std::suspend_never initial_suspend() noexcept { return {}; }
     std::suspend_always final_suspend() noexcept { return {}; }
-    void return_void() noexcept {}
+    void return_void() noexcept {
+      cv.notify_one();
+    }
 
     void unhandled_exception() {
       std::terminate();

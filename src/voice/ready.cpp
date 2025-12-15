@@ -24,6 +24,18 @@ std::string cipherToStr(Ciphers cipher){
 }
 
 
+
+void VoiceConnection::handleSessionDescription(const nlohmann::json& j){
+  if(j["d"]["mode"] != cipherToStr(api.cipher)){
+    Log::error("invalid cipher from voice gw");
+    api.stop = true;
+    return;
+  }
+  Log::dbg("session description valid");
+  api.secretKey = j["d"]["secret_key"];
+}
+
+
 void VoiceConnection::sendSelectProtocol(const IpDiscovery& i){
   nlohmann::json j;
   j["op"] = VoiceOpcodes::SELECT_PROTOCOL;
@@ -39,6 +51,7 @@ void VoiceConnection::sendSelectProtocol(const IpDiscovery& i){
 
 void VoiceConnection::handleReady(const nlohmann::json& j){
   VoiceReady r(j["d"]);
+  api.ssrc = r.ssrc;
   bool contains = false;
   for(const auto& c : r.modes){
     if(c == "aead_aes256_gcm_rtpsize"){
