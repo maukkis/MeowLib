@@ -20,6 +20,7 @@ std::string cipherToStr(Ciphers cipher){
       return "aead_xchacha20_poly1305_rtpsize";
     break;
   }
+  return "";
 }
 }
 
@@ -29,6 +30,7 @@ void VoiceConnection::handleSessionDescription(const nlohmann::json& j){
   if(j["d"]["mode"] != cipherToStr(api.cipher)){
     Log::error("invalid cipher from voice gw");
     api.stop = true;
+    close();
     return;
   }
   Log::dbg("session description valid");

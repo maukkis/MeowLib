@@ -37,6 +37,9 @@ void VoiceConnection::disconnect(){
 }
 
 void VoiceConnection::close(){
+  // we should... actually stop and join the thread
+  api.stop = true;
+  if(th.joinable()) th.join();
   if(bot->voiceTaskList.contains(api.guildId)){
     std::unique_lock lock(bot->voiceTaskmtx);
     bot->voiceTaskList.erase(api.guildId);

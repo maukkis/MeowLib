@@ -5,13 +5,13 @@
 #include <array>
 #include <cstdint>
 #include <meowHttp/websocket.h>
-#include <openssl/evp.h>
 #include <string_view>
 #include "../async.h"
 #include <expected>
 #include <coroutine>
 #include <nlohmann/json.hpp>
 #include "../queue.h"
+#include "../voice.h"
 
 
 
@@ -28,34 +28,12 @@ enum VoiceOpcodes {
 };
 
 
-struct VoiceInfo {
-  std::string endpoint;
-  std::string guildId;
-  std::string token;
-  std::string sessionId;
-};
 
 struct IpDiscovery {
   std::string ip;
   uint16_t port = 0;
 };
 
-struct VoiceTask {
-  VoiceInfo info;
-  std::mutex mtx;
-  std::coroutine_handle<> hp;
-  bool await_ready() const noexcept {
-    return !info.endpoint.empty() && !info.guildId.empty()
-            && !info.token.empty() && !info.sessionId.empty();
-  }
-  void await_suspend(std::coroutine_handle<> handle) noexcept {
-    hp = handle;
-  }
-  VoiceTask& operator=([[maybe_unused]]const VoiceTask& a){return *this;}
-  VoiceInfo await_resume() const noexcept {
-    return info;
-  }
-};
 
 struct VoiceReady {
   VoiceReady(const nlohmann::json& j);
