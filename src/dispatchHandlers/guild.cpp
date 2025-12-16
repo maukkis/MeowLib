@@ -8,6 +8,11 @@
 
 
 void NyaBot::guildCreate(nlohmann::json j){
+  if(j["d"].contains("unavailable")){
+    // the guild is unavailable due to outage we redirect it to the guildDelete event
+    guildDelete(std::move(j));
+    return;
+  }
   Guild a(j["d"]);
   int shard = calculateShardId(a.id, api.numShards);
   while(shards.at(shard).api.state != GatewayStates::READY)
