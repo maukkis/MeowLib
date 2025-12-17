@@ -89,7 +89,5 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
   Log::dbg("received: " + std::to_string(rlen) + " bytes");
   auto ip = parseIpDiscovery(buff);
   if(!ip) return std::unexpected(std::nullopt);
-  Log::dbg("ip: " + ip->ip);
-  Log::dbg("port: " + std::to_string(ip->port));
   return *ip;
 }

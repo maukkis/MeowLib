@@ -5,7 +5,6 @@
 #include <meowHttp/websocket.h>
 #include <string>
 #include <sys/socket.h>
-#include <thread>
 
 
 void VoiceConnection::listen(){
@@ -29,26 +28,12 @@ void VoiceConnection::listen(){
         j["op"] = VoiceOpcodes::HEARTBEAT;
         if(api.seq != -1) j["d"]["seq_ack"] = api.seq;
         j["d"]["t"] = std::chrono::system_clock::now().time_since_epoch().count();
-        Log::dbg(j.dump());
         if(handle.wsSend(j.dump(), meowWs::meowWS_TEXT) > 0){
           Log::dbg("sent voice heartbeat :3");
           sentHB = std::chrono::steady_clock::now();
         }
       }
-      if(!voiceDataQueue.empty()){
-        sendSpeaking();
-        while(!voiceDataQueue.empty()){
-          auto a = voiceDataQueue.pop();
-          auto b = frameRtp(a.first);
-          int slen = sendto(uSockfd, b.first.data(), b.second, 0, (sockaddr*)&api.dest, sizeof(api.dest));
-          if(slen <= 0){
-            Log::dbg("couldnt send");
-          }
-          api.timestamp += a.second;
-          ++api.rtpSeq;
-          std::this_thread::sleep_for(std::chrono::milliseconds(a.second / 48));
-        }
-      }
+
       meowWs::meowWsFrame frame;
       size_t rlen = handle.wsRecv(buf, &frame);
       if (rlen < 1){
@@ -64,7 +49,6 @@ void VoiceConnection::listen(){
         return;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
-      Log::dbg(buf);
       auto j = nlohmann::json::parse(buf);
       switch(j["op"].get<int>()){
         case VoiceOpcodes::READY:

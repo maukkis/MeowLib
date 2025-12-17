@@ -12,6 +12,8 @@ VoiceConnection::~VoiceConnection(){
   api.stop = true;
   if(th.joinable())
     th.join();
+  qcv.notify_all();
+  if(uth.joinable()) uth.join(); 
   close();
 }
 

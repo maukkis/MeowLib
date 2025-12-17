@@ -73,4 +73,6 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
     close();
   }
   sendSelectProtocol(*a);
+  sendSpeaking();
+  uth = std::thread(&VoiceConnection::udpLoop, this); 
 }

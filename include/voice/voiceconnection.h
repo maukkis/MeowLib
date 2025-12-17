@@ -4,8 +4,10 @@
 
 #include <array>
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <meowHttp/websocket.h>
+#include <mutex>
 #include <netinet/in.h>
 #include <string_view>
 #include "../async.h"
@@ -13,7 +15,8 @@
 #include <coroutine>
 #include <nlohmann/json.hpp>
 #include <sys/socket.h>
-#include "../queue.h"
+#include <vector>
+#include <deque>
 #include "../voice.h"
 
 
@@ -37,6 +40,11 @@ struct IpDiscovery {
   uint16_t port = 0;
 };
 
+struct VoiceData {
+  std::vector<uint8_t> payload;
+  uint64_t payloadLen{};
+  uint64_t duration{};
+};
 
 struct VoiceReady {
   VoiceReady(const nlohmann::json& j);
@@ -85,7 +93,9 @@ private:
   void sendSelectProtocol(const IpDiscovery& i);
   void sendSpeaking();
   void sendVoiceData();
- std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a);
+  void udpLoop();
+  void addToQueue(const VoiceData& a);
+ std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a, int dur);
   void handleSessionDescription(const nlohmann::json& j);
   std::expected<IpDiscovery, std::nullopt_t> performIpDiscovery(const VoiceReady& a);
   int aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
@@ -99,9 +109,12 @@ private:
   meowWs::Websocket handle;
   NyaBot *bot = nullptr;
   std::thread th;
+  std::thread uth;
   VoiceApiInfo api;
   int uSockfd{};
-  ThreadSafeQueue<std::pair<std::vector<uint8_t>, uint64_t>> voiceDataQueue;
+  std::mutex qmtx;
+  std::condition_variable qcv;
+  std::deque<VoiceData> voiceDataQueue;
 };
 
 #endif
