@@ -3,6 +3,9 @@
 #include <chrono>
 #include <meowHttp/client.h>
 #include <meowHttp/websocket.h>
+#include <string>
+#include <sys/socket.h>
+#include <thread>
 
 
 void VoiceConnection::listen(){
@@ -33,7 +36,18 @@ void VoiceConnection::listen(){
         }
       }
       if(!voiceDataQueue.empty()){
-        
+        sendSpeaking();
+        while(!voiceDataQueue.empty()){
+          auto a = voiceDataQueue.pop();
+          auto b = frameRtp(a.first);
+          int slen = sendto(uSockfd, b.first.data(), b.second, 0, (sockaddr*)&api.dest, sizeof(api.dest));
+          if(slen <= 0){
+            Log::dbg("couldnt send");
+          }
+          api.timestamp += a.second;
+          ++api.rtpSeq;
+          std::this_thread::sleep_for(std::chrono::milliseconds(a.second / 48));
+        }
       }
       meowWs::meowWsFrame frame;
       size_t rlen = handle.wsRecv(buf, &frame);

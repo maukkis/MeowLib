@@ -3,13 +3,16 @@
 
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <meowHttp/websocket.h>
+#include <netinet/in.h>
 #include <string_view>
 #include "../async.h"
 #include <expected>
 #include <coroutine>
 #include <nlohmann/json.hpp>
+#include <sys/socket.h>
 #include "../queue.h"
 #include "../voice.h"
 
@@ -53,12 +56,16 @@ constexpr uint8_t secretKeyLen = 32;
 struct VoiceApiInfo {
   std::string guildId;
   Ciphers cipher;
-  uint32_t pNonce = 69;
+  uint32_t pNonce = 0;
   int seq = -1;
   int ssrc{};
+  uint16_t rtpSeq = 0;
+  std::atomic<bool> speaking = false;
+  uint32_t timestamp = 0;
   uint64_t heartbeatInterval{};
   std::atomic<bool> stop = false;
   std::array<uint8_t, secretKeyLen> secretKey;
+  sockaddr_in dest;
 };
 
 class VoiceConnection {
@@ -66,7 +73,7 @@ public:
   VoiceConnection(NyaBot *a);
   ~VoiceConnection();
   MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
-  void sendOpusData(uint8_t *opusData, uint64_t opusLen);
+  void sendOpusData(uint8_t *opusData, uint64_t duration, uint64_t frameSize);
   void disconnect();
 private:
   VoiceTask& getConnectInfo(const std::string& guildId, const std::string_view channelId);
@@ -78,6 +85,7 @@ private:
   void sendSelectProtocol(const IpDiscovery& i);
   void sendSpeaking();
   void sendVoiceData();
+ std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a);
   void handleSessionDescription(const nlohmann::json& j);
   std::expected<IpDiscovery, std::nullopt_t> performIpDiscovery(const VoiceReady& a);
   int aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
@@ -93,7 +101,7 @@ private:
   std::thread th;
   VoiceApiInfo api;
   int uSockfd{};
-  ThreadSafeQueue<std::vector<uint8_t>> voiceDataQueue;
+  ThreadSafeQueue<std::pair<std::vector<uint8_t>, uint64_t>> voiceDataQueue;
 };
 
 #endif

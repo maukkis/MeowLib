@@ -8,8 +8,8 @@ int VoiceConnection::aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
                                                  int ptLen,
                                                  uint8_t *key,
                                                  uint8_t *iv,
-                                                 uint8_t *aad,
-                                                 int aadLen,
+                                                 [[maybe_unused]]uint8_t *aad,
+                                                 [[maybe_unused]]int aadLen,
                                                  uint8_t *ct)
 {
   int ctLen = 0;
@@ -39,6 +39,12 @@ int VoiceConnection::aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
     Log::error("final encrypt failed");
   }
   ctLen += len;
+
+  if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, ct + ctLen) != 1){
+    Log::error("failed to set tag");
+    return -1;
+  }
+  ctLen += 16;
   EVP_CIPHER_CTX_free(ctx);
   return ctLen;
 }

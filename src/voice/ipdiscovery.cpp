@@ -50,11 +50,11 @@ std::optional<IpDiscovery> parseIpDiscovery(char *buf){
 
 std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(const VoiceReady& a){
   uSockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  struct sockaddr_in bark;
-  bark.sin_family = AF_INET;
-  bark.sin_port = htons(a.port);
-  inet_pton(AF_INET, a.ip.c_str(), &bark.sin_addr);
-  if(::connect(uSockfd, (sockaddr*)&bark, sizeof(bark))){
+  api.dest.sin_family = AF_INET;
+  api.dest.sin_port = htons(a.port);
+  inet_pton(AF_INET, a.ip.c_str(), &api.dest.sin_addr);
+
+  if(::connect(uSockfd, (sockaddr*)&api.dest, sizeof(api.dest))){
     Log::error("failed to connect to voice gateway");
     throw std::runtime_error("*bites you*");
   }
