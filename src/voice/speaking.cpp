@@ -9,6 +9,16 @@
 #include <utility>
 
 constexpr int msToNs = 1000000;
+constexpr int rtpFrameSize = 12;
+constexpr int aes256GcmTagSize = 16;
+constexpr int aes256GcmAADSize = 12;
+constexpr int sampleRate = 48000;
+
+enum SpeakingCodes : uint8_t {
+  MICROPHONE = 1 << 0,
+  SOUNDSHARD = 1 << 1,
+  PRIORITY = 1 << 2,
+};
 
 
 void VoiceConnection::addToQueue(const VoiceData& a){
@@ -47,7 +57,7 @@ void VoiceConnection::udpLoop(){
 void VoiceConnection::sendSpeaking(){
   nlohmann::json j;
   j["op"] = VoiceOpcodes::SPEAKING;
-  j["d"]["speaking"] = 5;
+  j["d"]["speaking"] = MICROPHONE;
   j["d"]["delay"] = 0;
   j["d"]["ssrc"] = api.ssrc;
   handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
@@ -66,23 +76,38 @@ struct rtpHeader {
 };
 
 void VoiceConnection::sendOpusData(uint8_t *opusData, uint64_t duration, uint64_t frameSize){
-  int dur = 48 * duration;
+  // get the amount of samples per ms for the rtp timestamp
+  int dur = (sampleRate / 1000) * duration;
   std::vector<uint8_t> vec;
+  vec.reserve(frameSize);
   for(size_t i = 0; i < frameSize; ++i){
     vec.push_back(opusData[i]);
   }
   auto frame = frameRtp(std::move(vec), dur);
-  addToQueue(VoiceData{.payload = std::move(frame.first), .payloadLen = frame.second, .duration = duration});
+  addToQueue(
+    VoiceData{
+      .payload = std::move(frame.first),
+      .payloadLen = frame.second,
+      .duration = duration
+    }
+  );
 }
 
 
 std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t> a, int dur){
-  std::vector<uint8_t> frame(a.size() + 12 + 4 + 16);
+  std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + aes256GcmTagSize);
+
   rtpHeader rtp(api.rtpSeq, api.timestamp, api.ssrc);
   std::memcpy(frame.data(), &rtp, sizeof(rtp));
-  std::vector<std::uint8_t> encryptedOpus(a.size() + 16);
-  std::array<uint8_t, 12> nonce{0};
+
+  std::vector<std::uint8_t> encryptedOpus(a.size() + aes256GcmTagSize);
+  std::array<uint8_t, aes256GcmAADSize> nonce{0};
+
   std::memcpy(nonce.data(), &api.pNonce, sizeof(api.pNonce));
+  // key = secretKey from discord
+  // IV = pNonce padded by 8 null bytes
+  // AAD = rtp frame
+  // the nonce itself is appended to the end of the payload as big endian without any padding
   int len = aeadAes256GcmRtpsizeEncrypt(a.data(),
                                         a.size(),
                                         api.secretKey.data(),
@@ -94,10 +119,10 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
     Log::error("something went wrong with encrypting");
     close();
   }
-  uint32_t noncebe = htonl(api.pNonce);
+  uint32_t noncebe = htonl(api.pNonce++);
   std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
   std::memcpy(frame.data() + sizeof(rtp) + len, &noncebe, sizeof(noncebe));
   ++api.rtpSeq;
   api.timestamp += dur;
-  return {frame, 4 + 12 + len};
+  return {frame, sizeof(api.pNonce) + rtpFrameSize + len};
 }

@@ -99,7 +99,6 @@ void VoiceConnection::getHello(){
     std::terminate();
   }
   auto j = nlohmann::json::parse(data);
-  Log::dbg(j.dump());
   api.heartbeatInterval = j["d"]["heartbeat_interval"];
 }
 
