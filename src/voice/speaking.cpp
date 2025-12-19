@@ -35,6 +35,7 @@ void VoiceConnection::addToQueue(const VoiceData& a){
 void VoiceConnection::udpLoop(){
   auto lastSent = std::chrono::high_resolution_clock::now();
   while(!api.stop){
+    if(voiceDataQueue.empty()) fcv.notify_all();
     std::unique_lock<std::mutex> lock(qmtx);
     qcv.wait(lock, [this](){
       return !voiceDataQueue.empty() || api.stop;
@@ -84,13 +85,15 @@ struct rtpHeader {
 void VoiceConnection::sendSilence(){
   // we need exclusive access to the queue
   std::unique_lock<std::mutex> lock(qmtx);
-  auto item = voiceDataQueue.front();
-  voiceDataQueue.clear();
-  rtpHeader a;
-  std::memcpy(&a, item.payload.data(), sizeof(a));
-  api.rtpSeq = ntohs(a.seq);
-  api.timestamp = ntohl(a.ts);
-  assert(ntohl(a.ssrc) == api.ssrc && "ssrcs arent the same");
+  if(!voiceDataQueue.empty()){
+    auto item = voiceDataQueue.front();
+    voiceDataQueue.clear();
+    rtpHeader a;
+    std::memcpy(&a, item.payload.data(), sizeof(a));
+    api.rtpSeq = ntohs(a.seq);
+    api.timestamp = ntohl(a.ts);
+    assert(ntohl(a.ssrc) == api.ssrc && "ssrcs arent the same");
+  }
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
     auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), samplesPerSilence);
@@ -129,7 +132,8 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
   std::vector<std::uint8_t> encryptedOpus(a.size() + aes256GcmTagSize);
   std::array<uint8_t, aes256GcmAADSize> nonce{0};
 
-  std::memcpy(nonce.data(), &api.pNonce, sizeof(api.pNonce));
+  uint32_t noncec = api.pNonce++;
+  std::memcpy(nonce.data(), &noncec, sizeof(noncec));
   // key = secretKey from discord
   // IV = pNonce padded by 8 null bytes
   // AAD = rtp frame
@@ -145,9 +149,8 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
     Log::error("something went wrong with encrypting");
     close();
   }
-  uint32_t noncebe = api.pNonce++;
   std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
-  std::memcpy(frame.data() + sizeof(rtp) + len, &noncebe, sizeof(noncebe));
+  std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));
   ++api.rtpSeq;
   api.timestamp += dur;
   return {frame, sizeof(api.pNonce) + rtpFrameSize + len};

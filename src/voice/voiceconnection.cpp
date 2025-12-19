@@ -17,6 +17,13 @@ VoiceConnection::~VoiceConnection(){
   close();
 }
 
+void VoiceConnection::flush(){
+  std::unique_lock<std::mutex> lock(fmtx);
+  fcv.wait(lock, [this]{
+    return voiceDataQueue.empty();
+  });
+}
+
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
   api.guildId = guildId;
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){

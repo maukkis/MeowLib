@@ -82,6 +82,7 @@ public:
   ~VoiceConnection();
   MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
   void sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize);
+  void flush();
   void disconnect();
 private:
   VoiceTask& getConnectInfo(const std::string& guildId, const std::string_view channelId);
@@ -115,6 +116,8 @@ private:
   int uSockfd{};
   std::mutex qmtx;
   std::condition_variable qcv;
+  std::mutex fmtx;
+  std::condition_variable fcv;
   constexpr static std::array<uint8_t, 3> silence {0xf8, 0xff, 0xfe};
   std::deque<VoiceData> voiceDataQueue;
 };
