@@ -1,11 +1,14 @@
 #include "../../include/voice/voiceconnection.h"
 #include "../../include/log.h"
+#include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <meowHttp/websocket.h>
 #include <mutex>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <thread>
 #include <utility>
 
 constexpr int msToNs = 1000000;
@@ -13,6 +16,7 @@ constexpr int rtpFrameSize = 12;
 constexpr int aes256GcmTagSize = 16;
 constexpr int aes256GcmAADSize = 12;
 constexpr int sampleRate = 48000;
+constexpr int samplesPerSilence = 960;
 
 enum SpeakingCodes : uint8_t {
   MICROPHONE = 1 << 0,
@@ -29,27 +33,27 @@ void VoiceConnection::addToQueue(const VoiceData& a){
 }
 
 void VoiceConnection::udpLoop(){
-  while(!api.stop){ 
+  auto lastSent = std::chrono::high_resolution_clock::now();
+  while(!api.stop){
     std::unique_lock<std::mutex> lock(qmtx);
     qcv.wait(lock, [this](){
       return !voiceDataQueue.empty() || api.stop;
     });
     if(api.stop) return;
-    auto a = voiceDataQueue.front();
+    auto a = std::move(voiceDataQueue.front());
     voiceDataQueue.pop_front();
     lock.unlock();
-    auto start = std::chrono::high_resolution_clock::now();
     int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, (sockaddr*)&api.dest, sizeof(api.dest));
-    auto end = std::chrono::high_resolution_clock::now();
     if(slen <= 0){
       Log::dbg("couldnt send");
     }
-    auto time = end - start;
+    auto time = std::chrono::high_resolution_clock::now() - lastSent;
     auto tts = std::chrono::nanoseconds(
       a.duration * msToNs
       - std::chrono::duration_cast<std::chrono::nanoseconds>(time).count()
     );
     std::this_thread::sleep_for(tts);
+    lastSent = std::chrono::high_resolution_clock::now();
   }
 }
 
@@ -73,11 +77,33 @@ struct rtpHeader {
   uint32_t ts;
   uint32_t ssrc;
   rtpHeader(uint16_t seq, uint32_t ts, uint32_t ssrc) : magic1(0x80), magic2(0x78), seq(htons(seq)), ts(htonl(ts)), ssrc(htonl(ssrc)) {}
+  rtpHeader() = default;
 };
 
-void VoiceConnection::sendOpusData(uint8_t *opusData, uint64_t duration, uint64_t frameSize){
+
+void VoiceConnection::sendSilence(){
+  // we need exclusive access to the queue
+  std::unique_lock<std::mutex> lock(qmtx);
+  auto item = voiceDataQueue.front();
+  voiceDataQueue.clear();
+  rtpHeader a;
+  std::memcpy(&a, item.payload.data(), sizeof(a));
+  api.rtpSeq = ntohs(a.seq);
+  api.timestamp = ntohl(a.ts);
+  assert(ntohl(a.ssrc) == api.ssrc && "ssrcs arent the same");
+  for(size_t i = 0; i < 5; ++i){
+    Log::dbg("sending silence");
+    auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), samplesPerSilence);
+    sendto(uSockfd, a.first.data(), a.second, 0, (sockaddr*)&api.dest, sizeof(api.dest));
+    std::this_thread::sleep_for(std::chrono::milliseconds(samplesPerSilence / 48));
+  } 
+}
+
+
+void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize){
+  if(api.stop) return;
   // get the amount of samples per ms for the rtp timestamp
-  int dur = (sampleRate / 1000) * duration;
+  int dur = (int)(sampleRate / 1000) * duration;
   std::vector<uint8_t> vec;
   vec.reserve(frameSize);
   for(size_t i = 0; i < frameSize; ++i){
@@ -107,7 +133,7 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
   // key = secretKey from discord
   // IV = pNonce padded by 8 null bytes
   // AAD = rtp frame
-  // the nonce itself is appended to the end of the payload as big endian without any padding
+  // the nonce itself is appended to the end of the payload without any padding
   int len = aeadAes256GcmRtpsizeEncrypt(a.data(),
                                         a.size(),
                                         api.secretKey.data(),
@@ -119,7 +145,7 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
     Log::error("something went wrong with encrypting");
     close();
   }
-  uint32_t noncebe = htonl(api.pNonce++);
+  uint32_t noncebe = api.pNonce++;
   std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
   std::memcpy(frame.data() + sizeof(rtp) + len, &noncebe, sizeof(noncebe));
   ++api.rtpSeq;

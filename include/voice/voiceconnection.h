@@ -66,7 +66,7 @@ struct VoiceApiInfo {
   Ciphers cipher;
   uint32_t pNonce = 0;
   int seq = -1;
-  int ssrc{};
+  uint32_t ssrc{};
   uint16_t rtpSeq = 0;
   std::atomic<bool> speaking = false;
   uint32_t timestamp = 0;
@@ -81,7 +81,7 @@ public:
   VoiceConnection(NyaBot *a);
   ~VoiceConnection();
   MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
-  void sendOpusData(uint8_t *opusData, uint64_t duration, uint64_t frameSize);
+  void sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize);
   void disconnect();
 private:
   VoiceTask& getConnectInfo(const std::string& guildId, const std::string_view channelId);
@@ -94,6 +94,7 @@ private:
   void sendSpeaking();
   void sendVoiceData();
   void udpLoop();
+  void sendSilence();
   void addToQueue(const VoiceData& a);
  std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a, int dur);
   void handleSessionDescription(const nlohmann::json& j);
@@ -114,6 +115,7 @@ private:
   int uSockfd{};
   std::mutex qmtx;
   std::condition_variable qcv;
+  constexpr static std::array<uint8_t, 3> silence {0xf8, 0xff, 0xfe};
   std::deque<VoiceData> voiceDataQueue;
 };
 
