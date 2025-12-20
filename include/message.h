@@ -27,11 +27,11 @@ enum MsgFlags {
 
 
 
-struct InteractionData{
+struct InteractionMetaData{
   std::string id;
   int type;
-  std::string name;
   User user;
+  std::optional<User> targetUser;
 };
 
 
@@ -112,8 +112,9 @@ public:
   // ONLY FOR GATEWAY MESSAGE EVENTS
   std::optional<std::string> guildId;
   std::optional<MessageReference> messageReference;
-  std::optional<InteractionData> interactionData;
+  std::optional<InteractionMetaData> interactionData;
   std::optional<Poll> poll;
+  std::vector<ResolvedAttachment> resolvedAttachments;
 private:
   std::vector<std::unique_ptr<Component>> components;
 };

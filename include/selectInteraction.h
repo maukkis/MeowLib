@@ -15,7 +15,6 @@ public:
   std::unordered_set<std::string> values;
   std::unordered_map<std::string, User> resolvedUsers;
   ComponentTypes type;
-  InteractionData interaction;
 };
 
 #endif

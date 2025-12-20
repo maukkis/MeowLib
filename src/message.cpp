@@ -7,12 +7,12 @@
 
 namespace {
 
-InteractionData deserializeInteractionData(const nlohmann::json& j){
+InteractionMetaData deserializeInteractionMetaData(const nlohmann::json& j){
   return {
     .id = j["id"],
     .type = j["type"],
-    .name = j["name"],
-    .user = User(j["user"])
+    .user = User(j["user"]),
+    .targetUser = j.contains("target_user") ? std::make_optional(User(j["target_user"])) : std::nullopt
   };
 }
 
@@ -53,8 +53,8 @@ Message::Message(const nlohmann::json& j){
   msgflags = j["flags"];
   mentionEveryone = j["mention_everyone"];
   channelId = j["channel_id"];
-  if(j.contains("interaction")){
-    interactionData = deserializeInteractionData(j["interaction"]);
+  if(j.contains("interaction_metadata")){
+    interactionData = deserializeInteractionMetaData(j["interaction_metadata"]);
   }
   if(j.contains("webhook_id"))
     webhookId = j["webhook_id"];
@@ -66,6 +66,11 @@ Message::Message(const nlohmann::json& j){
   id = j["id"];
   if(j.contains("poll"))
     poll = Poll(j["poll"]);
+  if(j.contains("attachments")){
+    for(const auto& a : j["attachments"]){
+      resolvedAttachments.emplace_back(a);
+    }
+  }
 }
 
 Message& Message::addPoll(const Poll& a){
