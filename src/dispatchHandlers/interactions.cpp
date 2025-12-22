@@ -12,9 +12,23 @@ namespace {
 
 // TODO: cache these users i am eepy and too lazy to do it
 
+
+template<typename T>
+std::unordered_map<std::string, T>
+deserializeResolvedKeys(const std::string_view key, const nlohmann::json& j){
+  std::unordered_map<std::string, T> map;
+  if(!j["resolved"].contains(key)) return map;
+  for(const auto& a : j["resolved"][key].items()){
+    T b(a.value());
+    map.insert({a.key(), std::move(b)});
+  }
+  return map;
+}
+
 template<typename T>
 std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
   if(!d.contains("resolved")) return std::unordered_map<std::string, T>();
+  // this is a bit more complicated so cant be moved into the generic stuff
   if constexpr(std::is_same_v<T, User>){
     std::unordered_map<std::string, T> map;
     if(!d["resolved"].contains("users")) return map;
@@ -27,24 +41,19 @@ std::unordered_map<std::string, T> deserializeResolved(const nlohmann::json& d){
     }
     return map;
   }
-  else if constexpr(std::is_same_v<T, ResolvedAttachment>){
-    std::unordered_map<std::string, ResolvedAttachment> map;
-    if(!d["resolved"].contains("attachments")) return map;
-    for(const auto& a : d["resolved"]["attachments"].items()){
-      ResolvedAttachment c(a.value());
-      map[a.key()] = std::move(c);
-    }
-    return map;
-  }
-  else if constexpr(std::is_same_v<T, Message>){
-    std::unordered_map<std::string, Message> map;
-    if(!d["resolved"].contains("messages")) return map;
-    for(const auto& a : d["resolved"]["messages"].items()){
-      Message b(a.value());
-      map.insert({a.key(), std::move(b)});
-    }
-    return map;
-  }
+
+  if constexpr(std::is_same_v<T, ResolvedAttachment>)
+    return deserializeResolvedKeys<T>("attachments", d);
+
+  if constexpr(std::is_same_v<T, Message>)
+    return deserializeResolvedKeys<T>("messages", d);
+
+  if constexpr(std::is_same_v<T, Channel>)
+    return deserializeResolvedKeys<T>("channels", d);
+
+  if constexpr(std::is_same_v<T, Role>)
+    return deserializeResolvedKeys<T>("roles", d);
+
 }
 
 template<typename T>
@@ -100,6 +109,8 @@ SlashCommandInteraction constructSlash(nlohmann::json& json, NyaBot *a){
   auto slash = deserializeInteraction<SlashCommandInteraction>(json, a);
   slash.resolvedUsers = deserializeResolved<User>(json["data"]);
   slash.resolvedAttachments = deserializeResolved<ResolvedAttachment>(json["data"]);
+  slash.resolvedChannels = deserializeResolved<Channel>(json["data"]);
+  slash.resolvedRoles = deserializeResolved<Role>(json["data"]);
   if(json["data"].contains("options")){
     for (const auto& it : json["data"]["options"]){
       slash.parameters.insert({it["name"], it["value"].get<std::string>()});

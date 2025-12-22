@@ -10,6 +10,10 @@ enum class Types {
   INTEGER,
   BOOLEAN,
   USER,
+  CHANNEL,
+  ROLE,
+  MENTIONABLE,
+  NUMBER,
   ATTACHMENT = 11,
 };
 

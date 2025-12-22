@@ -13,6 +13,8 @@ struct SlashCommandInteraction : public Interaction {
   std::unordered_map<std::string, std::string> parameters;
   std::unordered_map<std::string, User> resolvedUsers;
   std::unordered_map<std::string, ResolvedAttachment> resolvedAttachments;
+  std::unordered_map<std::string, Channel> resolvedChannels;
+  std::unordered_map<std::string, Role> resolvedRoles;
 };
 
 // will be removed in later versions please switch to SlashCommandInteraction
