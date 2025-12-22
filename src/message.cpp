@@ -1,5 +1,6 @@
 #include "../include/message.h"
 #include "../include/helpers.h"
+#include <memory>
 #include <optional>
 #include <string_view>
 #include <format>
@@ -70,6 +71,9 @@ Message::Message(const nlohmann::json& j){
     for(const auto& a : j["attachments"]){
       resolvedAttachments.emplace_back(a);
     }
+  }
+  if(j.contains("referenced_message") && !j["referenced_message"].is_null()){
+    referencedMessage = std::make_unique<Message>(j["referenced_message"]);
   }
 }
 

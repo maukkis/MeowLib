@@ -115,6 +115,8 @@ public:
   std::optional<InteractionMetaData> interactionData;
   std::optional<Poll> poll;
   std::vector<ResolvedAttachment> resolvedAttachments;
+  //this would have been an optional but i cant have recursive optionals
+  std::unique_ptr<Message> referencedMessage = nullptr;
 private:
   std::vector<std::unique_ptr<Component>> components;
 };
