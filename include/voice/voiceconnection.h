@@ -33,11 +33,26 @@ enum VoiceOpcodes {
   HEARTBEAT_ACK,
 };
 
-
+constexpr int msToNs = 1000000;
+constexpr int rtpFrameSize = 12;
+constexpr int aes256GcmTagSize = 16;
+constexpr int aes256GcmAADSize = 12;
+constexpr int sampleRate = 48000;
+constexpr int frameSize = 960;
 
 struct IpDiscovery {
   std::string ip;
   uint16_t port = 0;
+};
+
+struct rtpHeader {
+  uint8_t magic1;
+  uint8_t magic2;
+  uint16_t seq;
+  uint32_t ts;
+  uint32_t ssrc;
+  rtpHeader(uint16_t seq, uint32_t ts, uint32_t ssrc) : magic1(0x80), magic2(0x78), seq(htons(seq)), ts(htonl(ts)), ssrc(htonl(ssrc)) {}
+  rtpHeader() = default;
 };
 
 struct VoiceData {
@@ -81,6 +96,11 @@ public:
   VoiceConnection(NyaBot *a);
   ~VoiceConnection();
   MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
+  /// @brief encodes encrypts and sends off pcmData
+  /// @param pcmData pointer to pcmData
+  /// @param len length of pcm data
+  /// @attention slow!!!! as we have to make a copy of the data and opus encode it this function will also block until all the data is encoded and encrypted
+  std::expected<std::nullopt_t, int> sendPcmData(const uint8_t* pcmData, size_t len);
   void sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize);
   void flush();
   void disconnect();

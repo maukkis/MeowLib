@@ -54,7 +54,7 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
   api.dest.sin_port = htons(a.port);
   inet_pton(AF_INET, a.ip.c_str(), &api.dest.sin_addr);
 
-  if(::connect(uSockfd, (sockaddr*)&api.dest, sizeof(api.dest))){
+  if(::connect(uSockfd, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest))){
     Log::error("failed to connect to voice gateway");
     throw std::runtime_error("*bites you*");
   }

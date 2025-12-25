@@ -1,5 +1,6 @@
 #include "../../include/voice/voiceconnection.h"
 #include "../../include/log.h"
+#include <bit>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
@@ -11,12 +12,7 @@
 #include <thread>
 #include <utility>
 
-constexpr int msToNs = 1000000;
-constexpr int rtpFrameSize = 12;
-constexpr int aes256GcmTagSize = 16;
-constexpr int aes256GcmAADSize = 12;
-constexpr int sampleRate = 48000;
-constexpr int samplesPerSilence = 960;
+
 
 enum SpeakingCodes : uint8_t {
   MICROPHONE = 1 << 0,
@@ -44,7 +40,7 @@ void VoiceConnection::udpLoop(){
     auto a = std::move(voiceDataQueue.front());
     voiceDataQueue.pop_front();
     lock.unlock();
-    int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, (sockaddr*)&api.dest, sizeof(api.dest));
+    int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     if(slen <= 0){
       Log::dbg("couldnt send");
     }
@@ -71,15 +67,7 @@ void VoiceConnection::sendSpeaking(){
 }
 
 
-struct rtpHeader {
-  uint8_t magic1;
-  uint8_t magic2;
-  uint16_t seq;
-  uint32_t ts;
-  uint32_t ssrc;
-  rtpHeader(uint16_t seq, uint32_t ts, uint32_t ssrc) : magic1(0x80), magic2(0x78), seq(htons(seq)), ts(htonl(ts)), ssrc(htonl(ssrc)) {}
-  rtpHeader() = default;
-};
+
 
 
 void VoiceConnection::sendSilence(){
@@ -96,62 +84,10 @@ void VoiceConnection::sendSilence(){
   }
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
-    auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), samplesPerSilence);
-    sendto(uSockfd, a.first.data(), a.second, 0, (sockaddr*)&api.dest, sizeof(api.dest));
-    std::this_thread::sleep_for(std::chrono::milliseconds(samplesPerSilence / 48));
+    auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), frameSize);
+    sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
+    std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));
   } 
 }
 
 
-void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize){
-  if(api.stop) return;
-  // get the amount of samples per ms for the rtp timestamp
-  int dur = (int)(sampleRate / 1000) * duration;
-  std::vector<uint8_t> vec;
-  vec.reserve(frameSize);
-  for(size_t i = 0; i < frameSize; ++i){
-    vec.push_back(opusData[i]);
-  }
-  auto frame = frameRtp(std::move(vec), dur);
-  addToQueue(
-    VoiceData{
-      .payload = std::move(frame.first),
-      .payloadLen = frame.second,
-      .duration = duration
-    }
-  );
-}
-
-
-std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t> a, int dur){
-  std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + aes256GcmTagSize);
-
-  rtpHeader rtp(api.rtpSeq, api.timestamp, api.ssrc);
-  std::memcpy(frame.data(), &rtp, sizeof(rtp));
-
-  std::vector<std::uint8_t> encryptedOpus(a.size() + aes256GcmTagSize);
-  std::array<uint8_t, aes256GcmAADSize> nonce{0};
-
-  uint32_t noncec = api.pNonce++;
-  std::memcpy(nonce.data(), &noncec, sizeof(noncec));
-  // key = secretKey from discord
-  // IV = pNonce padded by 8 null bytes
-  // AAD = rtp frame
-  // the nonce itself is appended to the end of the payload without any padding
-  int len = aeadAes256GcmRtpsizeEncrypt(a.data(),
-                                        a.size(),
-                                        api.secretKey.data(),
-                                        nonce.data(),
-                                        (uint8_t*)&rtp,
-                                        sizeof(rtp),
-                                        encryptedOpus.data());
-  if(len == -1){
-    Log::error("something went wrong with encrypting");
-    close();
-  }
-  std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
-  std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));
-  ++api.rtpSeq;
-  api.timestamp += dur;
-  return {frame, sizeof(api.pNonce) + rtpFrameSize + len};
-}

@@ -15,7 +15,6 @@ set(srcdir "${PROJECT_SOURCE_DIR}/src")
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-
 if(WIN32 AND MSVC)
   # msvc gives stupid warnings that dont really matter and causes this to not compile fuck msvc
   set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
@@ -29,6 +28,8 @@ else()
 endif()
 
 if(VOICE_ENABLED)
+  set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+  find_package(Opus REQUIRED)
   file(GLOB MeowLib_src "${srcdir}/*.cpp" "${srcdir}/dispatchHandlers/*.cpp" "${srcdir}/componentsv2/*.cpp" "${srcdir}/voice/*.cpp")
 else()
   file(GLOB MeowLib_src "${srcdir}/*.cpp" "${srcdir}/dispatchHandlers/*.cpp" "${srcdir}/componentsv2/*.cpp")
@@ -49,6 +50,7 @@ target_include_directories(MeowLib PUBLIC
 install(TARGETS MeowLib EXPORT MeowLibTargets DESTINATION lib)
 if(VOICE_ENABLED)
   target_compile_definitions(MeowLib PRIVATE VOICE_ENABLED)
+  target_link_libraries(MeowLib PUBLIC opus)
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib)
 else()
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib PATTERN "voice/*" EXCLUDE)
@@ -62,7 +64,7 @@ write_basic_package_version_file(
 )
 
 configure_package_config_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfig.cmake"
   INSTALL_DESTINATION ${config_dir}
   NO_SET_AND_CHECK_MACRO
@@ -80,6 +82,14 @@ install(
     ${CMAKE_CURRENT_BINARY_DIR}/MeowLib/MeowLibConfigVersion.cmake
   DESTINATION ${config_dir}
 )
+
+if(VOICE_ENABLED)
+  install(
+    FILES
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpus.cmake
+    DESTINATION ${config_dir}
+  )
+endif()
 
 install(EXPORT MeowLibTargets
   FILE
