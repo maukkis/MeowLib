@@ -356,6 +356,7 @@ public:
   AutoModApiRoutes automod{this};
   ChannelApiRoutes channel{this};
   InviteApiRoutes invite{this};
+  VoiceApiRoutes voice{this};
 private:
 
   void routeInteraction(ButtonInteraction& interaction);
