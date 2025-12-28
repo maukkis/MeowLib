@@ -83,7 +83,6 @@ struct VoiceApiInfo {
   int seq = -1;
   uint32_t ssrc{};
   uint16_t rtpSeq = 0;
-  std::atomic<bool> speaking = false;
   uint32_t timestamp = 0;
   uint64_t heartbeatInterval{};
   std::atomic<bool> stop = false;
@@ -127,6 +126,7 @@ private:
                                   uint8_t *aad,
                                   int aadlen,
                                   uint8_t *ct);
+  void closer();
 
   meowWs::Websocket handle;
   NyaBot *bot = nullptr;

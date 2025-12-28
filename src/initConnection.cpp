@@ -97,6 +97,10 @@ void NyaBot::close(){
   for(auto& shard : shards){
     shard.close();
   }
+  std::unique_lock<std::mutex> lock(voiceTaskmtx);
+  for(const auto& a : voiceTaskList){
+    a.second.closeCallback();
+  }
 }
 
 

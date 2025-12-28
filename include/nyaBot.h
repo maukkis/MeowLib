@@ -128,6 +128,8 @@ struct Funs {
   std::function<void(TypingStart&)> onTypingStartF = {};
 
   std::function<void(User&)> onUserUpdateF = {};
+
+  std::function<void(VoiceState&)> onVoiceStateUpdateF = {};
 };
 
 
@@ -321,6 +323,9 @@ public:
   void onTypingStart(std::function<void(TypingStart&)> f);
 
   void onUserUpdate(std::function<void(User&)> f);
+
+  void onVoiceStateUpdate(std::function<void(VoiceState&)> f);
+
   void onContextMenuCommand(std::function<void(ContextMenuInteraction&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.

@@ -20,7 +20,7 @@ VoiceConnection::~VoiceConnection(){
 void VoiceConnection::flush(){
   std::unique_lock<std::mutex> lock(fmtx);
   fcv.wait(lock, [this]{
-    return voiceDataQueue.empty();
+    return voiceDataQueue.empty() || api.stop;
   });
 }
 
@@ -48,13 +48,14 @@ void VoiceConnection::disconnect(){
 void VoiceConnection::close(){
   // we should... actually stop and join the thread
   api.stop = true;
+  qcv.notify_all();
+  fcv.notify_all();
   if(th.joinable()) th.join();
   if(uth.joinable()) uth.join();
+
+
   sendSilence();
-  if(bot->voiceTaskList.contains(api.guildId)){
-    std::unique_lock lock(bot->voiceTaskmtx);
-    bot->voiceTaskList.erase(api.guildId);
-  }
+
   handle.wsClose(1000, "bye :3");
   ::close(uSockfd);
   nlohmann::json j;
@@ -65,8 +66,13 @@ void VoiceConnection::close(){
   d["self_mute"] = false;
   d["self_deaf"] = true;
   j["d"] = d;
+  if(!bot) return;
   int shard = calculateShardId(api.guildId, bot->getNumShards());
   bot->shards.at(shard).queue.addToQueue(j.dump());
+  if(bot->voiceTaskList.contains(api.guildId)){
+    std::unique_lock lock(bot->voiceTaskmtx);
+    bot->voiceTaskList.erase(api.guildId);
+  }
 
 }
 
@@ -83,6 +89,11 @@ void VoiceConnection::sendIdentify(const VoiceInfo& info){
 }
 
 
+void VoiceConnection::closer(){
+  bot = nullptr;
+  close();
+}
+
 VoiceTask& VoiceConnection::getConnectInfo(const std::string& guildId, const std::string_view channelId){
   nlohmann::json j;
   j["op"] = VoiceStateUpdate;
@@ -95,6 +106,7 @@ VoiceTask& VoiceConnection::getConnectInfo(const std::string& guildId, const std
   int shard = calculateShardId(guildId, bot->getNumShards());
   std::unique_lock lock(bot->voiceTaskmtx);
   bot->voiceTaskList[guildId] = VoiceTask{};
+  bot->voiceTaskList[guildId].closeCallback = std::bind(&VoiceConnection::closer, this);
   lock.unlock();
   bot->shards.at(shard).queue.addToQueue(j.dump());
   return bot->voiceTaskList[guildId];

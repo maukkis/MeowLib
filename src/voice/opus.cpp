@@ -30,12 +30,14 @@ std::expected<std::nullopt_t, int> VoiceConnection::sendPcmData(const uint8_t* p
     int ret = opus_encode(enc, d, frameSize, opusData.data(), opusData.size());
     if(ret <= 0){
       Log::error(std::string("failed to encode opus") + opus_strerror(ret));
+      opus_encoder_destroy(enc);
       return std::unexpected(ret);
     }
     opusData.resize(ret);
     frames.emplace_back(opusData);
 
   }
+  opus_encoder_destroy(enc);
   for(auto& a : frames){
     int samples = opus_packet_get_samples_per_frame(a.data(), sampleRate);
     sendOpusData(a.data(), samples / static_cast<int>(sampleRate / 1000), a.size());
@@ -88,7 +90,7 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
                                         encryptedOpus.data());
   if(len == -1){
     Log::error("something went wrong with encrypting");
-    close();
+    return {{}, 0};
   }
   std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
   std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));

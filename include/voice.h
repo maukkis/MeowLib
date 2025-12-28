@@ -28,6 +28,7 @@ struct VoiceState {
 };
 
 struct VoiceTask {
+  std::function<void()> closeCallback;
   VoiceInfo info;
   std::mutex mtx;
   std::coroutine_handle<> hp;

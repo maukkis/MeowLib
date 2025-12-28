@@ -12,10 +12,13 @@ void setSessionId(std::unordered_map<std::string, VoiceTask>& arf, const nlohman
 #endif
 
 void NyaBot::voiceStateUpdate(nlohmann::json j){
-  if(j["d"]["user_id"] != api.appId ||
-     j["d"]["channel_id"].is_null()) return; // bark at you
-
-  sessionIdFun(voiceTaskList, j);
+  if(j["d"]["user_id"] == api.appId && !j["d"]["channel_id"].is_null()) {
+    sessionIdFun(voiceTaskList, j);
+  }
+  if(funs.onVoiceStateUpdateF){
+    VoiceState a(j["d"]);
+    funs.onVoiceStateUpdateF(a);
+  }
 }
 
 

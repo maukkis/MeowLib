@@ -62,7 +62,6 @@ void VoiceConnection::sendSpeaking(){
   j["d"]["delay"] = 0;
   j["d"]["ssrc"] = api.ssrc;
   handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
-  api.speaking = true;
   Log::dbg("speaking sent");
 }
 
@@ -85,6 +84,7 @@ void VoiceConnection::sendSilence(){
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
     auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), frameSize);
+    if(a.second == 0) return;
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));
   } 

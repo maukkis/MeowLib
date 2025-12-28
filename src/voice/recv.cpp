@@ -1,5 +1,5 @@
 #include "../../include/voice/voiceconnection.h"
-#include "../../include/nyaBot.h"
+#include "../../include/log.h"
 #include <chrono>
 #include <meowHttp/client.h>
 #include <meowHttp/websocket.h>
@@ -11,7 +11,7 @@ void VoiceConnection::listen(){
   using namespace std::chrono_literals;
   auto sentHB = std::chrono::steady_clock::now();
   auto lastHB = std::chrono::steady_clock::now();
-  while(!api.stop || bot->stop){
+  while(!api.stop){
     try {
       std::string buf;
       if(std::chrono::steady_clock::now() - lastHB >= std::chrono::milliseconds(api.heartbeatInterval + 10000)){
@@ -46,6 +46,12 @@ void VoiceConnection::listen(){
         arf = ntohs(arf);
         Log::dbg("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));
+        api.stop = true;
+        std::unique_lock lock(qmtx);
+        voiceDataQueue.clear();
+        lock.unlock();
+        fcv.notify_all();
+        //close(); TODO: fix this closing and add proper handling calling close here would cause a deadlock
         return;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
