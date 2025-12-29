@@ -89,7 +89,7 @@ void Shard::listen(){
           default:
             bot->stop = true;
             Log::error("something went horribly wrong");
-            return;
+            continue;
         }
         continue;
       }
@@ -133,7 +133,8 @@ void Shard::listen(){
       }
       else {
         Log::error("fatal error exiting :3");
-        return;
+        bot->stop = true;
+        continue;
       }
     }
   }
