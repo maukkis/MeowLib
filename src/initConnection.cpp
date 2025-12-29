@@ -35,13 +35,16 @@ NyaBot::NyaBot(int intents){
   #endif
   std::set_terminate([](){
     try {
-      std::rethrow_exception(std::current_exception());
+      if(std::current_exception())
+        std::rethrow_exception(std::current_exception());
     }
     catch(std::exception& e){
       Log::error("!!! THIS IS A BUG PLEASE REPORT THIS TO THE DEVELOPERS !!!");
       Log::error("Terminate called after throwing an instance of '" + std::string(demangle(typeid(e).name())) + "'");
       Log::error("  what(): " + std::string(e.what()));
+      std::abort();
     }
+    Log::error("terminate called without an active exception");
     std::abort();
   });
 }
