@@ -16,7 +16,7 @@ struct VoiceInfo {
   std::string endpoint;
   std::string guildId;
   std::string token;
-  std::string sessionId;
+  std::optional<std::string> sessionId = std::nullopt;
 };
 
 struct VoiceState {
@@ -27,23 +27,21 @@ struct VoiceState {
   std::string userId;
 };
 
-struct VoiceTask {
-  std::function<void()> closeCallback;
-  VoiceInfo info;
+struct VoiceCallbacks {
+  VoiceCallbacks() = default;
   std::mutex mtx;
-  std::coroutine_handle<> hp;
-  bool await_ready() const noexcept {
+  VoiceInfo info;
+  bool ready(){
     return !info.endpoint.empty() && !info.guildId.empty()
-            && !info.token.empty() && !info.sessionId.empty();
+            && !info.token.empty() && info.sessionId 
+            && !info.sessionId->empty();
   }
-  void await_suspend(std::coroutine_handle<> handle) noexcept {
-    hp = handle;
-  }
-  VoiceTask& operator=([[maybe_unused]]const VoiceTask& a){return *this;}
-  VoiceInfo await_resume() const noexcept {
-    return info;
-  }
+  std::function<void()> closeCallback;
+  std::function<void(const VoiceInfo&)> voiceServerUpdate;
+  VoiceCallbacks& operator=([[maybe_unused]]const VoiceCallbacks& a){return *this;}
 };
+
+
 
 class VoiceApiRoutes {
 public:

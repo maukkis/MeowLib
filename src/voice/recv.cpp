@@ -46,12 +46,26 @@ void VoiceConnection::listen(){
         arf = ntohs(arf);
         Log::dbg("code = " + std::to_string(arf) + "\nbuf = " + buf.substr(2));
         handle.wsClose(arf, buf.substr(2));
-        api.stop = true;
-        std::unique_lock lock(qmtx);
-        voiceDataQueue.clear();
-        lock.unlock();
-        fcv.notify_all();
-        //close(); TODO: fix this closing and add proper handling calling close here would cause a deadlock
+        switch(arf){
+          case 4001:
+          case 4002:
+          case 4003:
+          case 4004:
+          case 4005:
+          case 4006:
+          case 4016:
+            reconnect();
+          break;
+          case 4021:
+          case 4022:
+            api.stop = true;
+            fcv.notify_all();
+            qcv.notify_all();
+          break;
+          default:
+            reconnect(true);
+          break;
+        }
         return;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
@@ -68,11 +82,17 @@ void VoiceConnection::listen(){
           lastHB = std::chrono::steady_clock::now();
           Log::dbg("got heartbeat ack");
         break;
+        case VoiceOpcodes::SPEAKING:
+        break;
+        default:
+          Log::dbg("got unknown voice payload");
+          Log::dbg(j.dump());
+        break;
       }
     } catch(meowHttp::Exception& e){
         Log::dbg(e.what());
-        api.stop = true;
-        return;
+        reconnect(true);
+        continue;
     }
   }
 }

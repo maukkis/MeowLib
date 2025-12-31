@@ -510,7 +510,7 @@ private:
   std::vector<SlashCommand> slashs;
   std::vector<ContextMenuCommand> ctxMenuCommands;
   std::mutex voiceTaskmtx;
-  std::unordered_map<std::string, VoiceTask> voiceTaskList;
+  std::unordered_map<std::string, VoiceCallbacks> voiceTaskList;
   friend RestClient;
   friend EmojiApiRoutes;
   friend Shard;

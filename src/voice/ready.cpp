@@ -74,5 +74,8 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
   }
   sendSelectProtocol(*a);
   sendSpeaking();
-  uth = std::thread(&VoiceConnection::udpLoop, this); 
+  udpInterrupt = false;
+  qcv.notify_all();
+  if(!uth.joinable())
+    uth = std::thread(&VoiceConnection::udpLoop, this); 
 }

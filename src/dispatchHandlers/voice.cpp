@@ -7,7 +7,7 @@ void NyaBot::voiceServerUpdate([[maybe_unused]]nlohmann::json j){}
 #define sessionIdFun(x, y)
 #endif
 #ifdef VOICE_ENABLED
-void setSessionId(std::unordered_map<std::string, VoiceTask>& arf, const nlohmann::json& j);
+void setSessionId(std::unordered_map<std::string, VoiceCallbacks>& arf, const nlohmann::json& j);
 #define sessionIdFun(x, y) setSessionId(x, y);
 #endif
 

@@ -31,10 +31,10 @@ void VoiceConnection::addToQueue(const VoiceData& a){
 void VoiceConnection::udpLoop(){
   auto lastSent = std::chrono::high_resolution_clock::now();
   while(!api.stop){
-    if(voiceDataQueue.empty()) fcv.notify_all();
     std::unique_lock<std::mutex> lock(qmtx);
+    if(voiceDataQueue.empty()) fcv.notify_all();
     qcv.wait(lock, [this](){
-      return !voiceDataQueue.empty() || api.stop;
+      return (!voiceDataQueue.empty() || api.stop) && !udpInterrupt;
     });
     if(api.stop) return;
     auto a = std::move(voiceDataQueue.front());

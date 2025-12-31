@@ -104,7 +104,7 @@ public:
   void flush();
   void disconnect();
 private:
-  VoiceTask& getConnectInfo(const std::string& guildId, const std::string_view channelId);
+  VoiceInfo& getConnectInfo(const std::string& guildId, const std::string_view channelId);
   void getHello();
   void close();
   void sendIdentify(const VoiceInfo& info);
@@ -115,6 +115,8 @@ private:
   void sendVoiceData();
   void udpLoop();
   void sendSilence();
+  void reconnect(bool resume = false);
+  void voiceServerUpdate(const VoiceInfo&);
   void addToQueue(const VoiceData& a);
  std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a, int dur);
   void handleSessionDescription(const nlohmann::json& j);
@@ -134,6 +136,11 @@ private:
   std::thread uth;
   VoiceApiInfo api;
   int uSockfd{};
+  std::mutex voiceServerUpdatemtx;
+  VoiceInfo voiceinfo;
+  std::condition_variable voiceServerUpdatecv;
+  std::atomic<bool> voiceServerUpdateFlag = false;
+  std::atomic<bool> udpInterrupt = false;
   std::mutex qmtx;
   std::condition_variable qcv;
   std::mutex fmtx;
