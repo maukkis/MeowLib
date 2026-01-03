@@ -20,18 +20,19 @@ void VoiceConnection::flush(){
   Log::dbg("flush exited");
 }
 
-MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
+void VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
   api.guildId = guildId;
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
-    co_return;
+    return;
   }
   auto info = getConnectInfo(std::string(guildId), channelId);
   handle.setUrl("https://" + info.endpoint + "/?v=8");
   if(handle.perform() != OK){
     Log::dbg("failed to connect");
-    co_return;
+    return;
   }
+  api.state = VoiceGatewayState::CONNECTED;
   getHello();
   sendIdentify(info);
   th = std::thread(&VoiceConnection::listen, this);
@@ -43,6 +44,8 @@ void VoiceConnection::disconnect(){
 
 void VoiceConnection::close(){
   // we should... actually stop and join the thread
+  api.state = VoiceGatewayState::DISONNECTED;
+  Log::dbg("closing voice :3");
   api.stop = true;
   qcv.notify_all();
   fcv.notify_all();
@@ -72,14 +75,34 @@ void VoiceConnection::close(){
 
 }
 
-void VoiceConnection::reconnect(bool resume){
+void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){
   handle.wsClose(1012, "*bites you*");
+  api.state = VoiceGatewayState::DISONNECTED;
+  if(waitForNewVoice){
+    api.state = VoiceGatewayState::CHANGING_VOICE_SERVER;
+    udpInterrupt = true;
+    std::unique_lock<std::mutex> lockq(qmtx);
+    voiceDataQueue.clear();
+    lockq.unlock();
+    std::unique_lock lock(voiceServerUpdatemtx);
+    Log::dbg("waiting 5 seconds for new voice information");
+    voiceServerUpdatecv.wait_for(lock, std::chrono::seconds(5), [this]{
+      return api.stop || voiceServerUpdateFlag;
+    });
+    Log::dbg("voice finished waiting");
+    if(api.stop || !voiceServerUpdateFlag){
+      api.stop = true;
+      return;
+    };
+    voiceServerUpdateFlag = false;
+  }
   handle.setUrl("https://" + voiceinfo.endpoint + "/?v=8");
   if(handle.perform() != OK){
     Log::dbg("failed to connect");
     api.stop = true;
     return;
   }
+  api.state = VoiceGatewayState::CONNECTED;
   getHello();
   if(resume){
     nlohmann::json j;
@@ -93,7 +116,6 @@ void VoiceConnection::reconnect(bool resume){
     handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
     return;
   }
-  udpInterrupt = true;
   sendIdentify(voiceinfo);
 }
 
@@ -110,8 +132,9 @@ void VoiceConnection::sendIdentify(const VoiceInfo& info){
 }
 
 
-void VoiceConnection::closer(){
-  bot = nullptr;
+void VoiceConnection::closer(bool forget){
+  if(forget)
+    bot = nullptr;
   close();
 }
 
@@ -127,7 +150,7 @@ VoiceInfo& VoiceConnection::getConnectInfo(const std::string& guildId, const std
   int shard = calculateShardId(guildId, bot->getNumShards());
   std::unique_lock lock(bot->voiceTaskmtx);
   bot->voiceTaskList[guildId] = VoiceCallbacks{};
-  bot->voiceTaskList[guildId].closeCallback = std::bind(&VoiceConnection::closer, this);
+  bot->voiceTaskList[guildId].closeCallback = std::bind(&VoiceConnection::closer, this, std::placeholders::_1);
   bot->voiceTaskList[guildId].voiceServerUpdate = std::bind(&VoiceConnection::voiceServerUpdate, this, std::placeholders::_1);
   lock.unlock();
   bot->shards.at(shard).queue.addToQueue(j.dump());
@@ -140,10 +163,11 @@ VoiceInfo& VoiceConnection::getConnectInfo(const std::string& guildId, const std
 }
 
 
-void VoiceConnection::voiceServerUpdate(const VoiceInfo& a){
-  std::unique_lock<std::mutex> lock(voiceServerUpdatemtx); 
+void VoiceConnection::voiceServerUpdate(VoiceInfo& a){
+  std::unique_lock<std::mutex> lock(voiceServerUpdatemtx);
   voiceinfo = a;
   voiceServerUpdateFlag = true;
+  a = VoiceInfo{};
   lock.unlock();
   voiceServerUpdatecv.notify_all();
 }
@@ -155,6 +179,7 @@ void VoiceConnection::getHello(){
   if(rlen <= 0){
     std::terminate();
   }
+  Log::dbg("got voice hello");
   auto j = nlohmann::json::parse(data);
   api.heartbeatInterval = j["d"]["heartbeat_interval"];
 }

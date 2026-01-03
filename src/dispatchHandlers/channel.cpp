@@ -28,8 +28,12 @@ void NyaBot::channelCreate(nlohmann::json j){
 void NyaBot::channelDelete(nlohmann::json j){
   Channel a(j["d"]);
   channel.cache.erase(a.id);
-  if(a.guildId)
+  if(a.guildId){
+    if(voiceTaskList.contains(*a.guildId) && voiceTaskList.at(*a.guildId).channelId.value_or("bark") == a.id){
+      voiceTaskList.at(*a.guildId).closeCallback(false); 
+    }
     guild.cache.removeGuildChannel(*a.guildId, a.id);
+  }
   if(funs.onChannelDeleteF){
     funs.onChannelDeleteF(a);
   }

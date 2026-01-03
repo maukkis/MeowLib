@@ -102,7 +102,7 @@ void NyaBot::close(){
   }
   std::unique_lock<std::mutex> lock(voiceTaskmtx);
   for(const auto& a : voiceTaskList){
-    a.second.closeCallback();
+    a.second.closeCallback(true);
   }
 }
 

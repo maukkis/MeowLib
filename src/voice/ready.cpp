@@ -74,6 +74,7 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
   }
   sendSelectProtocol(*a);
   sendSpeaking();
+  api.state = VoiceGatewayState::READY;
   udpInterrupt = false;
   qcv.notify_all();
   if(!uth.joinable())

@@ -14,14 +14,14 @@
 
 
 
-
+template<typename... T>
+concept AllowedInContainer = std::conjunction<TopLevelComponent<T>...>::value;
 
 
 class ContainerComponent : public Component {
 public:
   nlohmann::json generate() override;
-  template<typename... T>
-  requires (std::conjunction<TopLevelComponent<T>...>::value)
+  template<AllowedInContainer... T>
   ContainerComponent& addComponents(T&&... comps){
     (components.emplace_back(std::make_shared<std::remove_cvref_t<T>>(std::forward<T>(comps))), ...);
     return *this;

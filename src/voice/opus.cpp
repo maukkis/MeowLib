@@ -11,6 +11,7 @@ constexpr int channels = 2;
 constexpr int pcmDataSize = frameSize * channels * sizeof(opus_int16);
 
 std::expected<std::nullopt_t, int> VoiceConnection::sendPcmData(const uint8_t* pcmData, size_t len){
+  if(api.stop) return std::unexpected(-1);
   std::vector<uint8_t> data(pcmData, pcmData + len);
 
   // pad it to fit into a frame
@@ -47,6 +48,7 @@ std::expected<std::nullopt_t, int> VoiceConnection::sendPcmData(const uint8_t* p
 
 
 void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize){
+  while(api.state != VoiceGatewayState::READY && !api.stop); // stupid
   if(api.stop) return;
   // get the amount of samples per ms for the rtp timestamp
   int dur = (int)(sampleRate / 1000) * duration;
@@ -55,7 +57,7 @@ void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, u
   for(size_t i = 0; i < frameSize; ++i){
     vec.push_back(opusData[i]);
   }
-  auto frame = frameRtp(std::move(vec), dur);
+  auto frame = frameRtp(vec, dur);
   addToQueue(
     VoiceData{
       .payload = std::move(frame.first),
@@ -66,7 +68,7 @@ void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, u
 }
 
 
-std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t> a, int dur){
+std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t>& a, int dur){
   std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + aes256GcmTagSize);
 
   rtpHeader rtp(api.rtpSeq, api.timestamp, api.ssrc);

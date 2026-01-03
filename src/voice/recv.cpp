@@ -52,21 +52,22 @@ void VoiceConnection::listen(){
           case 4003:
           case 4004:
           case 4005:
-          case 4006:
           case 4016:
             reconnect();
           break;
+          case 4006:
           case 4021:
-          case 4022:
             api.stop = true;
-            fcv.notify_all();
-            qcv.notify_all();
+            return;
+          break;
+          case 4022:
+            reconnect(false, true);
           break;
           default:
             reconnect(true);
           break;
         }
-        return;
+        continue;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
       auto j = nlohmann::json::parse(buf);
@@ -83,6 +84,11 @@ void VoiceConnection::listen(){
           Log::dbg("got heartbeat ack");
         break;
         case VoiceOpcodes::SPEAKING:
+        break;
+        case VoiceOpcodes::CLIENT_CONNECT:
+        case 15: // undocumented
+        case 18:
+        case 20:
         break;
         default:
           Log::dbg("got unknown voice payload");

@@ -31,13 +31,14 @@ struct VoiceCallbacks {
   VoiceCallbacks() = default;
   std::mutex mtx;
   VoiceInfo info;
+  std::optional<std::string> channelId = std::nullopt;
   bool ready(){
     return !info.endpoint.empty() && !info.guildId.empty()
             && !info.token.empty() && info.sessionId 
             && !info.sessionId->empty();
   }
-  std::function<void()> closeCallback;
-  std::function<void(const VoiceInfo&)> voiceServerUpdate;
+  std::function<void(bool)> closeCallback;
+  std::function<void(VoiceInfo&)> voiceServerUpdate;
   VoiceCallbacks& operator=([[maybe_unused]]const VoiceCallbacks& a){return *this;}
 };
 

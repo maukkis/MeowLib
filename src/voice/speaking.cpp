@@ -34,7 +34,7 @@ void VoiceConnection::udpLoop(){
     std::unique_lock<std::mutex> lock(qmtx);
     if(voiceDataQueue.empty()) fcv.notify_all();
     qcv.wait(lock, [this](){
-      return (!voiceDataQueue.empty() || api.stop) && !udpInterrupt;
+      return (!voiceDataQueue.empty() && !udpInterrupt) || api.stop;
     });
     if(api.stop) return;
     auto a = std::move(voiceDataQueue.front());
@@ -43,6 +43,7 @@ void VoiceConnection::udpLoop(){
     int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     if(slen <= 0){
       Log::dbg("couldnt send");
+      continue;
     }
     auto time = std::chrono::high_resolution_clock::now() - lastSent;
     auto tts = std::chrono::nanoseconds(
@@ -83,7 +84,7 @@ void VoiceConnection::sendSilence(){
   }
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
-    auto a = frameRtp(std::vector<uint8_t>(silence.begin(), silence.end()), frameSize);
+    auto a = frameRtp(silence, frameSize);
     if(a.second == 0) return;
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));

@@ -31,6 +31,7 @@ enum VoiceOpcodes {
   SESSION_DESCRIPTION,
   SPEAKING,
   HEARTBEAT_ACK,
+  CLIENT_CONNECT = 11,
 };
 
 constexpr int msToNs = 1000000;
@@ -76,6 +77,13 @@ enum class Ciphers {
 
 constexpr uint8_t secretKeyLen = 32;
 
+enum class VoiceGatewayState {
+  DISONNECTED,
+  CONNECTED,
+  READY,
+  CHANGING_VOICE_SERVER,
+};
+
 struct VoiceApiInfo {
   std::string guildId;
   Ciphers cipher;
@@ -87,6 +95,7 @@ struct VoiceApiInfo {
   uint64_t heartbeatInterval{};
   std::atomic<bool> stop = false;
   std::array<uint8_t, secretKeyLen> secretKey;
+  VoiceGatewayState state = VoiceGatewayState::DISONNECTED;
   sockaddr_in dest;
 };
 
@@ -94,7 +103,7 @@ class VoiceConnection {
 public:
   VoiceConnection(NyaBot *a);
   ~VoiceConnection();
-  MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
+  void connect(const std::string_view guildId, const std::string_view channelId);
   /// @brief encodes encrypts and sends off pcmData
   /// @param pcmData pointer to pcmData
   /// @param len length of pcm data
@@ -115,10 +124,10 @@ private:
   void sendVoiceData();
   void udpLoop();
   void sendSilence();
-  void reconnect(bool resume = false);
-  void voiceServerUpdate(const VoiceInfo&);
+  void reconnect(bool resume = false, bool waitForNewVoice = false);
+  void voiceServerUpdate(VoiceInfo&);
   void addToQueue(const VoiceData& a);
- std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t> a, int dur);
+ std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t>& a, int dur);
   void handleSessionDescription(const nlohmann::json& j);
   std::expected<IpDiscovery, std::nullopt_t> performIpDiscovery(const VoiceReady& a);
   int aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
@@ -128,7 +137,7 @@ private:
                                   uint8_t *aad,
                                   int aadlen,
                                   uint8_t *ct);
-  void closer();
+  void closer(bool forget);
 
   meowWs::Websocket handle;
   NyaBot *bot = nullptr;
@@ -145,7 +154,7 @@ private:
   std::condition_variable qcv;
   std::mutex fmtx;
   std::condition_variable fcv;
-  constexpr static std::array<uint8_t, 3> silence {0xf8, 0xff, 0xfe};
+  inline static std::vector<uint8_t> silence {0xf8, 0xff, 0xfe};
   std::deque<VoiceData> voiceDataQueue;
 };
 
