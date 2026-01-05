@@ -69,33 +69,63 @@ void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, u
 
 
 std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t>& a, int dur){
-  std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + aes256GcmTagSize);
+  std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + tagSize);
 
   rtpHeader rtp(api.rtpSeq, api.timestamp, api.ssrc);
   std::memcpy(frame.data(), &rtp, sizeof(rtp));
+  int len = 0;
+  switch(api.cipher){
+    case Ciphers::aead_aes256_gcm_rtpsize: {
+      std::vector<std::uint8_t> encryptedOpus(a.size() + tagSize);
+      std::array<uint8_t, aes256GcmIvSize> nonce{0};
 
-  std::vector<std::uint8_t> encryptedOpus(a.size() + aes256GcmTagSize);
-  std::array<uint8_t, aes256GcmAADSize> nonce{0};
+      uint32_t noncec = api.pNonce++;
+      std::memcpy(nonce.data(), &noncec, sizeof(noncec));
+      // key = secretKey from discord
+      // IV = pNonce padded by 8 null bytes
+      // AAD = rtp frame
+      // the nonce itself is appended to the end of the payload without any padding
+      len = aeadAes256GcmRtpsizeEncrypt(a.data(),
+                                            a.size(),
+                                            api.secretKey.data(),
+                                            nonce.data(),
+                                            std::bit_cast<uint8_t*>(&rtp),
+                                            sizeof(rtp),
+                                            encryptedOpus.data());
+      if(len == -1){
+        Log::error("something went wrong with encrypting");
+        return {{}, 0};
+      }
+      std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
+      std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));
+      break;
+    }
+    case Ciphers::aead_xchacha20_poly1305_rtpsize: {
+      std::vector<std::uint8_t> encryptedOpus(a.size() + tagSize);
+      std::array<uint8_t, xchacha20Poly1305IvSIze> nonce{0};
+      uint32_t noncec = api.pNonce++;
+      std::memcpy(nonce.data(), &noncec, sizeof(noncec));
+      // key = secretKey from discord
+      // IV = pNonce padded by 20 null bytes
+      // AAD = rtp frame
+      // the nonce itself is appended to the end of the payload without any padding
+      len = aeadxChaCha20Poly1305RtpsizeEncrypt(a.data(),
+                                                a.size(),
+                                                api.secretKey.data(),
+                                                nonce.data(),
+                                                std::bit_cast<uint8_t*>(&rtp),
+                                                sizeof(rtp),
+                                                encryptedOpus.data());
+      if(len == -1){
+        Log::error("something went wrong with encrypting");
+        return {{}, 0};
+      }
+      std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
+      std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));
+      break;
 
-  uint32_t noncec = api.pNonce++;
-  std::memcpy(nonce.data(), &noncec, sizeof(noncec));
-  // key = secretKey from discord
-  // IV = pNonce padded by 8 null bytes
-  // AAD = rtp frame
-  // the nonce itself is appended to the end of the payload without any padding
-  int len = aeadAes256GcmRtpsizeEncrypt(a.data(),
-                                        a.size(),
-                                        api.secretKey.data(),
-                                        nonce.data(),
-                                        std::bit_cast<uint8_t*>(&rtp),
-                                        sizeof(rtp),
-                                        encryptedOpus.data());
-  if(len == -1){
-    Log::error("something went wrong with encrypting");
-    return {{}, 0};
+    }
   }
-  std::memcpy(frame.data() + sizeof(rtp), encryptedOpus.data(), len);
-  std::memcpy(frame.data() + sizeof(rtp) + len, &noncec, sizeof(noncec));
   ++api.rtpSeq;
   api.timestamp += dur;
   return {frame, sizeof(api.pNonce) + rtpFrameSize + len};

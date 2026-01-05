@@ -36,10 +36,13 @@ enum VoiceOpcodes {
 
 constexpr int msToNs = 1000000;
 constexpr int rtpFrameSize = 12;
-constexpr int aes256GcmTagSize = 16;
+constexpr int tagSize = 16;
 constexpr int aes256GcmAADSize = 12;
+constexpr int aes256GcmIvSize = 12;
+constexpr int xchacha20Poly1305IvSIze = 24;
 constexpr int sampleRate = 48000;
 constexpr int frameSize = 960;
+
 
 struct IpDiscovery {
   std::string ip;
@@ -130,6 +133,13 @@ private:
  std::pair<std::vector<uint8_t>, uint32_t> frameRtp(std::vector<uint8_t>& a, int dur);
   void handleSessionDescription(const nlohmann::json& j);
   std::expected<IpDiscovery, std::nullopt_t> performIpDiscovery(const VoiceReady& a);
+  int aeadxChaCha20Poly1305RtpsizeEncrypt(uint8_t *pt,
+                                          int ptLen,
+                                          uint8_t *key,
+                                          uint8_t *iv,
+                                          uint8_t *aad,
+                                          int aadlen,
+                                          uint8_t *ct);
   int aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
                                   int ptLen,
                                   uint8_t *key,

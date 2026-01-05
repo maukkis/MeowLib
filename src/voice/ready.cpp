@@ -1,6 +1,7 @@
 #include "../../include/voice/voiceconnection.h"
 #include <meowHttp/websocket.h>
 #include <nlohmann/json.hpp>
+#include <unordered_set>
 #include "../../include/log.h"
 
 VoiceReady::VoiceReady(const nlohmann::json& j){
@@ -54,18 +55,13 @@ void VoiceConnection::sendSelectProtocol(const IpDiscovery& i){
 void VoiceConnection::handleReady(const nlohmann::json& j){
   VoiceReady r(j["d"]);
   api.ssrc = r.ssrc;
-  bool contains = false;
-  for(const auto& c : r.modes){
-    if(c == "aead_aes256_gcm_rtpsize"){
-      contains = true;
-      api.cipher = Ciphers::aead_aes256_gcm_rtpsize;
-    }
-  }
-  if(!contains){
-    Log::dbg("couldnt find a supported cipher suite");
-    api.stop = true;
-    close();
-  }
+  std::unordered_set<std::string> modes(r.modes.begin(), r.modes.end());
+  if(modes.contains(cipherToStr(Ciphers::aead_aes256_gcm_rtpsize)))
+    api.cipher = Ciphers::aead_aes256_gcm_rtpsize;
+  else
+    api.cipher = Ciphers::aead_xchacha20_poly1305_rtpsize;
+
+  Log::dbg(std::format("using cipher: {}", cipherToStr(api.cipher)));
   auto a = performIpDiscovery(r);
   if(!a){
     Log::error("failed to perform ip discovery");
