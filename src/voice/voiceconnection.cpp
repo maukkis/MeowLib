@@ -1,12 +1,20 @@
 #include "../../include/nyaBot.h"
 #include "../../include/voice/voiceconnection.h"
 #include "../../include/eventCodes.h"
+#include <cstdint>
 #include <exception>
+#include <limits>
 #include <meowHttp/websocket.h>
 #include <mutex>
+#include <random>
 #include <unistd.h>
 
-VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {}
+VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {
+  std::random_device dev;
+  std::mt19937 gen(dev());
+  std::uniform_int_distribution<uint32_t> distrib(0, std::numeric_limits<uint32_t>::max());
+  api.pNonce = distrib(gen);
+}
 
 VoiceConnection::~VoiceConnection(){
   close();

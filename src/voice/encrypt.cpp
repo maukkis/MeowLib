@@ -5,6 +5,7 @@
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 
+namespace {
 
 static constexpr std::array arff = { 'e', 'x', 'p', 'a', 'n', 'd', ' ', '3',
                                    '2', '-', 'b', 'y', 't', 'e', ' ', 'k' };
@@ -40,6 +41,8 @@ void hChaCha20(uint8_t *out, uint8_t *key, uint8_t *nonce){
   std::memcpy(out + 16, &x.at(12), 16);
 }
 
+
+}
 
 int VoiceConnection::aeadxChaCha20Poly1305RtpsizeEncrypt(uint8_t *pt,
                                                          int ptLen,
@@ -94,7 +97,6 @@ int VoiceConnection::aeadxChaCha20Poly1305RtpsizeEncrypt(uint8_t *pt,
   ctLen += 16;
   EVP_CIPHER_CTX_free(ctx);
   return ctLen;
-
 }
 
 

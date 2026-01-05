@@ -50,6 +50,10 @@ void VoiceConnection::udpLoop(){
       a.duration * msToNs
       - std::chrono::duration_cast<std::chrono::nanoseconds>(time).count()
     );
+    if(tts <= std::chrono::nanoseconds(0)){
+      Log::dbg("bite");
+      tts = std::chrono::nanoseconds(a.duration * msToNs);
+    }
     std::this_thread::sleep_for(tts);
     lastSent = std::chrono::high_resolution_clock::now();
   }
