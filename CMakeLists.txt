@@ -49,8 +49,9 @@ target_include_directories(MeowLib PUBLIC
 
 install(TARGETS MeowLib EXPORT MeowLibTargets DESTINATION lib)
 if(VOICE_ENABLED)
+  target_include_directories(MeowLib PUBLIC ${OPUS_INCLUDE_DIR})
   target_compile_definitions(MeowLib PRIVATE VOICE_ENABLED)
-  target_link_libraries(MeowLib PUBLIC opus)
+  target_link_libraries(MeowLib PUBLIC ${OPUS_LIBRARY})
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib)
 else()
   install(DIRECTORY ${PROJECT_SOURCE_DIR}/include// DESTINATION include/MeowLib PATTERN "voice/*" EXCLUDE)

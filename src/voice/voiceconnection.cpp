@@ -7,7 +7,13 @@
 #include <meowHttp/websocket.h>
 #include <mutex>
 #include <random>
+#ifdef WIN32
+#define closeSock(x) closesocket(x)
+#undef max // fuck you fuck you fuck you fuck you
+#else
 #include <unistd.h>
+#define closeSock(x) ::close(x)
+#endif
 
 VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {
   std::random_device dev;
@@ -64,7 +70,7 @@ void VoiceConnection::close(){
   sendSilence();
 
   handle.wsClose(1000, "bye :3");
-  ::close(uSockfd);
+  closeSock(uSockfd);
   nlohmann::json j;
   j["op"] = VoiceStateUpdate;
   nlohmann::json d;

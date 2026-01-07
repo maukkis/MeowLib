@@ -7,8 +7,6 @@
 #include <cstring>
 #include <meowHttp/websocket.h>
 #include <mutex>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <thread>
 #include <utility>
 
@@ -40,7 +38,11 @@ void VoiceConnection::udpLoop(){
     auto a = std::move(voiceDataQueue.front());
     voiceDataQueue.pop_front();
     lock.unlock();
+    #ifdef WIN32
+    int slen = sendto(uSockfd, std::bit_cast<char*>(a.payload.data()), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest)); // stupid
+    #else
     int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
+    #endif
     if(slen <= 0){
       Log::dbg("couldnt send");
       continue;
@@ -90,7 +92,12 @@ void VoiceConnection::sendSilence(){
     Log::dbg("sending silence");
     auto a = frameRtp(silence, frameSize);
     if(a.second == 0) return;
+    #ifdef WIN32
+    // WHY TF IS THIS MARKED NO DISCARD
+    [[maybe_unused]] int slen = sendto(uSockfd, std::bit_cast<char*>(a.first.data()), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest)); // stupid
+    #else
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
+    #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));
   } 
 }

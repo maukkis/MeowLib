@@ -8,13 +8,19 @@
 #include <cstdint>
 #include <meowHttp/websocket.h>
 #include <mutex>
+#ifdef WIN32
+#include <windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#else
 #include <netinet/in.h>
+#include <sys/socket.h>
+#endif
 #include <string_view>
 #include "../async.h"
 #include <expected>
 #include <coroutine>
 #include <nlohmann/json.hpp>
-#include <sys/socket.h>
 #include <vector>
 #include <deque>
 #include "../voice.h"

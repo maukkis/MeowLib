@@ -4,7 +4,6 @@
 #include <meowHttp/client.h>
 #include <meowHttp/websocket.h>
 #include <string>
-#include <sys/socket.h>
 
 
 void VoiceConnection::listen(){

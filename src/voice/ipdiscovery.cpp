@@ -1,14 +1,10 @@
 #include "../../include/voice/voiceconnection.h"
 #include "../../include/log.h"
-#include <arpa/inet.h>
 #include <cstdint>
 #include <cstring>
 #include <expected>
 #include <optional>
 #include <stdexcept>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <poll.h>
 
 namespace {
 
@@ -69,8 +65,11 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
   
   uint32_t ssrc = htonl(a.ssrc);
   std::memcpy(&buf.at(ssrcStart), &ssrc, sizeof(ssrc));
-
+  #ifdef WIN32
+  size_t slen = send(uSockfd, std::bit_cast<char*>(buf.data()), buf.size(), 0);
+  #else
   size_t slen = send(uSockfd, buf.data(), buf.size(), 0);
+  #endif
 
   if(slen <= 0){
     Log::error("nothing got sent for ip discovery *bites*");
