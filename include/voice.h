@@ -1,6 +1,5 @@
 #ifndef _INCLUDE_VOICE_H
 #define _INCLUDE_VOICE_H
-#include <coroutine>
 #include <optional>
 #include <string>
 #include <mutex>
@@ -16,7 +15,7 @@ struct VoiceInfo {
   std::string endpoint;
   std::string guildId;
   std::string token;
-  std::optional<std::string> sessionId = std::nullopt;
+  std::string sessionId;
 };
 
 struct VoiceState {
@@ -34,8 +33,7 @@ struct VoiceCallbacks {
   std::optional<std::string> channelId = std::nullopt;
   bool ready(){
     return !info.endpoint.empty() && !info.guildId.empty()
-            && !info.token.empty() && info.sessionId 
-            && !info.sessionId->empty();
+            && !info.token.empty() && !info.sessionId.empty();
   }
   std::function<void(bool)> closeCallback;
   std::function<void(VoiceInfo&)> voiceServerUpdate;

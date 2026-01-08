@@ -86,12 +86,12 @@ std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<
       // AAD = rtp frame
       // the nonce itself is appended to the end of the payload without any padding
       len = aeadAes256GcmRtpsizeEncrypt(a.data(),
-                                            a.size(),
-                                            api.secretKey.data(),
-                                            nonce.data(),
-                                            std::bit_cast<uint8_t*>(&rtp),
-                                            sizeof(rtp),
-                                            encryptedOpus.data());
+                                        a.size(),
+                                        api.secretKey.data(),
+                                        nonce.data(),
+                                        std::bit_cast<uint8_t*>(&rtp),
+                                        sizeof(rtp),
+                                        encryptedOpus.data());
       if(len == -1){
         Log::error("something went wrong with encrypting");
         return {{}, 0};

@@ -17,9 +17,7 @@
 #include <sys/socket.h>
 #endif
 #include <string_view>
-#include "../async.h"
 #include <expected>
-#include <coroutine>
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <deque>
@@ -117,7 +115,7 @@ public:
   /// @param pcmData pointer to pcmData
   /// @param len length of pcm data
   /// @attention slow!!!! as we have to make a copy of the data and opus encode it this function will also block until all the data is encoded and encrypted
-  std::expected<std::nullopt_t, int> sendPcmData(const uint8_t* pcmData, size_t len);
+  std::expected<std::nullopt_t, int> sendPcmData(const uint8_t *pcmData, size_t len);
   void sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize);
   void flush();
   void disconnect();

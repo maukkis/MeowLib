@@ -16,7 +16,6 @@
 #include "modalInteraction.h"
 #include "contextMenuInteraction.h"
 #include "poll.h"
-#include "queue.h"
 #include "restclient.h"
 #include "automod.h"
 #include "role.h"
@@ -24,7 +23,6 @@
 #include "slashCommandInt.h"
 #include "presence.h"
 #include "slashCommands.h"
-#include <cstdint>
 #include <expected>
 #include <functional>
 #include <mutex>
