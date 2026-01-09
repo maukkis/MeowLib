@@ -249,3 +249,36 @@ void NyaBot::rateLimited(nlohmann::json j){
     break;
   }
 }
+
+void NyaBot::guildJoinRequestCreate(nlohmann::json j){
+  if(funs.onGuildJoinRequestCreate){
+    GuildJoinRequestEvent a {
+      .guildId = j["d"]["guild_id"],
+      .request = GuildJoinRequest(j["d"]["request"]),
+      .status = j["d"]["status"],
+    };
+    funs.onGuildJoinRequestCreate(a);
+  }
+}
+
+void NyaBot::guildJoinRequestUpdate(nlohmann::json j){
+  if(funs.onGuildJoinRequestUpdate){
+    GuildJoinRequestEvent a {
+      .guildId = j["d"]["guild_id"],
+      .request = GuildJoinRequest(j["d"]["request"]),
+      .status = j["d"]["status"],
+    };
+    funs.onGuildJoinRequestUpdate(a);
+  }
+}
+
+void NyaBot::guildJoinRequestDelete(nlohmann::json j){
+  if(funs.onGuildJoinRequestDelete){
+    GuildJoinRequestDeleteEvent a {
+      .guildId = j["d"]["guild_id"],
+      .id = j["d"]["id"],
+      .userId = j["d"]["user_id"],
+    };
+    funs.onGuildJoinRequestDelete(a);
+  }
+}

@@ -205,6 +205,18 @@ void NyaBot::onUserUpdate(std::function<void(User&)> f){
   funs.onUserUpdateF = f;
 }
 
+void NyaBot::onGuildJoinRequestCreate(std::function<void(GuildJoinRequestEvent&)> f){
+  funs.onGuildJoinRequestCreate = f;
+}
+
+void NyaBot::onGuildJoinRequestUpdate(std::function<void(GuildJoinRequestEvent&)> f){
+  funs.onGuildJoinRequestUpdate = f;
+}
+
+void NyaBot::onGuildJoinRequestDelete(std::function<void(GuildJoinRequestDeleteEvent&)> f){
+  funs.onGuildJoinRequestDelete = f;
+}
+
 void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
   funs.onTypingStartF = f;
 }

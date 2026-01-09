@@ -78,6 +78,44 @@ Guild::Guild(const nlohmann::json& j){
   }
 }
 
+MemberVerificationFormField::MemberVerificationFormField(const nlohmann::json& j){
+  fieldType = j["field_type"];
+  label = j["label"];
+  if(j.contains("choices")){
+    choices = j["choices"];
+  }
+  if(j.contains("values") && !j["values"].is_null()){
+    values = j["values"];
+  }
+  if(j.contains("response") && !j["response"].is_null()){
+    if(j["response"].is_string())
+      response = j["response"].get<std::string>();
+    else if(j["response"].is_number())
+      response = std::to_string(j["response"].get<int>());
+    else if(j["response"].is_boolean())
+      response = j["response"].get<bool>() ? "true" : "false";
+  }
+  required = j["required"];
+  jsonToOptional(description, j, "description");
+  jsonToOptional(placeholder, j, "placeholder");
+}
+
+GuildJoinRequest::GuildJoinRequest(const nlohmann::json& j){
+  id = j["id"];
+  createdAt = j["created_at"];
+  applicationStatus = j["application_status"];
+  guildId = j["guild_id"];
+  if(j.contains("form_responses") && !j["form_responses"].is_null()){
+    for(const auto& a : j["form_responses"]){
+      formResponses.emplace_back(a);
+    }
+  }
+  jsonToOptional(lastSeen, j, "last_seen");
+  userId = j["user_id"];
+  jsonToOptional(user, j, "user");
+}
+
+
 GuildPreview deserializeGuildPreview(const nlohmann::json& j){
   GuildPreview g;
   g.id = j["id"];

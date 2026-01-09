@@ -87,6 +87,44 @@ struct Guild {
   int nsfwLevel{};
 };
 
+struct MemberVerificationFormField {
+  MemberVerificationFormField() = default;
+  MemberVerificationFormField(const nlohmann::json& j);
+  std::string fieldType;
+  std::string label;
+  std::vector<std::string> choices;
+  std::vector<std::string> values;
+  std::optional<std::string> response;
+  bool required;
+  std::optional<std::string> description;
+  std::optional<std::string> placeholder;
+};
+
+struct GuildJoinRequest {
+  GuildJoinRequest() = default;
+  GuildJoinRequest(const nlohmann::json& j);
+  std::string id;
+  std::string createdAt;
+  std::string applicationStatus;
+  std::string guildId;
+  std::vector<MemberVerificationFormField> formResponses;
+  std::optional<std::string> lastSeen;
+  std::string userId;
+  std::optional<User> user;
+};
+
+struct GuildJoinRequestEvent {
+  std::string guildId;
+  GuildJoinRequest request;
+  std::string status;
+};
+
+struct GuildJoinRequestDeleteEvent {
+  std::string guildId;
+  std::string id;
+  std::string userId;
+};
+
 GuildPreview deserializeGuildPreview(const nlohmann::json& j);
 
 

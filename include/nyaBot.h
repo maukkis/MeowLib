@@ -125,6 +125,9 @@ struct Funs {
   std::function<void(TypingStart&)> onTypingStartF = {};
 
   std::function<void(User&)> onUserUpdateF = {};
+  std::function<void(GuildJoinRequestEvent&)> onGuildJoinRequestCreate = {};
+  std::function<void(GuildJoinRequestEvent&)> onGuildJoinRequestUpdate = {};
+  std::function<void(GuildJoinRequestDeleteEvent&)> onGuildJoinRequestDelete = {};
 };
 
 
@@ -319,6 +322,11 @@ public:
   void onTypingStart(std::function<void(TypingStart&)> f);
 
   void onUserUpdate(std::function<void(User&)> f);
+
+  void onGuildJoinRequestCreate(std::function<void(GuildJoinRequestEvent&)> f);
+  void onGuildJoinRequestUpdate(std::function<void(GuildJoinRequestEvent&)> f);
+  void onGuildJoinRequestDelete(std::function<void(GuildJoinRequestDeleteEvent&)> f);
+
   void onContextMenuCommand(std::function<void(ContextMenuInteraction&)> f);
   ///
   /// @brief Adds a callback when a certain interaction happens.
@@ -420,6 +428,10 @@ private:
   
   void userUpdate(nlohmann::json j);
 
+  void guildJoinRequestCreate(nlohmann::json j);
+  void guildJoinRequestUpdate(nlohmann::json j);
+  void guildJoinRequestDelete(nlohmann::json j);
+
   static void signalHandler(int){
     a->stop = true;
   }
@@ -475,6 +487,9 @@ private:
     {"TYPING_START", std::bind(&NyaBot::typingStart, this, std::placeholders::_1)},
     {"RATE_LIMITED", std::bind(&NyaBot::rateLimited, this, std::placeholders::_1)},
     {"USER_UPDATE", std::bind(&NyaBot::userUpdate, this, std::placeholders::_1)},
+    {"GUILD_JOIN_REQUEST_CREATE", std::bind(&NyaBot::guildJoinRequestCreate, this, std::placeholders::_1)},
+    {"GUILD_JOIN_REQUEST_UPDATE", std::bind(&NyaBot::guildJoinRequestUpdate, this, std::placeholders::_1)},
+    {"GUILD_JOIN_REQUEST_DELETE", std::bind(&NyaBot::guildJoinRequestDelete, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
