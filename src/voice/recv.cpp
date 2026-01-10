@@ -86,6 +86,7 @@ void VoiceConnection::listen(){
         break;
         case VoiceOpcodes::CLIENT_CONNECT:
         case 15: // undocumented
+        case 12:
         case 18:
         case 20:
         break;
