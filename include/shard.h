@@ -61,6 +61,7 @@ private:
   State api;
   ThreadSafeQueue<std::string> queue;
   friend NyaBot;
+  friend class VoiceConnection;
 };
 
 #endif

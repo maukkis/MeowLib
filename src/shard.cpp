@@ -48,6 +48,7 @@ void Shard::routeEvent(const nlohmann::json& j){
   }
   else {
     Log::warn("unknown dispatch");
+    Log::dbg(j.dump());
   }
 }
 

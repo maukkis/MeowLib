@@ -16,7 +16,6 @@
 #include "modalInteraction.h"
 #include "contextMenuInteraction.h"
 #include "poll.h"
-#include "queue.h"
 #include "restclient.h"
 #include "automod.h"
 #include "role.h"
@@ -24,7 +23,6 @@
 #include "slashCommandInt.h"
 #include "presence.h"
 #include "slashCommands.h"
-#include <cstdint>
 #include <expected>
 #include <functional>
 #include <mutex>
@@ -42,6 +40,9 @@
 #include "thread.h"
 #include "typingstart.h"
 #include "user.h"
+#include "voice.h"
+
+
 
 struct ImportantApiStuff {
   std::string token;
@@ -128,6 +129,8 @@ struct Funs {
   std::function<void(GuildJoinRequestEvent&)> onGuildJoinRequestCreate = {};
   std::function<void(GuildJoinRequestEvent&)> onGuildJoinRequestUpdate = {};
   std::function<void(GuildJoinRequestDeleteEvent&)> onGuildJoinRequestDelete = {};
+
+  std::function<void(VoiceState&)> onVoiceStateUpdateF = {};
 };
 
 
@@ -181,7 +184,6 @@ concept HasOnCommandImplemented = !std::is_same_v<decltype(&Command::onCommand),
 
 template<typename T>
 concept CommandHandler = std::is_base_of_v<Command, T> && HasOnCommandImplemented<T>;
-
 
 
 
@@ -326,6 +328,7 @@ public:
   void onGuildJoinRequestCreate(std::function<void(GuildJoinRequestEvent&)> f);
   void onGuildJoinRequestUpdate(std::function<void(GuildJoinRequestEvent&)> f);
   void onGuildJoinRequestDelete(std::function<void(GuildJoinRequestDeleteEvent&)> f);
+  void onVoiceStateUpdate(std::function<void(VoiceState&)> f);
 
   void onContextMenuCommand(std::function<void(ContextMenuInteraction&)> f);
   ///
@@ -362,6 +365,7 @@ public:
   AutoModApiRoutes automod{this};
   ChannelApiRoutes channel{this};
   InviteApiRoutes invite{this};
+  VoiceApiRoutes voice{this};
 private:
 
   void routeInteraction(ButtonInteraction& interaction);
@@ -431,6 +435,12 @@ private:
   void guildJoinRequestCreate(nlohmann::json j);
   void guildJoinRequestUpdate(nlohmann::json j);
   void guildJoinRequestDelete(nlohmann::json j);
+  void voiceServerUpdate(nlohmann::json j);
+  void voiceStateUpdate(nlohmann::json j);
+
+  // these are undocumented and are just placeholders
+  void voiceChannelStatusUpdate(nlohmann::json j);
+  void voiceChannelStartTimeUpdate(nlohmann::json j);
 
   static void signalHandler(int){
     a->stop = true;
@@ -490,6 +500,10 @@ private:
     {"GUILD_JOIN_REQUEST_CREATE", std::bind(&NyaBot::guildJoinRequestCreate, this, std::placeholders::_1)},
     {"GUILD_JOIN_REQUEST_UPDATE", std::bind(&NyaBot::guildJoinRequestUpdate, this, std::placeholders::_1)},
     {"GUILD_JOIN_REQUEST_DELETE", std::bind(&NyaBot::guildJoinRequestDelete, this, std::placeholders::_1)},
+    {"VOICE_SERVER_UPDATE", std::bind(&NyaBot::voiceServerUpdate, this, std::placeholders::_1)},
+    {"VOICE_STATE_UPDATE", std::bind(&NyaBot::voiceStateUpdate, this, std::placeholders::_1)},
+    {"VOICE_CHANNEL_START_TIME_UPDATE", std::bind(&NyaBot::voiceChannelStartTimeUpdate, this, std::placeholders::_1)},
+    {"VOICE_CHANNEL_STATUS_UPDATE", std::bind(&NyaBot::voiceChannelStatusUpdate, this, std::placeholders::_1)},
   };
 
   std::unordered_map<std::string, std::unique_ptr<Command>> commands;
@@ -505,8 +519,11 @@ private:
   std::optional<Presence> presence = std::nullopt;
   std::vector<SlashCommand> slashs;
   std::vector<ContextMenuCommand> ctxMenuCommands;
+  std::mutex voiceTaskmtx;
+  std::unordered_map<std::string, VoiceCallbacks> voiceTaskList;
   friend RestClient;
   friend EmojiApiRoutes;
   friend Shard;
+  friend class VoiceConnection;
 };
 #endif

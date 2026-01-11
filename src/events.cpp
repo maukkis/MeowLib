@@ -221,6 +221,11 @@ void NyaBot::onTypingStart(std::function<void(TypingStart&)> f){
   funs.onTypingStartF = f;
 }
 
+
+void NyaBot::onVoiceStateUpdate(std::function<void(VoiceState&)> f){
+  funs.onVoiceStateUpdateF = f;
+}
+
 void NyaBot::onContextMenuCommand(std::function<void(ContextMenuInteraction&)> f){
   funs.onContextMenuF = f;
 }
