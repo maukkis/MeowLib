@@ -70,7 +70,7 @@ T deserializeInteraction(nlohmann::json& j, NyaBot *a){
     a->guild.cache.insertGuildUser(j["guild_id"], user);
   } 
   else user = User(j["user"]);
-    a->user.cache.insert(user.id, user); 
+  a->user.cache.insert(user.id, user); 
 
   std::string name;
 

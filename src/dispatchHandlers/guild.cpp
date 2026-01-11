@@ -8,7 +8,7 @@
 
 
 void NyaBot::guildCreate(nlohmann::json j){
-  if(j["d"].contains("unavailable")){
+  if(j["d"].contains("unavailable") && j["d"]["unavailable"] == true){
     // the guild is unavailable due to outage we redirect it to the guildDelete event
     guildDelete(std::move(j));
     return;
@@ -41,7 +41,6 @@ void NyaBot::guildUpdate(nlohmann::json j){
 }
 
 void NyaBot::guildDelete(nlohmann::json j){
-
   UnavailableGuild a = deserializeUnavailableGuild(j["d"]);
   int shard = calculateShardId(a.id, api.numShards);
   while(shards.at(shard).api.state != GatewayStates::READY){
@@ -241,7 +240,8 @@ void NyaBot::rateLimited(nlohmann::json j){
       a["d"]["query"] = "";
       a["d"]["limit"] = 0;
       a["d"]["nonce"] = nonce;
-      shards.at(0).queue.addToQueue(a.dump());
+      int shard = calculateShardId(guildId, getNumShards());
+      shards.at(shard).queue.addToQueue(a.dump());
       break;
     }
     default: [[unlikely]]
