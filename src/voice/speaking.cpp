@@ -10,7 +10,11 @@
 #include <thread>
 #include <utility>
 
-
+#ifdef WIN32
+#define poll WSAPoll
+#else
+#include <sys/poll.h>
+#endif
 
 enum SpeakingCodes : uint8_t {
   MICROPHONE = 1 << 0,
@@ -38,15 +42,21 @@ void VoiceConnection::udpLoop(){
     auto a = std::move(voiceDataQueue.front());
     voiceDataQueue.pop_front();
     lock.unlock();
-    #ifdef WIN32
-    int slen = sendto(uSockfd, std::bit_cast<char*>(a.payload.data()), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest)); // stupid
-    #else
-    int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
-    #endif
-    if(slen <= 0){
-      Log::dbg("couldnt send");
-      continue;
-    }
+    pollfd pfd;
+    pfd.fd = uSockfd;
+    pfd.events = POLLOUT;
+    int ret = poll(&pfd, 1, a.duration);
+    if(ret != 0 && ret > 0 && pfd.revents & POLLOUT){
+      #ifdef WIN32
+      int slen = sendto(uSockfd, std::bit_cast<char*>(a.payload.data()), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest)); // stupid
+      #else
+      int slen = sendto(uSockfd, a.payload.data(), a.payloadLen, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
+      #endif
+      if(slen <= 0){
+        Log::dbg("couldnt send");
+      }
+    } else Log::dbg("poll timeout reached or error");
+
     auto time = std::chrono::high_resolution_clock::now() - lastSent;
     auto tts = std::chrono::nanoseconds(
       a.duration * msToNs

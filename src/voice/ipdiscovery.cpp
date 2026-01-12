@@ -45,6 +45,14 @@ std::optional<IpDiscovery> parseIpDiscovery(char *buf){
 
 std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(const VoiceReady& a){
   uSockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  uint32_t bufsize = 212992;
+  #ifdef WIN32
+  bufsize *= 4; // windows is stupid
+  int arf = setsockopt(uSockfd, SOL_SOCKET, SO_SNDBUF, std::bit_cast<const char*>(&bufsize), sizeof(bufsize));
+  if(arf != 0) Log::error("setting send buf size failed owo");
+  #else
+  setsockopt(uSockfd, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize));
+  #endif
   api.dest.sin_family = AF_INET;
   api.dest.sin_port = htons(a.port);
   inet_pton(AF_INET, a.ip.c_str(), &api.dest.sin_addr);
@@ -82,8 +90,10 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
     Log::error("didnt receive anything grr");
     return std::unexpected(std::nullopt);
   }
-
-
+  #ifdef WIN32
+   unsigned long mode = 0;
+   ioctlsocket(uSockfd, FIONBIO, &mode);
+  #endif
   Log::dbg("received: " + std::to_string(rlen) + " bytes");
   auto ip = parseIpDiscovery(buff);
   if(!ip) return std::unexpected(std::nullopt);

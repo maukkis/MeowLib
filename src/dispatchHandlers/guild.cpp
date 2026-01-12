@@ -224,7 +224,7 @@ void NyaBot::guildMemberChunk(nlohmann::json j){
 void NyaBot::rateLimited(nlohmann::json j){
   j = j["d"];
   switch(j["opcode"].get<int>()){
-    case 8: [[likely]] {
+    case eventCodes::RequestGuildMember: [[likely]] {
       const float retryAfter = j["retry_after"];
       const std::string nonce = j["meta"]["nonce"];
       const std::string guildId = j["meta"]["guild_id"];
