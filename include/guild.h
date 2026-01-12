@@ -1,6 +1,5 @@
 #ifndef _INCLUDE_GUILD_H
 #define _INCLUDE_GUILD_H
-#include <functional>
 #include <nlohmann/json_fwd.hpp>
 #include <mutex>
 #include <optional>

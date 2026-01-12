@@ -31,7 +31,8 @@ struct GuildUser {
   std::optional<std::string> avatar = std::nullopt;
   std::optional<std::string> banner = std::nullopt;
   std::vector<std::string> roles = {};
-  std::optional<uint64_t> permissions = std::nullopt; 
+  std::optional<uint64_t> permissions = std::nullopt;
+  std::optional<std::string> channelId = std::nullopt;
   // only for guild member gw events
   std::optional<std::string> guildId = std::nullopt;
   // an iso8601 timestamp 

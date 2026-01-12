@@ -131,6 +131,7 @@ GuildUser::GuildUser(const nlohmann::json &j){
   avatar = j["avatar"].is_null() ? std::nullopt : std::make_optional(j["avatar"]);
   banner = j["banner"].is_null() ? std::nullopt : std::make_optional(j["banner"]);
   roles = j["roles"].get<std::vector<std::string>>();
+  jsonToOptional(channelId, j, "channel_id");
   permissions = j.contains("permissions") ? 
    std::make_optional(std::stoull(j["permissions"].get<std::string>(), nullptr, 10))
    : std::nullopt;
@@ -157,6 +158,9 @@ nlohmann::json serializeGuildUser(const GuildUser& a){
     j["roles"] = a.roles;
   else
     j["roles"] = nullptr;
+  if(a.channelId)
+    j["channel_id"] = *a.channelId;
+  else j["channel_id"] = nullptr;
   return j;
 }
 

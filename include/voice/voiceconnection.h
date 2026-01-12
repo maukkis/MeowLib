@@ -5,9 +5,12 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
+#include <coroutine>
 #include <cstdint>
 #include <meowHttp/websocket.h>
+#include "../async.h"
 #include <mutex>
+#include <thread>
 #ifdef WIN32
 #include <windows.h>
 #include <WinSock2.h>
@@ -110,17 +113,33 @@ class VoiceConnection {
 public:
   VoiceConnection(NyaBot *a);
   ~VoiceConnection();
-  void connect(const std::string_view guildId, const std::string_view channelId);
+  MeowAsync<void> connect(const std::string_view guildId, const std::string_view channelId);
   /// @brief encodes encrypts and sends off pcmData
   /// @param pcmData pointer to pcmData
   /// @param len length of pcm data
   /// @attention slow!!!! as we have to make a copy of the data and opus encode it this function will also block until all the data is encoded and encrypted
   std::expected<std::nullopt_t, int> sendPcmData(const uint8_t *pcmData, size_t len);
+  void changeChannel(const std::string_view channelId);
   void sendOpusData(const uint8_t *opusData, uint64_t duration, uint64_t frameSize);
   void flush();
   void disconnect();
 private:
   VoiceInfo& getConnectInfo(const std::string& guildId, const std::string_view channelId);
+  struct VoiceTask {
+    VoiceConnection *a;
+    bool await_ready() const noexcept {
+      return a->voiceServerUpdateFlag;
+    }
+
+    void await_suspend(std::coroutine_handle<> hp){
+      a->hp = hp;
+    }
+
+    VoiceInfo await_resume(){
+      return a->voiceinfo;
+    }
+  };
+  VoiceTask cogetConnectInfo(const std::string& guildId, const std::string_view channelId);
   void getHello();
   void close();
   void sendIdentify(const VoiceInfo& info);
@@ -152,7 +171,7 @@ private:
                                   int aadlen,
                                   uint8_t *ct);
   void closer(bool forget);
-
+  std::optional<std::coroutine_handle<>> hp;
   meowWs::Websocket handle;
   NyaBot *bot = nullptr;
   std::thread th;

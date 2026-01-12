@@ -34,22 +34,37 @@ void VoiceConnection::flush(){
   Log::dbg("flush exited");
 }
 
-void VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
+MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
   api.guildId = guildId;
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
-    return;
+    co_return;
   }
-  auto info = getConnectInfo(std::string(guildId), channelId);
+  auto info = co_await cogetConnectInfo(std::string(guildId), channelId);
+  voiceServerUpdateFlag = false;
   handle.setUrl("https://" + info.endpoint + "/?v=8");
   if(handle.perform() != OK){
     Log::dbg("failed to connect");
-    return;
+    co_return;
   }
   api.state = VoiceGatewayState::CONNECTED;
   getHello();
   sendIdentify(info);
   th = std::thread(&VoiceConnection::listen, this);
+}
+
+
+void VoiceConnection::changeChannel(const std::string_view channelId){
+  nlohmann::json j;
+  j["op"] = VoiceStateUpdate;
+  nlohmann::json d;
+  d["guild_id"] = api.guildId;
+  d["channel_id"] = channelId;
+  d["self_mute"] = false;
+  d["self_deaf"] = true;
+  j["d"] = std::move(d);
+  int shard = calculateShardId(api.guildId, bot->getNumShards());
+  bot->shards.at(shard).queue.addToQueue(j.dump());
 }
 
 void VoiceConnection::disconnect(){
@@ -176,6 +191,26 @@ VoiceInfo& VoiceConnection::getConnectInfo(const std::string& guildId, const std
   return voiceinfo;
 }
 
+VoiceConnection::VoiceTask VoiceConnection::cogetConnectInfo(const std::string& guildId, const std::string_view channelId){
+  nlohmann::json j;
+  j["op"] = VoiceStateUpdate;
+  nlohmann::json d;
+  d["guild_id"] = guildId;
+  d["channel_id"] = channelId;
+  d["self_mute"] = false;
+  d["self_deaf"] = true;
+  j["d"] = d;
+  int shard = calculateShardId(guildId, bot->getNumShards());
+  std::unique_lock lock(bot->voiceTaskmtx);
+  bot->voiceTaskList[guildId] = VoiceCallbacks{};
+  bot->voiceTaskList[guildId].closeCallback = std::bind(&VoiceConnection::closer, this, std::placeholders::_1);
+  bot->voiceTaskList[guildId].voiceServerUpdate = std::bind(&VoiceConnection::voiceServerUpdate, this, std::placeholders::_1);
+  lock.unlock();
+  bot->shards.at(shard).queue.addToQueue(j.dump());
+  return VoiceConnection::VoiceTask{.a = this};
+}
+
+
 
 void VoiceConnection::voiceServerUpdate(VoiceInfo& a){
   std::unique_lock<std::mutex> lock(voiceServerUpdatemtx);
@@ -184,6 +219,8 @@ void VoiceConnection::voiceServerUpdate(VoiceInfo& a){
   a = VoiceInfo{};
   lock.unlock();
   voiceServerUpdatecv.notify_all();
+  if(hp) hp->resume();
+  hp = std::nullopt;
 }
 
 void VoiceConnection::getHello(){
