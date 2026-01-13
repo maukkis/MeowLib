@@ -12,7 +12,7 @@ template<typename T, typename = void>
 struct AllowedInLabel : std::false_type {};
 
 template<typename T>
-struct AllowedInLabel<T, std::enable_if_t<std::is_base_of<SelectComponent, T>::value, void>> : std::true_type {};
+struct AllowedInLabel<T, std::enable_if_t<isSelect<T>::value, void>> : std::true_type {};
 
 template<>
 struct AllowedInLabel<TextInputComponent> : std::true_type {};

@@ -10,8 +10,8 @@
 #include "selectcomponents.h"
 // im sorry for whoever is having to edit this --Luna
 
-template<typename T>
-using buttons = std::is_same<std::remove_reference_t<T>, ButtonComponent>;
+template<typename... T>
+concept buttons = std::conjunction_v<std::is_same<std::remove_reference_t<T>, ButtonComponent>...>;
 
 enum ActionRowComponentStates {
   NONE,
@@ -36,8 +36,7 @@ public:
     return j;
   }
   ActionRowComponent() = default;
-  template<typename... E>
-  requires (std::conjunction<buttons<E>...>::value)
+  template<buttons... E>
   ActionRowComponent<BUTTONS> addComponents(E&&... comps){
     static_assert(state == NONE || state == BUTTONS, "this component can only have 1 type of component");
     static_assert(sizeof...(comps) <= 5, "cannot have more than 5 buttons");
@@ -47,8 +46,7 @@ public:
   }
 
 
-  template<typename E>
-  requires (std::is_base_of<SelectComponent, std::remove_reference_t<E>>::value)
+  template<Select E>
   ActionRowComponent<SELECT> addComponents(E&& comps){
     static_assert(state == NONE || state == SELECT, "this component can only have 1 type of component");
     ActionRowComponent<SELECT> arf;

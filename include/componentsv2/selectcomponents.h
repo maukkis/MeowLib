@@ -2,6 +2,8 @@
 #define _INCLUDE_COMPONENTSV2_SELECTCOMPONENTS
 #include "componentsv2.h"
 #include <string>
+#include <type_traits>
+
 
 
 struct SelectDefaultValue{
@@ -22,6 +24,13 @@ struct SelectComponent{
   int minValues = 1;
   int maxValues = 1;
 };
+
+template<typename T>
+using isSelect = std::is_base_of<SelectComponent, std::remove_reference_t<T>>;
+
+template<typename T>
+concept Select = isSelect<T>::value;
+
 
 
 #endif

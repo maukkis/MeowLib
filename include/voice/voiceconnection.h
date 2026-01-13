@@ -149,7 +149,6 @@ private:
   void handleReady(const nlohmann::json& j);
   void sendSelectProtocol(const IpDiscovery& i);
   void sendSpeaking();
-  void sendVoiceData();
   void udpLoop();
   void sendSilence();
   void reconnect(bool resume = false, bool waitForNewVoice = false);

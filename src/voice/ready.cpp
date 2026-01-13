@@ -31,7 +31,6 @@ void VoiceConnection::handleSessionDescription(const nlohmann::json& j){
   if(j["d"]["mode"] != cipherToStr(api.cipher)){
     Log::error("invalid cipher from voice gw");
     api.stop = true;
-    close();
     return;
   }
   Log::dbg("session description valid");
@@ -66,7 +65,7 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
   if(!a){
     Log::error("failed to perform ip discovery");
     api.stop = true;
-    close();
+    return;
   }
   sendSelectProtocol(*a);
   sendSpeaking();

@@ -26,8 +26,7 @@ concept areItems = std::conjunction<std::is_same<std::remove_reference_t<T>, Med
 class MediaGalleryComponent : public Component {
 public:
   nlohmann::json generate() override;
-  template<typename... T>
-  requires(areItems<T...>)
+  template<areItems... T>
   MediaGalleryComponent& addItems(T&&... items){
     static_assert(sizeof...(items) < 10, "cannot have more than 10 items");
     (mediaItems.emplace_back(std::forward<T>(items)), ...);

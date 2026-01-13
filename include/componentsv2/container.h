@@ -1,13 +1,7 @@
 #ifndef _INCLUDE_COMPONENTSV2_CONTAINER_H
 #define _INCLUDE_COMPONENTSV2_CONTAINER_H
 #include "componentsv2.h"
-#include "actionRowComponent.h"
-#include "mediagallery.h"
-#include "seperator.h"
-#include "section.h"
 #include "../helpers.h"
-#include "textDisplay.h"
-#include "file.h"
 #include <memory>
 #include <optional>
 #include <type_traits>

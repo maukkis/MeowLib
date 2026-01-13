@@ -12,12 +12,13 @@ template<typename T>
 concept accessory = std::is_same<std::remove_cvref_t<T>, ThumbnailComponent>::value 
                     || std::is_same<std::remove_cvref_t<T>, ButtonComponent>::value;               
 
+template<typename... T>
+concept textdisplays = std::conjunction<std::is_same<std::remove_cvref_t<T>, TextDisplayComponent>...>::value;
 
 class SectionComponent : public Component {
 public:
   nlohmann::json generate() override;
-  template<typename... T>
-  requires(std::conjunction<std::is_same<std::remove_cvref_t<T>, TextDisplayComponent>...>::value)
+  template<textdisplays... T>
   SectionComponent& addComponents(T&&... c){
     (components.emplace_back(std::forward<T>(c)), ...);
     return *this;

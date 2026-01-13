@@ -18,6 +18,10 @@ struct StringSelectOption {
   nlohmann::json serialize();
 };
 
+template<typename... T>
+concept StringSelectOptions = std::conjunction<std::is_same<std::remove_reference_t<T>, StringSelectOption>...>::value;
+
+
 class StringSelectComponent : public SelectComponent, public Component{
 public:
   StringSelectComponent& setCustomId(const std::string_view);
@@ -27,8 +31,7 @@ public:
   // ONLY FOR MODALS
   StringSelectComponent& setRequired(const bool);
   nlohmann::json generate() override;
-  template<typename... T>
-  requires(std::conjunction<std::is_same<std::remove_reference_t<T>, StringSelectOption>...>::value)
+  template<StringSelectOptions... T>
   StringSelectComponent& addOptions(T&&... vals){
     static_assert(sizeof...(vals) <= 25, "cannot have more than 25 options!!");
     (options.emplace_back(std::forward<T>(vals)), ...);
