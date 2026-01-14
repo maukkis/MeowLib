@@ -1,4 +1,6 @@
 #include <cstdint>
+#ifndef _INCLUDE_VOICE_VOICEOPCODES_H
+#define _INCLUDE_VOICE_VOICEOPCODES_H
 enum VoiceOpcodes : uint8_t {
   IDENTIFY,
   SELECT_PROTOCOL,
@@ -21,3 +23,4 @@ enum VoiceOpcodes : uint8_t {
   DAVE_MLS_Welcome = 30,
   DAVE_MLS_Invalid_Commit_Welcome = 31,
 };
+#endif

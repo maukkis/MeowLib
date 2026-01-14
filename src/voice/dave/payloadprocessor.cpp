@@ -7,6 +7,7 @@ DaveProcessInfo Dave::processDavePayload(const std::string_view payload){
   DaveProcessInfo info;
   std::memcpy(&info.seq, payload.data(), sizeof(info.seq));
   info.seq = ntohs(info.seq);
+  Log::dbg(std::to_string(payload.at(2)));
   auto fun = daveLut.at(payload.at(2) - 21);
   if(!fun){
     Log::dbg("not implemented DAVE opcode!!!");

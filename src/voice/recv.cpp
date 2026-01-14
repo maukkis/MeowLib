@@ -69,6 +69,10 @@ void VoiceConnection::listen(){
         continue;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
+      if(frame.opcode == meowWs::meowWS_BINARY){
+        dave.processDavePayload(buf);
+        continue;
+      }
       auto j = nlohmann::json::parse(buf);
       switch(j["op"].get<int>()){
         case VoiceOpcodes::READY:

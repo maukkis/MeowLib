@@ -69,6 +69,9 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
   }
   sendSelectProtocol(*a);
   sendSpeaking();
+
+  handle.wsSend(dave.getKeyPackagePayload(), meowWs::meowWS_BINARY);
+
   api.state = VoiceGatewayState::READY;
   udpInterrupt = false;
   qcv.notify_all();

@@ -1,5 +1,6 @@
 #include "../../include/nyaBot.h"
 #include "../../include/voice/voiceconnection.h"
+#include "../../include/voice/dave/dave.h"
 #include "../../include/eventCodes.h"
 #include <cstdint>
 #include <exception>
@@ -15,7 +16,7 @@
 #define closeSock(x) ::close(x)
 #endif
 
-VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {
+VoiceConnection::VoiceConnection(NyaBot *a) : dave(a->api.appId), bot{a}{
   std::random_device dev;
   std::mt19937 gen(dev());
   std::uniform_int_distribution<uint32_t> distrib(0, std::numeric_limits<uint32_t>::max());
@@ -35,6 +36,7 @@ void VoiceConnection::flush(){
 }
 
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
+  Log::dbg("bite");
   api.guildId = guildId;
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
@@ -156,6 +158,7 @@ void VoiceConnection::sendIdentify(const VoiceInfo& info){
   e["user_id"] = bot->api.appId;
   e["session_id"] = info.sessionId;
   e["token"] = info.token;
+  e["max_dave_protocol_version"] = daveVersion;
   j["d"] = e;
   handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
 }

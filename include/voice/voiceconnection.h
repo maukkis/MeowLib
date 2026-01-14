@@ -3,6 +3,7 @@
 
 
 #include <array>
+#include "dave/dave.h"
 #include <atomic>
 #include <condition_variable>
 #include <coroutine>
@@ -165,6 +166,7 @@ private:
   void closer(bool forget);
   std::optional<std::coroutine_handle<>> hp;
   meowWs::Websocket handle;
+  Dave dave;
   NyaBot *bot = nullptr;
   std::thread th;
   std::thread uth;
