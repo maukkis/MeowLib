@@ -27,21 +27,12 @@
 #include <vector>
 #include <deque>
 #include "../voice.h"
-
+#include "voiceOpcodes.h"
 
 
 class NyaBot;
 
-enum VoiceOpcodes {
-  IDENTIFY,
-  SELECT_PROTOCOL,
-  READY,
-  HEARTBEAT,
-  SESSION_DESCRIPTION,
-  SPEAKING,
-  HEARTBEAT_ACK,
-  CLIENT_CONNECT = 11,
-};
+
 
 constexpr int msToNs = 1000000;
 constexpr int rtpFrameSize = 12;
