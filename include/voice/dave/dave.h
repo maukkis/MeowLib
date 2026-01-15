@@ -1,6 +1,7 @@
 #ifndef _INCLUDE_VOICE_DAVE_DAVE_H
 #define _INCLUDE_VOICE_DAVE_DAVE_H
 #include <cstdint>
+#include <meowHttp/websocket.h>
 #include <mlspp/mls/messages.h>
 #include <mlspp/mls/state.h>
 #include <vector>
@@ -15,7 +16,12 @@ inline static constexpr int daveVersion = 1;
 struct DaveProcessInfo {
   std::optional<std::string> toSend;
   uint16_t seq;
+  meowWs::opcodes opcode;
 };
+
+
+bool isDaveEvent(int opcode);
+bool isBinaryEvent(int opcode);
 
 class Dave {
 public:

@@ -6,6 +6,15 @@
 #include <string>
 
 
+
+void VoiceConnection::handleDave(const std::string_view buf){
+  auto a = dave.processDavePayload(buf);
+  api.seq = a.seq;
+  if(a.toSend){
+    handle.wsSend(*a.toSend, a.opcode);
+  }
+}
+
 void VoiceConnection::listen(){
   using namespace std::chrono_literals;
   auto sentHB = std::chrono::steady_clock::now();
@@ -70,10 +79,14 @@ void VoiceConnection::listen(){
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
       if(frame.opcode == meowWs::meowWS_BINARY){
-        dave.processDavePayload(buf);
+        handleDave(buf);
         continue;
       }
       auto j = nlohmann::json::parse(buf);
+      if(isDaveEvent(j["op"])){
+        handleDave(buf);
+        continue;
+      }
       switch(j["op"].get<int>()){
         case VoiceOpcodes::READY:
           Log::dbg("voice ready");

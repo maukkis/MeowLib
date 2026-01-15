@@ -118,6 +118,7 @@ public:
   void flush();
   void disconnect();
 private:
+  void handleDave(const std::string_view a);
   VoiceInfo& getConnectInfo(const std::string& guildId, const std::string_view channelId);
   struct VoiceTask {
     VoiceConnection *a;

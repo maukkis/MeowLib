@@ -33,6 +33,8 @@ void VoiceConnection::handleSessionDescription(const nlohmann::json& j){
     api.stop = true;
     return;
   }
+  if(j["d"].contains("dave_protocol_version"))
+    Log::dbg("dave version: " + std::to_string(j["d"]["dave_protocol_version"].get<int>()));
   Log::dbg("session description valid");
   api.secretKey = j["d"]["secret_key"];
 }

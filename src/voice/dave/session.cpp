@@ -57,11 +57,13 @@ Dave::Dave(const std::string& userId, int groupId){
 
 
 std::string Dave::getKeyPackagePayload(){
+  // we should ALWAYS generate a new key package
+  // ref: rfc 9420 sect: 16.8
   joinInitKey = mls::HPKEPrivateKey::generate(getCipherSuite());
   keyPackage = mls::KeyPackage(
     getCipherSuite(),
     joinInitKey.public_key,
-    leaf.value(),
+    *leaf,
     mls::ExtensionList{},
     sigPrivKey
   );
@@ -84,7 +86,7 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
     getCipherSuite(),
     hpekKey,
     sigPrivKey,
-    leaf.value(),
+    *leaf,
     generateStateExtensionList(externalSender.value())
   );
   return std::nullopt;
@@ -94,19 +96,21 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
   if(s.at(0) == 1){
     todo("proposal revokes not implemented");
   }
+  auto commitState = (pendingState ? *pendingState : *currentState);
   Log::dbg("processing proposals");
   mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
   std::vector<mls::MLSMessage> messages;
   stream >> messages;
   for(const auto& a : messages){
-    pendingState->handle(a);
+    commitState.handle(a);
   }
   auto secret = mls::hpke::random_bytes(getCipherSuite().secret_size());
-  auto [commit, welcome, state] = pendingState->commit(secret, std::nullopt, {});
+  auto [commit, welcome, state] = commitState.commit(secret, std::nullopt, {});
   cachedState = state; // seemingly we need this state always idk maybe im missing something from the docs but libdave does it like this maybe DAVE 1.0 thing?
   mls::tls::ostream ostream;
   ostream << commit << welcome;
-  return std::string(ostream.bytes().begin(), ostream.bytes().end());
+  std::string data(ostream.bytes().begin(), ostream.bytes().end());
+  return static_cast<char>(VoiceOpcodes::DAVE_MLS_Commit_Welcome) + data;
 }
 
 void Dave::initLeaf(const std::string& userId) {
