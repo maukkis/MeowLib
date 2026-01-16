@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
-#include "../../../include/log.h" 
+#include "../../../include/log.h"
+#include "../../../include/helpers.h"
 #include <cstdint>
 #include <cstring>
 #include <meowHttp/websocket.h>
@@ -13,13 +14,14 @@ DaveProcessInfo Dave::processDavePayload(const std::string_view payload, bool js
   if(!json){
     opc = payload.at(2);
     data = payload.substr(3);
-    std::memcpy(&info.seq, payload.data(), sizeof(info.seq));
-    info.seq = ntohs(info.seq);
+    uint16_t arf = 0;
+    std::memcpy(&arf, payload.data(), sizeof(arf));
+    info.seq = ntohs(arf);
   } else {
     auto j = nlohmann::json::parse(payload);
     Log::dbg(j.dump());
     opc = j["op"];
-    info.seq = j["d"]["seq_ack"];
+    jsonToOptional(info.seq, j["d"], "seq_ack");
   }
   Log::dbg(std::to_string(opc));
   auto fun = daveLut.at(opc - 21);

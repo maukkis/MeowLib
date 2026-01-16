@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h" 
+#include <nlohmann/json.hpp>
 #include <mlspp/hpke/random.h>
 #include <mlspp/mls/messages.h>
 #include <mlspp/tls/tls_syntax.h>
@@ -52,6 +53,8 @@ Dave::Dave(const std::string& userId, uint64_t groupId){
   this->groupId = genBEBytes(groupId, sizeof(groupId));
   addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_External_Sender);
   addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Proposals);
+  addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Announce_Commit_Transition);
+  addToLut(std::bind(&Dave::executeTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_Execute_Transition);
   // we wont have an external sender at this point so we cannot create a group
 }
 
@@ -129,6 +132,27 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
   bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_Commit_Welcome);
   std::string data(bytes.begin(), bytes.end());
   return data;
+}
+
+
+std::optional<std::string> Dave::processCommitTransition(const std::string_view a){
+  mls::tls::istream istream(std::vector<uint8_t>(a.begin(), a.end()));
+  uint16_t transitionId = 4;
+  istream >> transitionId;
+  Log::dbg(std::format("handling commit transition with an id of: {}", transitionId));
+  mls::MLSMessage message;
+  istream >> message;
+  auto state = commitState->handle(message, *cachedState);
+  currentState = std::move(state);
+  Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
+  cachedState.reset();
+  commitState.reset();
+  return std::nullopt;
+}
+std::optional<std::string> Dave::executeTransition(const std::string_view a){
+  auto j = nlohmann::json::parse(a);
+  Log::dbg(std::format("executing transition with an id of {}", j["d"]["transition_id"].get<int>()));
+  return std::nullopt;
 }
 
 void Dave::initLeaf(const std::string& userId) {

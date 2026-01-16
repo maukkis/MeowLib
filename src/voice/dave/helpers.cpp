@@ -10,7 +10,6 @@ bool isBinaryEvent(int opcode){
     case VoiceOpcodes::DAVE_MLS_Key_Package:
     case VoiceOpcodes::DAVE_MLS_Proposals:
     case VoiceOpcodes::DAVE_MLS_Commit_Welcome:
-    case VoiceOpcodes::DAVE_MLS_Announce_Commit_Transition:
     case VoiceOpcodes::DAVE_MLS_Welcome:
     return true;
   }

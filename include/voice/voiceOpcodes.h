@@ -10,7 +10,6 @@ enum VoiceOpcodes : uint8_t {
   SPEAKING,
   HEARTBEAT_ACK,
   CLIENT_CONNECT = 11,
-  DAVE_PREPARE_TRANSITION = 21,
   DAVE_Prepare_Transition = 21,
   DAVE_Execute_Transition = 22,
   DAVE_Transition_Ready = 23,

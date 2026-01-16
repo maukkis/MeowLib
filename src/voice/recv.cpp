@@ -9,9 +9,9 @@
 
 void VoiceConnection::handleDave(const std::string_view buf, bool json){
   auto a = dave->processDavePayload(buf, json);
-  api.seq = a.seq;
+  api.seq = a.seq.value_or(api.seq);
   if(a.toSend){
-    size_t size = handle.wsSend(*a.toSend, meowWs::meowWS_BINARY);
+    size_t size = handle.wsSend(*a.toSend, a.opcode);
     Log::dbg("sent " + std::to_string(size) + " bytes");
   }
 }

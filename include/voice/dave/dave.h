@@ -15,7 +15,7 @@ inline static constexpr int daveVersion = 1;
 
 struct DaveProcessInfo {
   std::optional<std::string> toSend;
-  uint16_t seq;
+  std::optional<uint16_t> seq;
   meowWs::opcodes opcode;
 };
 
@@ -32,6 +32,8 @@ private:
   void addToLut(std::function<std::optional<std::string>(const std::string_view)> f, VoiceOpcodes opc);
   std::optional<std::string> processExternalSender(const std::string_view);
   std::optional<std::string> processProposals(const std::string_view);
+  std::optional<std::string> processCommitTransition(const std::string_view);
+  std::optional<std::string> executeTransition(const std::string_view);
   void initLeaf(const std::string& userId);
   std::optional<mls::State> currentState;
   std::optional<mls::State> pendingState;
