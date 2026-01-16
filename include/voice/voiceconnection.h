@@ -2,6 +2,7 @@
 #define _INCLUDE_VOICE_VOICECONNECTION_H
 
 
+#include <algorithm>
 #include <array>
 #include "dave/dave.h"
 #include <atomic>
@@ -118,7 +119,13 @@ public:
   void flush();
   void disconnect();
 private:
-  void handleDave(const std::string_view a);
+  std::tuple<std::vector<uint8_t>, uint32_t, int> transportEncrypt(uint8_t *pt,
+                                                             int ptLen,
+                                                             uint8_t *key,
+                                                             uint8_t *aad,
+                                                             int aadlen);
+
+  void handleDave(const std::string_view a, bool json = false);
   VoiceInfo& getConnectInfo(const std::string& guildId, const std::string_view channelId);
   struct VoiceTask {
     VoiceConnection *a;
@@ -167,7 +174,7 @@ private:
   void closer(bool forget);
   std::optional<std::coroutine_handle<>> hp;
   meowWs::Websocket handle;
-  Dave dave;
+  std::unique_ptr<Dave> dave;
   NyaBot *bot = nullptr;
   std::thread th;
   std::thread uth;

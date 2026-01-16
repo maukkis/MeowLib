@@ -33,10 +33,14 @@ void VoiceConnection::handleSessionDescription(const nlohmann::json& j){
     api.stop = true;
     return;
   }
-  if(j["d"].contains("dave_protocol_version"))
+  if(j["d"].contains("dave_protocol_version")){
     Log::dbg("dave version: " + std::to_string(j["d"]["dave_protocol_version"].get<int>()));
+    size_t sent = handle.wsSend(dave->getKeyPackagePayload(), meowWs::meowWS_BINARY);
+    Log::dbg(std::format("sent key package: {} bytes", sent));
+  }
   Log::dbg("session description valid");
   api.secretKey = j["d"]["secret_key"];
+
 }
 
 
@@ -72,7 +76,6 @@ void VoiceConnection::handleReady(const nlohmann::json& j){
   sendSelectProtocol(*a);
   sendSpeaking();
 
-  handle.wsSend(dave.getKeyPackagePayload(), meowWs::meowWS_BINARY);
 
   api.state = VoiceGatewayState::READY;
   udpInterrupt = false;

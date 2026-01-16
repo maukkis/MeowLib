@@ -7,11 +7,12 @@
 
 
 
-void VoiceConnection::handleDave(const std::string_view buf){
-  auto a = dave.processDavePayload(buf);
+void VoiceConnection::handleDave(const std::string_view buf, bool json){
+  auto a = dave->processDavePayload(buf, json);
   api.seq = a.seq;
   if(a.toSend){
-    handle.wsSend(*a.toSend, a.opcode);
+    size_t size = handle.wsSend(*a.toSend, meowWs::meowWS_BINARY);
+    Log::dbg("sent " + std::to_string(size) + " bytes");
   }
 }
 
@@ -84,7 +85,7 @@ void VoiceConnection::listen(){
       }
       auto j = nlohmann::json::parse(buf);
       if(isDaveEvent(j["op"])){
-        handleDave(buf);
+        handleDave(buf, true);
         continue;
       }
       switch(j["op"].get<int>()){

@@ -6,17 +6,18 @@
 #include <netinet/in.h>
 #include <nlohmann/json.hpp>
 
-DaveProcessInfo Dave::processDavePayload(const std::string_view payload){
+DaveProcessInfo Dave::processDavePayload(const std::string_view payload, bool json){
   DaveProcessInfo info;
   uint8_t opc{};
   std::string_view data;
-  if(isBinaryEvent(opc)){
+  if(!json){
     opc = payload.at(2);
     data = payload.substr(3);
     std::memcpy(&info.seq, payload.data(), sizeof(info.seq));
     info.seq = ntohs(info.seq);
   } else {
     auto j = nlohmann::json::parse(payload);
+    Log::dbg(j.dump());
     opc = j["op"];
     info.seq = j["d"]["seq_ack"];
   }

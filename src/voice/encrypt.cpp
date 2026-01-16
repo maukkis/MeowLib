@@ -150,3 +150,57 @@ int VoiceConnection::aeadAes256GcmRtpsizeEncrypt(uint8_t *pt,
   EVP_CIPHER_CTX_free(ctx);
   return ctLen;
 }
+
+std::tuple<std::vector<uint8_t>, uint32_t, int> VoiceConnection::transportEncrypt(uint8_t *pt,
+                                                                            int ptLen,
+                                                                            uint8_t *key,
+                                                                            uint8_t *aad,
+                                                                            int aadlen)
+{
+  int len = 0;
+  switch(api.cipher){
+    case Ciphers::aead_aes256_gcm_rtpsize: {
+      std::array<uint8_t, aes256GcmIvSize> nonce{0};
+      std::vector<uint8_t> data(tagSize + ptLen);
+      uint32_t noncec = api.pNonce++;
+      std::memcpy(nonce.data(), &noncec, sizeof(noncec));
+      // key = secretKey from discord
+      // IV = pNonce padded by 8 null bytes
+      // AAD = rtp frame
+      // the nonce itself is appended to the end of the payload without any padding
+      len = aeadAes256GcmRtpsizeEncrypt(pt,
+                                        ptLen,
+                                        key,
+                                        nonce.data(),
+                                        aad,
+                                        aadlen,
+                                        data.data());
+      if(len == -1){
+        Log::error("something went wrong with encrypting");
+      }
+      return {data, noncec, len};
+    }
+    case Ciphers::aead_xchacha20_poly1305_rtpsize: {
+      std::vector<std::uint8_t> data(ptLen + tagSize);
+      std::array<uint8_t, xchacha20Poly1305IvSIze> nonce{0};
+      uint32_t noncec = api.pNonce++;
+      std::memcpy(nonce.data(), &noncec, sizeof(noncec));
+      // key = secretKey from discord
+      // IV = pNonce padded by 20 null bytes
+      // AAD = rtp frame
+      // the nonce itself is appended to the end of the payload without any padding
+      len = aeadxChaCha20Poly1305RtpsizeEncrypt(pt,
+                                                ptLen,
+                                                key,
+                                                nonce.data(),
+                                                aad,
+                                                aadlen,
+                                                data.data());
+      if(len == -1){
+        Log::error("something went wrong with encrypting");
+      }
+      return {data, noncec, len};
+    }
+  }
+
+}

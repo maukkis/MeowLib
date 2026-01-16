@@ -16,7 +16,7 @@
 #define closeSock(x) ::close(x)
 #endif
 
-VoiceConnection::VoiceConnection(NyaBot *a) : dave(a->api.appId), bot{a}{
+VoiceConnection::VoiceConnection(NyaBot *a) : bot{a}{  
   std::random_device dev;
   std::mt19937 gen(dev());
   std::uniform_int_distribution<uint32_t> distrib(0, std::numeric_limits<uint32_t>::max());
@@ -38,6 +38,7 @@ void VoiceConnection::flush(){
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
   Log::dbg("bite");
   api.guildId = guildId;
+  dave = std::make_unique<Dave>(bot->user.getCurrent().value().id, std::stoull(std::string(channelId)));
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
     co_return;
@@ -52,6 +53,8 @@ MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const s
   api.state = VoiceGatewayState::CONNECTED;
   getHello();
   sendIdentify(info);
+
+
   th = std::thread(&VoiceConnection::listen, this);
 }
 

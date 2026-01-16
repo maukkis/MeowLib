@@ -25,8 +25,8 @@ bool isBinaryEvent(int opcode);
 
 class Dave {
 public:
-  Dave(const std::string& userId, int groupId = 1);
-  DaveProcessInfo processDavePayload(const std::string_view payload);
+  Dave(const std::string& userId, uint64_t groupId);
+  DaveProcessInfo processDavePayload(const std::string_view payload, bool json = false);
   std::string getKeyPackagePayload();
 private:
   void addToLut(std::function<std::optional<std::string>(const std::string_view)> f, VoiceOpcodes opc);
@@ -36,13 +36,16 @@ private:
   std::optional<mls::State> currentState;
   std::optional<mls::State> pendingState;
   std::optional<mls::State> cachedState;
-  std::optional<mls::LeafNode> leaf;
-  std::optional<mls::KeyPackage> keyPackage;
-  mls::HPKEPrivateKey joinInitKey;
+  std::optional<mls::State> commitState;
+  // why are all these unique ptrs?
+  // turns out mlspp is a stupid fucking library this was the only way they started working
+  std::unique_ptr<mls::LeafNode> leaf;
+  std::unique_ptr<mls::KeyPackage> keyPackage;
+  std::unique_ptr<mls::HPKEPrivateKey> joinInitKey;
   std::optional<mls::ExternalSender> externalSender;
   mls::bytes_ns::bytes groupId;
-  mls::HPKEPrivateKey hpekKey;
-  mls::SignaturePrivateKey sigPrivKey;
+  std::unique_ptr<mls::HPKEPrivateKey> hpekKey;
+  std::unique_ptr<mls::SignaturePrivateKey> sigPrivKey;
   std::array<std::function<std::optional<std::string>(const std::string_view)>, 11> daveLut{nullptr};
 };
 

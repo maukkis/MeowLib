@@ -18,15 +18,16 @@ mls::CipherSuite getCipherSuite(){
 mls::Capabilities getDefaultDaveMLSCapabilities(){
   auto cap = mls::Capabilities::create_default();
   cap.cipher_suites = {mls::CipherSuite::ID::P256_AES128GCM_SHA256_P256};
+  cap.credentials = {mls::CredentialType::basic};
   return cap;
 }
 
 template<typename T>
-mls::bytes_ns::bytes genBEBytes(T&& value, size_t size){
+mls::bytes_ns::bytes genBEBytes(const T& value, size_t size){
   auto buf = mls::bytes_ns::bytes();
   buf.reserve(size);
   for(ssize_t i = size - 1; i >= 0; --i){
-    buf.push_back(static_cast<uint8_t>(std::forward<T>(value) >> (i * 8)));
+    buf.push_back(static_cast<uint8_t>(value >> (i * 8)));
   }
   return buf;
 } 
@@ -39,15 +40,14 @@ mls::ExtensionList generateStateExtensionList(const mls::ExternalSender& a){
 
 mls::Credential generateDaveMLSCredential(const std::string& userId){
   uint64_t snowflake = std::stoull(userId);
-  return mls::Credential::basic(genBEBytes(snowflake, sizeof(snowflake)));
+  auto a = genBEBytes(snowflake, sizeof(snowflake));
+  return mls::Credential::basic(a);
+}
+
 }
 
 
-
-}
-
-
-Dave::Dave(const std::string& userId, int groupId){
+Dave::Dave(const std::string& userId, uint64_t groupId){
   initLeaf(userId);
   this->groupId = genBEBytes(groupId, sizeof(groupId));
   addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_External_Sender);
@@ -59,17 +59,20 @@ Dave::Dave(const std::string& userId, int groupId){
 std::string Dave::getKeyPackagePayload(){
   // we should ALWAYS generate a new key package
   // ref: rfc 9420 sect: 16.8
-  joinInitKey = mls::HPKEPrivateKey::generate(getCipherSuite());
-  keyPackage = mls::KeyPackage(
+  joinInitKey = std::make_unique<mls::HPKEPrivateKey>(mls::HPKEPrivateKey::generate(getCipherSuite()));
+  keyPackage = std::make_unique<mls::KeyPackage>(
     getCipherSuite(),
-    joinInitKey.public_key,
+    joinInitKey->public_key,
     *leaf,
     mls::ExtensionList{},
-    sigPrivKey
+    *sigPrivKey
   );
-  auto a = mls::tls::marshal(keyPackage);
+  auto a = mls::tls::marshal(*keyPackage);
+  a.insert(a.begin(), VoiceOpcodes::DAVE_MLS_Key_Package);
   std::string str(a.begin(), a.end());
-  return static_cast<char>(VoiceOpcodes::DAVE_MLS_Key_Package) + str;
+  uint8_t b = str.at(0);
+  Log::dbg(std::to_string(b));
+  return str;
 }
 
 
@@ -84,8 +87,8 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
   pendingState = mls::State(
     groupId,
     getCipherSuite(),
-    hpekKey,
-    sigPrivKey,
+    *hpekKey,
+    *sigPrivKey,
     *leaf,
     generateStateExtensionList(externalSender.value())
   );
@@ -96,35 +99,50 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
   if(s.at(0) == 1){
     todo("proposal revokes not implemented");
   }
-  auto commitState = (pendingState ? *pendingState : *currentState);
+  commitState = (pendingState ? *pendingState : *currentState);
   Log::dbg("processing proposals");
   mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
+  bool meow;
+  stream >> meow;
   std::vector<mls::MLSMessage> messages;
   stream >> messages;
   for(const auto& a : messages){
-    commitState.handle(a);
+    Log::dbg("handling message");
+    commitState->handle(a);
   }
-  auto secret = mls::hpke::random_bytes(getCipherSuite().secret_size());
-  auto [commit, welcome, state] = commitState.commit(secret, std::nullopt, {});
+  auto secret = mls::hpke::random_bytes(commitState->cipher_suite().secret_size());
+  auto co = mls::CommitOpts{
+    {},
+    true,
+    false,
+    {}
+  };
+  auto [commit, welcome, state] = commitState->commit(secret, co, {});
   cachedState = state; // seemingly we need this state always idk maybe im missing something from the docs but libdave does it like this maybe DAVE 1.0 thing?
   mls::tls::ostream ostream;
-  ostream << commit << welcome;
-  std::string data(ostream.bytes().begin(), ostream.bytes().end());
-  return static_cast<char>(VoiceOpcodes::DAVE_MLS_Commit_Welcome) + data;
+  ostream << commit;
+  Log::dbg(std::format("{} welcome messages", welcome.secrets.size()));
+  if(welcome.secrets.size() > 0){
+    ostream << welcome;
+  }
+  auto bytes = ostream.bytes();
+  bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_Commit_Welcome);
+  std::string data(bytes.begin(), bytes.end());
+  return data;
 }
 
 void Dave::initLeaf(const std::string& userId) {
-  sigPrivKey = mls::SignaturePrivateKey::generate(getCipherSuite());
-  hpekKey = mls::HPKEPrivateKey::generate(getCipherSuite());
-  leaf = mls::LeafNode(
+  sigPrivKey = std::make_unique<mls::SignaturePrivateKey>(mls::SignaturePrivateKey::generate(getCipherSuite()));
+  hpekKey = std::make_unique<mls::HPKEPrivateKey>(mls::HPKEPrivateKey::generate(getCipherSuite()));
+  leaf = std::make_unique<mls::LeafNode>(
     getCipherSuite(),
-    hpekKey.public_key,
-    sigPrivKey.public_key,
+    hpekKey->public_key,
+    sigPrivKey->public_key,
     generateDaveMLSCredential(userId),
     getDefaultDaveMLSCapabilities(),
     mls::Lifetime::create_default(),
     mls::ExtensionList{},
-    sigPrivKey
+    *sigPrivKey
   );
-  if(leaf.has_value()) Log::dbg("stupid");
+  Log::dbg("initialized leaf");
 }
