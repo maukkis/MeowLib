@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h" 
+#include <mlspp/mls/key_schedule.h>
 #include <nlohmann/json.hpp>
 #include <mlspp/hpke/random.h>
 #include <mlspp/mls/messages.h>
@@ -11,6 +12,7 @@
 #include <mlspp/mls/core_types.h>
 
 namespace {
+constexpr std::string_view exporterLabel = "Discord Secure Frames v0";
 mls::CipherSuite getCipherSuite(){
   return mls::CipherSuite::ID::P256_AES128GCM_SHA256_P256;
 }
@@ -23,6 +25,7 @@ mls::Capabilities getDefaultDaveMLSCapabilities(){
   return cap;
 }
 
+
 template<typename T>
 mls::bytes_ns::bytes genBEBytes(const T& value, size_t size){
   auto buf = mls::bytes_ns::bytes();
@@ -33,11 +36,13 @@ mls::bytes_ns::bytes genBEBytes(const T& value, size_t size){
   return buf;
 } 
 
+
 mls::ExtensionList generateStateExtensionList(const mls::ExternalSender& a){
   mls::ExtensionList list;
   list.add(mls::ExternalSendersExtension{{{a.signature_key, a.credential}}});
   return list;
 }
+
 
 mls::Credential generateDaveMLSCredential(const std::string& userId){
   uint64_t snowflake = std::stoull(userId);
@@ -50,12 +55,17 @@ mls::Credential generateDaveMLSCredential(const std::string& userId){
 
 Dave::Dave(const std::string& userId, uint64_t groupId){
   initLeaf(userId);
+  botId = userId;
   this->groupId = genBEBytes(groupId, sizeof(groupId));
   addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_External_Sender);
   addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Proposals);
   addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Announce_Commit_Transition);
   addToLut(std::bind(&Dave::executeTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_Execute_Transition);
   // we wont have an external sender at this point so we cannot create a group
+}
+
+bool Dave::ready(){
+  return currentState.has_value() && encryptor.has_value();
 }
 
 
@@ -147,8 +157,20 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
+  mls::bytes_ns::bytes userId;
+  uint64_t id = std::stoull(botId);
+  for(size_t i = 0; i < sizeof(id); ++i){
+    userId.push_back(std::bit_cast<uint8_t *>(&id)[i]);
+  }
+  auto baseSecret = currentState->do_export(std::string(exporterLabel), userId, 16);
+  keyratchet = mls::HashRatchet(getCipherSuite(), baseSecret);
+  auto b = keyratchet.get(transitionId);
+  encryptor = Encryptor(b.key);
+  
   return std::nullopt;
 }
+
+
 std::optional<std::string> Dave::executeTransition(const std::string_view a){
   auto j = nlohmann::json::parse(a);
   Log::dbg(std::format("executing transition with an id of {}", j["d"]["transition_id"].get<int>()));

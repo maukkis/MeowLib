@@ -36,7 +36,6 @@ void VoiceConnection::flush(){
 }
 
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
-  Log::dbg("bite");
   api.guildId = guildId;
   dave = std::make_unique<Dave>(bot->user.getCurrent().value().id, std::stoull(std::string(channelId)));
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){

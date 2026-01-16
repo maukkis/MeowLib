@@ -69,12 +69,17 @@ void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, u
 
 
 std::pair<std::vector<uint8_t>, uint32_t> VoiceConnection::frameRtp(std::vector<uint8_t>& a, int dur){
-  std::vector<uint8_t> frame(a.size() + rtpFrameSize + sizeof(api.pNonce) + tagSize);
-
+  std::vector<uint8_t> opus;
+  if(dave->ready()){
+    opus = dave->encryptor->encrypt(a);
+  } else {
+    opus = a;
+  }
+  std::vector<uint8_t> frame(opus.size() + rtpFrameSize + sizeof(api.pNonce) + tagSize);
   rtpHeader rtp(api.rtpSeq, api.timestamp, api.ssrc);
   std::memcpy(frame.data(), &rtp, sizeof(rtp));
-  auto [encryptedOpus, noncec, len] = transportEncrypt(a.data(),
-                                                       a.size(),
+  auto [encryptedOpus, noncec, len] = transportEncrypt(opus.data(),
+                                                       opus.size(),
                                                        api.secretKey.data(),
                                                        std::bit_cast<uint8_t *>(&rtp),
                                                        sizeof(rtp));

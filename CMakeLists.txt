@@ -24,7 +24,7 @@ else()
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(-fsanitize=address)
   endif()
-  set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Wall -Wextra -Werror -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra -Werror -DNDEBUG")
 endif()
 
 if(VOICE_ENABLED)

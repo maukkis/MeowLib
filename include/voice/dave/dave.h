@@ -8,6 +8,7 @@
 #include <array>
 #include <functional>
 #include "../voiceOpcodes.h"
+#include "encryptor.h"
 
 #define todo(x) Log::error(x);\
                 std::terminate();
@@ -26,8 +27,10 @@ bool isBinaryEvent(int opcode);
 class Dave {
 public:
   Dave(const std::string& userId, uint64_t groupId);
+  bool ready();
   DaveProcessInfo processDavePayload(const std::string_view payload, bool json = false);
   std::string getKeyPackagePayload();
+  std::optional<Encryptor> encryptor;
 private:
   void addToLut(std::function<std::optional<std::string>(const std::string_view)> f, VoiceOpcodes opc);
   std::optional<std::string> processExternalSender(const std::string_view);
@@ -49,6 +52,8 @@ private:
   std::unique_ptr<mls::HPKEPrivateKey> hpekKey;
   std::unique_ptr<mls::SignaturePrivateKey> sigPrivKey;
   std::array<std::function<std::optional<std::string>(const std::string_view)>, 11> daveLut{nullptr};
+  std::string botId;
+  mls::HashRatchet keyratchet;
 };
 
 #endif

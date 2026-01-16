@@ -116,6 +116,8 @@ void VoiceConnection::listen(){
     } catch(meowHttp::Exception& e){
         Log::dbg(e.what());
         reconnect(true);
+        lastHB = std::chrono::steady_clock::now();
+        sentHB = std::chrono::steady_clock::now();
         continue;
     }
   }
