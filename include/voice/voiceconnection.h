@@ -92,6 +92,7 @@ enum class VoiceGatewayState {
 struct VoiceApiInfo {
   std::string guildId;
   Ciphers cipher;
+  int daveVersion{};
   uint32_t pNonce = 0;
   int seq = -1;
   uint32_t ssrc{};
