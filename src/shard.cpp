@@ -1,6 +1,7 @@
 #include "../include/shard.h"
 #include "../include/nyaBot.h"
 #include "../include/eventCodes.h"
+#include <exception>
 #include <nlohmann/json.hpp>
 
 #ifndef OS
@@ -132,13 +133,22 @@ void Shard::getHeartbeatInterval(){
   std::string buf;
   try{
     meowWs::meowWsFrame frame;
-    handle.wsRecv(buf, &frame);
+    size_t rlen = 0;
+    for(size_t i = 0; i < 5 && !bot->stop && rlen < 1; ++i)
+      rlen = handle.wsRecv(buf, &frame);
+    if(rlen == 0){
+      Log::error("failed to receive hello bailing out");
+      std::terminate();
+    }
     auto meowJson = nlohmann::json::parse(buf);
     api.interval = meowJson["d"]["heartbeat_interval"];
   }
   catch(nlohmann::json::exception& e){
     Log::error("failed to get the heartbeat interval");
     Log::dbg("buffer is " + buf);
+    bot->stop = true;
+  } catch(std::exception& e){
+    Log::error(std::string("got exception ") + e.what());
     bot->stop = true;
   }
 
