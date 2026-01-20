@@ -13,6 +13,7 @@ bool Dave::isValidProposal(const mls::ValidatedContent& a){
   // only mls add and remove proposals
   if(proposal.proposal_type() != mls::ProposalType::add && proposal.proposal_type() != mls::ProposalType::remove){
     Log::error("not valid proposal type");
+    return false;
   }
   if(a.authenticated_content().content.sender.sender_type() != mls::SenderType::external){
     Log::error("proposal from a sender that is not the voice gateway");
