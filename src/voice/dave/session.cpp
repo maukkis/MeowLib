@@ -165,6 +165,7 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
+  pendingState.reset();
   createEncryptor();
   return std::nullopt;
 }
