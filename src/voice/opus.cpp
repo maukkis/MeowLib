@@ -57,12 +57,12 @@ void VoiceConnection::sendOpusData(const uint8_t *opusData, uint64_t duration, u
   for(size_t i = 0; i < frameSize; ++i){
     vec.push_back(opusData[i]);
   }
-  auto frame = frameRtp(vec, dur);
   addToQueue(
     VoiceData{
-      .payload = std::move(frame.first),
-      .payloadLen = frame.second,
-      .duration = duration
+      .payload = std::move(vec),
+      .payloadLen = vec.size(),
+      .duration = duration,
+      .samples = dur
     }
   );
 }

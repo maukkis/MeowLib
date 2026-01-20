@@ -164,11 +164,17 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   istream >> message;
   auto state = commitState->handle(message, *cachedState);
   currentState = std::move(state);
-  Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
+  Log::dbg(std::format("succesfully moved to a new epoch our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
   pendingState.reset();
   createEncryptor();
+  if(transitionId != 0){
+    nlohmann::json j;
+    j["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
+    j["d"]["transition_id"] = transitionId;
+    return j.dump();
+  }
   return std::nullopt;
 }
 

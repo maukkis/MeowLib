@@ -20,7 +20,6 @@ DaveProcessInfo Dave::processDavePayload(const std::string_view payload, bool js
   } else {
     data = payload;
     auto j = nlohmann::json::parse(payload);
-    Log::dbg(j.dump());
     opc = j["op"];
     jsonToOptional(info.seq, j["d"], "seq_ack");
   }

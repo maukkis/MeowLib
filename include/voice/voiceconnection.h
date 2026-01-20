@@ -65,6 +65,7 @@ struct VoiceData {
   std::vector<uint8_t> payload;
   uint64_t payloadLen{};
   uint64_t duration{};
+  int samples{};
 };
 
 struct VoiceReady {
@@ -192,6 +193,7 @@ private:
   std::condition_variable fcv;
   inline static std::vector<uint8_t> silence {0xf8, 0xff, 0xfe};
   std::deque<VoiceData> voiceDataQueue;
+  std::deque<VoiceData> sendDataQueue;
 };
 
 #endif
