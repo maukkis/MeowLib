@@ -37,6 +37,7 @@ private:
   std::optional<std::string> processExternalSender(const std::string_view);
   std::optional<std::string> processProposals(const std::string_view);
   std::optional<std::string> processCommitTransition(const std::string_view);
+  std::optional<std::string> processWelcome(const std::string_view);
   std::optional<std::string> executeTransition(const std::string_view);
   bool isValidProposal(const mls::ValidatedContent& a);
   void initLeaf(const std::string& userId);

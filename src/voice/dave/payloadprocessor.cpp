@@ -18,6 +18,7 @@ DaveProcessInfo Dave::processDavePayload(const std::string_view payload, bool js
     std::memcpy(&arf, payload.data(), sizeof(arf));
     info.seq = ntohs(arf);
   } else {
+    data = payload;
     auto j = nlohmann::json::parse(payload);
     Log::dbg(j.dump());
     opc = j["op"];

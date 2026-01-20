@@ -26,7 +26,7 @@ void Dave::createEncryptor(){
   auto userId = bytesFrom(std::stoull(botId), sizeof(uint64_t));
   auto baseSecret = currentState->do_export(std::string(exporterLabel), userId, 16);
   keyratchet = mls::HashRatchet(getCipherSuite(), baseSecret);
-  auto key = getKeyForGeneration(0);
+  auto key = getKeyForGeneration(0); // when we create an encryptor for a new epoch we start the generation from zero always
   encryptor = Encryptor(key, this);
 }
 

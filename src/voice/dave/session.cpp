@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h" 
+#include <mlspp/mls/state.h>
 #include <exception>
 #include <mlspp/mls/key_schedule.h>
 #include <nlohmann/json.hpp>
@@ -58,6 +59,7 @@ Dave::Dave(const std::string& userId, uint64_t groupId){
   addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_PROPOSALS);
   addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION);
   addToLut(std::bind(&Dave::executeTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_EXECUTE_TRANSITION);
+  addToLut(std::bind(&Dave::processWelcome, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_WELCOME);
   // we wont have an external sender at this point so we cannot create a group
 }
 
@@ -155,7 +157,7 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
 
 std::optional<std::string> Dave::processCommitTransition(const std::string_view a){
   mls::tls::istream istream(std::vector<uint8_t>(a.begin(), a.end()));
-  uint16_t transitionId = 4;
+  uint16_t transitionId{};
   istream >> transitionId;
   Log::dbg(std::format("handling commit transition with an id of: {}", transitionId));
   mls::MLSMessage message;
@@ -163,6 +165,31 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   auto state = commitState->handle(message, *cachedState);
   currentState = std::move(state);
   Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
+  cachedState.reset();
+  commitState.reset();
+  pendingState.reset();
+  createEncryptor();
+  return std::nullopt;
+}
+
+
+std::optional<std::string> Dave::processWelcome(const std::string_view a){
+  mls::tls::istream istream(std::vector<uint8_t>(a.begin(), a.end()));
+  uint16_t transitionId{};
+  istream >> transitionId;
+  Log::dbg(std::format("got a welcome for transition id: {}", transitionId));
+  mls::Welcome welcome;
+  istream >> welcome;
+  currentState = mls::State(
+    *joinInitKey,
+    *hpekKey,
+    *sigPrivKey,
+    *keyPackage,
+    welcome,
+    std::nullopt,
+    {}
+  );
+  Log::dbg(std::format("succesfully welcomed into the group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
   pendingState.reset();
