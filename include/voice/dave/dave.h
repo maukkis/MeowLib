@@ -4,7 +4,6 @@
 #include <meowHttp/websocket.h>
 #include <mlspp/mls/messages.h>
 #include <mlspp/mls/state.h>
-#include <vector>
 #include <array>
 #include <functional>
 #include "../voiceOpcodes.h"
@@ -32,11 +31,14 @@ public:
   std::string getKeyPackagePayload();
   std::optional<Encryptor> encryptor;
 private:
+  void createEncryptor();
+  std::vector<uint8_t> getKeyForGeneration(uint32_t generation);
   void addToLut(std::function<std::optional<std::string>(const std::string_view)> f, VoiceOpcodes opc);
   std::optional<std::string> processExternalSender(const std::string_view);
   std::optional<std::string> processProposals(const std::string_view);
   std::optional<std::string> processCommitTransition(const std::string_view);
   std::optional<std::string> executeTransition(const std::string_view);
+  bool isValidProposal(const mls::ValidatedContent& a);
   void initLeaf(const std::string& userId);
   std::optional<mls::State> currentState;
   std::optional<mls::State> pendingState;
@@ -54,6 +56,18 @@ private:
   std::array<std::function<std::optional<std::string>(const std::string_view)>, 11> daveLut{nullptr};
   std::string botId;
   mls::HashRatchet keyratchet;
+  friend Encryptor;
 };
+
+mls::CipherSuite getCipherSuite();
+
+template<typename T>
+mls::bytes_ns::bytes bytesFrom(const T& value, size_t size){
+  mls::bytes_ns::bytes bytes;
+  for(size_t i = 0; i < size; ++i){
+    bytes.push_back(std::bit_cast<uint8_t *>(&value)[i]);
+  }
+  return bytes;
+}
 
 #endif

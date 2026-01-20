@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h" 
+#include <exception>
 #include <mlspp/mls/key_schedule.h>
 #include <nlohmann/json.hpp>
 #include <mlspp/hpke/random.h>
@@ -12,10 +13,6 @@
 #include <mlspp/mls/core_types.h>
 
 namespace {
-constexpr std::string_view exporterLabel = "Discord Secure Frames v0";
-mls::CipherSuite getCipherSuite(){
-  return mls::CipherSuite::ID::P256_AES128GCM_SHA256_P256;
-}
 
 
 mls::Capabilities getDefaultDaveMLSCapabilities(){
@@ -94,7 +91,8 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
   Log::dbg("processing external sender");
   externalSender = mls::tls::get<mls::ExternalSender>(std::vector<uint8_t>(payload.begin(), payload.end()));
   if(!leaf){
-    Log::dbg("???");
+    Log::dbg("leaf is somehow null wtf");
+    return std::nullopt;
   }
   // we can now create our pending group
   pendingState = mls::State(
@@ -114,34 +112,44 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
   }
   commitState = (pendingState ? *pendingState : *currentState);
   Log::dbg("processing proposals");
-  mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
-  bool meow;
-  stream >> meow;
-  std::vector<mls::MLSMessage> messages;
-  stream >> messages;
-  for(const auto& a : messages){
-    Log::dbg("handling message");
-    commitState->handle(a);
+  try{
+    mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
+    bool meow;
+    stream >> meow;
+    std::vector<mls::MLSMessage> messages;
+    stream >> messages;
+    for(const auto& a : messages){
+      Log::dbg("handling message");
+      auto msg = commitState->unwrap(a);
+      if(!isValidProposal(msg)){
+        Log::error("not a valid proposal bailing out from handling proposals");
+        return std::nullopt;
+      }
+      commitState->handle(msg);
+    }
+    auto secret = mls::hpke::random_bytes(commitState->cipher_suite().secret_size());
+    auto co = mls::CommitOpts{
+      {},
+      true,
+      false,
+      {}
+    };
+    auto [commit, welcome, state] = commitState->commit(secret, co, {});
+    cachedState = state; // seemingly we need this state always idk maybe im missing something from the docs but libdave does it like this maybe DAVE 1.0 thing?
+    mls::tls::ostream ostream;
+    ostream << commit;
+    Log::dbg(std::format("{} welcome messages", welcome.secrets.size()));
+    if(welcome.secrets.size() > 0){
+      ostream << welcome;
+    }
+    auto bytes = ostream.bytes();
+    bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_Commit_Welcome);
+    std::string data(bytes.begin(), bytes.end());
+    return data;
+  } catch(std::exception& e){
+    Log::dbg(std::string("got exception ") + e.what());
+    return std::nullopt;
   }
-  auto secret = mls::hpke::random_bytes(commitState->cipher_suite().secret_size());
-  auto co = mls::CommitOpts{
-    {},
-    true,
-    false,
-    {}
-  };
-  auto [commit, welcome, state] = commitState->commit(secret, co, {});
-  cachedState = state; // seemingly we need this state always idk maybe im missing something from the docs but libdave does it like this maybe DAVE 1.0 thing?
-  mls::tls::ostream ostream;
-  ostream << commit;
-  Log::dbg(std::format("{} welcome messages", welcome.secrets.size()));
-  if(welcome.secrets.size() > 0){
-    ostream << welcome;
-  }
-  auto bytes = ostream.bytes();
-  bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_Commit_Welcome);
-  std::string data(bytes.begin(), bytes.end());
-  return data;
 }
 
 
@@ -157,16 +165,7 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   Log::dbg(std::format("established a group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
-  mls::bytes_ns::bytes userId;
-  uint64_t id = std::stoull(botId);
-  for(size_t i = 0; i < sizeof(id); ++i){
-    userId.push_back(std::bit_cast<uint8_t *>(&id)[i]);
-  }
-  auto baseSecret = currentState->do_export(std::string(exporterLabel), userId, 16);
-  keyratchet = mls::HashRatchet(getCipherSuite(), baseSecret);
-  auto b = keyratchet.get(transitionId);
-  encryptor = Encryptor(b.key);
-  
+  createEncryptor();
   return std::nullopt;
 }
 

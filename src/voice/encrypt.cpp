@@ -202,5 +202,5 @@ std::tuple<std::vector<uint8_t>, uint32_t, int> VoiceConnection::transportEncryp
       return {data, noncec, len};
     }
   }
-
+  return {};
 }

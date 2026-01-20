@@ -1,5 +1,7 @@
 #include "../../../include/voice/dave/encryptor.h"
+#include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h"
+#include <bit>
 #include <openssl/evp.h>
 #include <array>
 #include <cstdint>
@@ -9,7 +11,7 @@ constexpr int truncTagSize = 8;
 constexpr uint16_t magicBytes = 0xFAFA;
 constexpr int supplementalDataSize = 1;
 
-Encryptor::Encryptor(std::vector<uint8_t> key): key{key}{}
+Encryptor::Encryptor(const std::vector<uint8_t>& key, Dave *dave): dave{dave}, key{key}{}
 
 
 constexpr uint32_t Encryptor::getMaxHeaderSize(){
@@ -30,9 +32,13 @@ std::vector<uint8_t> Encryptor::uleb128encode(uint64_t a){
 std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
   std::vector<uint8_t> data(vec.size() + truncTagSize);
   data.reserve(data.size() + getMaxHeaderSize());
+  if((nonce >> 24) != previousNonce){
+    key = dave->getKeyForGeneration(++generation);
+  }
+  previousNonce = nonce >> 24;
   int len = aes128GcmEncrypt(vec.data(), vec.size(), data.data());
   if(len == -1){
-    Log::error("something went wrong with dave e2ee encryption");
+    Log::error("something went wrong with dave E2EE encryption");
     return {};
   }
   uint32_t nonce = this->nonce++;
@@ -43,8 +49,9 @@ std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
   }
   uint8_t supplementalDataSize = truncTagSize + i + sizeof(magicBytes) + ::supplementalDataSize;
   data.emplace_back(supplementalDataSize);
-  data.emplace_back(0xFA);
-  data.emplace_back(0xFA);
+  for(size_t i = 0; i < sizeof(magicBytes); ++i)
+    data.emplace_back(std::bit_cast<uint8_t *>(&magicBytes)[i]);
+
   return data;
 }
 
