@@ -54,10 +54,10 @@ Dave::Dave(const std::string& userId, uint64_t groupId){
   initLeaf(userId);
   botId = userId;
   this->groupId = genBEBytes(groupId, sizeof(groupId));
-  addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_External_Sender);
-  addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Proposals);
-  addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_Announce_Commit_Transition);
-  addToLut(std::bind(&Dave::executeTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_Execute_Transition);
+  addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_EXTERNAL_SENDER);
+  addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_PROPOSALS);
+  addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION);
+  addToLut(std::bind(&Dave::executeTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_EXECUTE_TRANSITION);
   // we wont have an external sender at this point so we cannot create a group
 }
 
@@ -78,7 +78,7 @@ std::string Dave::getKeyPackagePayload(){
     *sigPrivKey
   );
   auto a = mls::tls::marshal(*keyPackage);
-  a.insert(a.begin(), VoiceOpcodes::DAVE_MLS_Key_Package);
+  a.insert(a.begin(), VoiceOpcodes::DAVE_MLS_KEY_PACKAGE);
   std::string str(a.begin(), a.end());
   uint8_t b = str.at(0);
   Log::dbg(std::to_string(b));
@@ -143,7 +143,7 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
       ostream << welcome;
     }
     auto bytes = ostream.bytes();
-    bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_Commit_Welcome);
+    bytes.insert(bytes.begin(), VoiceOpcodes::DAVE_MLS_COMMIT_WELCOME);
     std::string data(bytes.begin(), bytes.end());
     return data;
   } catch(std::exception& e){

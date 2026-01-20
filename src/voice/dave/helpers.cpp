@@ -37,11 +37,11 @@ std::vector<uint8_t> Dave::getKeyForGeneration(uint32_t generation){
 
 bool isBinaryEvent(int opcode){
   switch(opcode){
-    case VoiceOpcodes::DAVE_MLS_External_Sender:
-    case VoiceOpcodes::DAVE_MLS_Key_Package:
-    case VoiceOpcodes::DAVE_MLS_Proposals:
-    case VoiceOpcodes::DAVE_MLS_Commit_Welcome:
-    case VoiceOpcodes::DAVE_MLS_Welcome:
+    case VoiceOpcodes::DAVE_MLS_EXTERNAL_SENDER:
+    case VoiceOpcodes::DAVE_MLS_KEY_PACKAGE:
+    case VoiceOpcodes::DAVE_MLS_PROPOSALS:
+    case VoiceOpcodes::DAVE_MLS_COMMIT_WELCOME:
+    case VoiceOpcodes::DAVE_MLS_WELCOME:
     return true;
   }
   return false;
