@@ -27,7 +27,14 @@ void Dave::createEncryptor(){
   auto baseSecret = currentState->do_export(std::string(exporterLabel), userId, 16);
   keyratchet = mls::HashRatchet(getCipherSuite(), baseSecret);
   auto key = getKeyForGeneration(0); // when we create an encryptor for a new epoch we start the generation from zero always
-  encryptor = Encryptor(key, this);
+  if(!encryptor)
+    encryptor.emplace(key, this);
+  else {
+    encryptor->nonce = 0;
+    encryptor->previousNonce = 0;
+    encryptor->generation = 0;
+    encryptor->changeKey(key);
+  }
 }
 
 std::vector<uint8_t> Dave::getKeyForGeneration(uint32_t generation){
@@ -41,7 +48,6 @@ bool isBinaryEvent(int opcode){
     case VoiceOpcodes::DAVE_MLS_KEY_PACKAGE:
     case VoiceOpcodes::DAVE_MLS_PROPOSALS:
     case VoiceOpcodes::DAVE_MLS_COMMIT_WELCOME:
-    case VoiceOpcodes::DAVE_MLS_WELCOME:
     return true;
   }
   return false;

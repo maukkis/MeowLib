@@ -22,3 +22,22 @@ bool Dave::isValidProposal(const mls::ValidatedContent& a){
   // TODO: add checking if the member is expected to be in the group
   return true;
 }
+
+
+bool Dave::isValidWelcomeState(){
+
+  if(currentState->extensions().extensions.size() != 1){
+    Log::error("state has more than one extension");
+    return false;
+  }
+  auto extension = currentState->extensions().find<mls::ExternalSendersExtension>();
+  if(extension->senders.size() != 1){
+    Log::error("more than one external sender");
+    return false;
+  }
+  if(extension->senders.at(0) != *externalSender){
+    Log::error("state has a different external sender than what the voice gateway sent");
+    return false;
+  }
+  return true;
+}

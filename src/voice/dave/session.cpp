@@ -186,6 +186,7 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
   Log::dbg(std::format("got a welcome for transition id: {}", transitionId));
   mls::Welcome welcome;
   istream >> welcome;
+
   currentState = mls::State(
     *joinInitKey,
     *hpekKey,
@@ -195,6 +196,14 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
     std::nullopt,
     {}
   );
+  if(!isValidWelcomeState()){
+    currentState.reset();
+    Log::error("failed to process welcome");
+    nlohmann::json j;
+    j["op"] = VoiceOpcodes::DAVE_MLS_INVALID_COMMIT_WELCOME;
+    j["d"]["transition_id"] = transitionId;
+    return j.dump();
+  }
   Log::dbg(std::format("succesfully welcomed into the group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();

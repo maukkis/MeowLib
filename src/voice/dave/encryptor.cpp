@@ -2,6 +2,7 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h"
 #include <bit>
+#include <mutex>
 #include <openssl/evp.h>
 #include <array>
 #include <cstdint>
@@ -29,11 +30,18 @@ std::vector<uint8_t> Encryptor::uleb128encode(uint64_t a){
 }
 
 
+
+void Encryptor::changeKey(const std::vector<uint8_t>& key){
+  std::unique_lock lock(keymtx);
+  this->key = key;
+}
+
+
 std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
   std::vector<uint8_t> data(vec.size() + truncTagSize);
   data.reserve(data.size() + getMaxHeaderSize());
   if((nonce >> 24) != previousNonce){
-    key = dave->getKeyForGeneration(++generation);
+    changeKey(dave->getKeyForGeneration(++generation));
   }
   previousNonce = nonce >> 24;
   int len = aes128GcmEncrypt(vec.data(), vec.size(), data.data());

@@ -40,6 +40,7 @@ private:
   std::optional<std::string> processWelcome(const std::string_view);
   std::optional<std::string> executeTransition(const std::string_view);
   bool isValidProposal(const mls::ValidatedContent& a);
+  bool isValidWelcomeState();
   void initLeaf(const std::string& userId);
   std::optional<mls::State> currentState;
   std::optional<mls::State> pendingState;
