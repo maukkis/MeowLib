@@ -38,6 +38,7 @@ void Encryptor::changeKey(const std::vector<uint8_t>& key){
 
 
 std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
+  if(passthrough) return vec;
   std::vector<uint8_t> data(vec.size() + truncTagSize);
   data.reserve(data.size() + getMaxHeaderSize());
   if((nonce >> 24) != previousNonce){

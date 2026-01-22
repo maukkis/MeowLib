@@ -21,6 +21,10 @@ struct DaveProcessInfo {
   meowWs::opcodes opcode;
 };
 
+struct TransitionInfo {
+  int transitionId{};
+  int protocolVersion{};
+};
 
 bool isDaveEvent(int opcode);
 bool isBinaryEvent(int opcode);
@@ -42,6 +46,7 @@ private:
   std::optional<std::string> processProposals(const std::string_view);
   std::optional<std::string> processCommitTransition(const std::string_view);
   std::optional<std::string> processWelcome(const std::string_view);
+  std::optional<std::string> prepareTransition(const std::string_view);
   std::optional<std::string> executeTransition(const std::string_view);
   bool isValidProposal(const mls::ValidatedContent& a);
   bool isValidWelcomeState();
@@ -63,6 +68,7 @@ private:
   std::unordered_set<uint64_t> users;
   std::string botId;
   mls::HashRatchet keyratchet;
+  std::optional<TransitionInfo> transitionInfo;
   friend Encryptor;
 };
 

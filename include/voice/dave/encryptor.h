@@ -22,6 +22,7 @@ private:
   std::atomic<uint32_t> nonce = 0;
   std::atomic<uint8_t> previousNonce = 0;
   std::atomic<int> generation = 0;
+  std::atomic<bool> passthrough = false;
   friend Dave;
 };
 

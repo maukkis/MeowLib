@@ -56,6 +56,7 @@ Dave::Dave(const std::string& userId, uint64_t groupId){
   initLeaf(userId);
   botId = userId;
   this->groupId = genBEBytes(groupId, sizeof(groupId));
+  addToLut(std::bind(&Dave::prepareTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_PREPARE_TRANSITION);
   addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_EXTERNAL_SENDER);
   addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_PROPOSALS);
   addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION);
@@ -169,6 +170,10 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   pendingState.reset();
   createEncryptor();
   if(transitionId != 0){
+    transitionInfo = TransitionInfo{
+      .transitionId = transitionId,
+      .protocolVersion = daveVersion,
+    };
     nlohmann::json j;
     j["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
     j["d"]["transition_id"] = transitionId;
@@ -212,11 +217,35 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
 }
 
 
+std::optional<std::string> Dave::prepareTransition(const std::string_view a){
+  auto j = nlohmann::json::parse(a);
+  transitionInfo = TransitionInfo{
+    .transitionId = j["d"]["transition_id"],
+    .protocolVersion = j["d"]["protocol_version"],
+  };
+  nlohmann::json d;
+  d["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
+  d["d"]["transition_id"] = transitionInfo->transitionId;
+  return d.dump();
+}
+
+
 std::optional<std::string> Dave::executeTransition(const std::string_view a){
   auto j = nlohmann::json::parse(a);
+  if(!transitionInfo || j["d"]["transition_id"] != transitionInfo->transitionId){
+    Log::error("transition for an id not previously known");
+    return std::nullopt;
+  }
   Log::dbg(std::format("executing transition with an id of {}", j["d"]["transition_id"].get<int>()));
+  if(transitionInfo->protocolVersion == 0){
+    encryptor->passthrough = true;
+  } else {
+    encryptor->passthrough = false;
+  }
+  transitionInfo.reset();
   return std::nullopt;
 }
+
 
 void Dave::initLeaf(const std::string& userId) {
   sigPrivKey = std::make_unique<mls::SignaturePrivateKey>(mls::SignaturePrivateKey::generate(getCipherSuite()));
