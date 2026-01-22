@@ -20,6 +20,9 @@ enum ComponentTypes {
   CONTAINER = 17,
   LABEL,
   FILE_UPLOAD = 19,
+  RADIO_GROUP = 21,
+  CHECKBOX_GROUP = 22,
+  CHECKBOX,
 };
 
 

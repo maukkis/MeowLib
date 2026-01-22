@@ -140,6 +140,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
       case CHANNEL_SELECT:
       case FILE_UPLOAD:
       case MENTIONABLE_SELECT:
+      case RADIO_GROUP:
         {
           const auto& vec = a["component"]["values"].get<std::vector<std::string>>();
           modal.data.insert({a["component"]["custom_id"],
