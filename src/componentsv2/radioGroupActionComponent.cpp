@@ -1,4 +1,4 @@
-#include "../../include/componentsv2/radioGroupActionComponent.h"
+#include "../../include/componentsv2/radioGroupAction.h"
 
 
 nlohmann::json RadioGroupOption::generate() const {

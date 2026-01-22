@@ -4,7 +4,8 @@
 #include "fileupload.h"
 #include "selectcomponents.h"
 #include "textInput.h"
-#include "radioGroupActionComponent.h"
+#include "checkboxAction.h"
+#include "radioGroupAction.h"
 #include <type_traits>
 #include <memory>
 
@@ -24,6 +25,8 @@ struct AllowedInLabel<FileUploadComponent> : std::true_type {};
 template<>
 struct AllowedInLabel<RadioGroupActionComponent> : std::true_type {};
 
+template<>
+struct AllowedInLabel<CheckboxActionComponent> : std::true_type {};
 
 template<typename T>
 concept AllowedInLabel_t = AllowedInLabel<std::remove_reference_t<T>>::value;

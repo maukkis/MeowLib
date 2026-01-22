@@ -140,7 +140,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
       case CHANNEL_SELECT:
       case FILE_UPLOAD:
       case MENTIONABLE_SELECT:
-      case RADIO_GROUP:
+      case CHECKBOX_GROUP:
         {
           const auto& vec = a["component"]["values"].get<std::vector<std::string>>();
           modal.data.insert({a["component"]["custom_id"],
@@ -149,6 +149,7 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
               .data = std::unordered_set<std::string>(vec.begin(), vec.end())}});
           break;
         }
+      case RADIO_GROUP:
       case TEXT_INPUT:
         modal.data.insert(
           {
@@ -159,6 +160,18 @@ ModalInteraction constructModal(nlohmann::json& j, NyaBot *a){
             }
           }
         );
+      break;
+      case CHECKBOX:
+        modal.data.insert(
+          {
+            a["component"]["custom_id"],
+            ModalData{
+              .type = CHECKBOX,
+              .data = a["component"]["value"].get<bool>(),
+            }
+          }
+        );
+      break;
     }
   }
   return modal;
