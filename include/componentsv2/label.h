@@ -5,6 +5,7 @@
 #include "selectcomponents.h"
 #include "textInput.h"
 #include "checkboxAction.h"
+#include "checkboxGroupAction.h"
 #include "radioGroupAction.h"
 #include <type_traits>
 #include <memory>
@@ -27,6 +28,9 @@ struct AllowedInLabel<RadioGroupActionComponent> : std::true_type {};
 
 template<>
 struct AllowedInLabel<CheckboxActionComponent> : std::true_type {};
+
+template<>
+struct AllowedInLabel<CheckboxGroupActionComponent> : std::true_type {};
 
 template<typename T>
 concept AllowedInLabel_t = AllowedInLabel<std::remove_reference_t<T>>::value;

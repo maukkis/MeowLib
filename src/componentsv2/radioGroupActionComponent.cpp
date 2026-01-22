@@ -1,7 +1,7 @@
 #include "../../include/componentsv2/radioGroupAction.h"
 
 
-nlohmann::json RadioGroupOption::generate() const {
+nlohmann::json GroupOption::generate() const {
   nlohmann::json j;
   j["value"] = value;
   j["label"] = label;
@@ -13,25 +13,25 @@ nlohmann::json RadioGroupOption::generate() const {
 }
 
 
-RadioGroupOption& RadioGroupOption::setValue(const std::string_view a){
+GroupOption& GroupOption::setValue(const std::string_view a){
   value = a;
   return *this;
 }
 
 
-RadioGroupOption& RadioGroupOption::setLabel(const std::string_view a){
+GroupOption& GroupOption::setLabel(const std::string_view a){
   label = a;
   return *this;
 }
 
 
-RadioGroupOption& RadioGroupOption::setDescription(const std::string_view a){
+GroupOption& GroupOption::setDescription(const std::string_view a){
   desc = a;
   return *this;
 }
 
 
-RadioGroupOption& RadioGroupOption::setDefault(const bool a){
+GroupOption& GroupOption::setDefault(const bool a){
   defaultt = a;
   return *this;
 }

@@ -1,3 +1,5 @@
+#ifndef _INCLUDE_COMPONENTSV2_CHECKBOXACTION_H
+#define _INCLUDE_COMPONENTSV2_CHECKBOXACTION_H
 #include "componentsv2.h"
 #include <string>
 #include <optional>
@@ -12,3 +14,5 @@ private:
   std::string customId;
   std::optional<bool> defaultt;
 };
+
+#endif
