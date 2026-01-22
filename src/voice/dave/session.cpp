@@ -52,6 +52,7 @@ mls::Credential generateDaveMLSCredential(const std::string& userId){
 
 
 Dave::Dave(const std::string& userId, uint64_t groupId){
+  users.emplace(std::stoull(userId));
   initLeaf(userId);
   botId = userId;
   this->groupId = genBEBytes(groupId, sizeof(groupId));
@@ -82,8 +83,6 @@ std::string Dave::getKeyPackagePayload(){
   auto a = mls::tls::marshal(*keyPackage);
   a.insert(a.begin(), VoiceOpcodes::DAVE_MLS_KEY_PACKAGE);
   std::string str(a.begin(), a.end());
-  uint8_t b = str.at(0);
-  Log::dbg(std::to_string(b));
   return str;
 }
 
@@ -103,7 +102,7 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
     *hpekKey,
     *sigPrivKey,
     *leaf,
-    generateStateExtensionList(externalSender.value())
+    generateStateExtensionList(*externalSender)
   );
   return std::nullopt;
 }
@@ -232,5 +231,6 @@ void Dave::initLeaf(const std::string& userId) {
     mls::ExtensionList{},
     *sigPrivKey
   );
+  Log::dbg(std::format("user id: {}", snowflakeFromCredential(leaf->credential.get<mls::BasicCredential>().identity)));
   Log::dbg("initialized leaf");
 }

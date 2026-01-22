@@ -103,6 +103,11 @@ void VoiceConnection::listen(){
         case VoiceOpcodes::SPEAKING:
         break;
         case VoiceOpcodes::CLIENT_CONNECT:
+          dave->addUsers(j["d"]["user_ids"]);
+        break;
+        case VoiceOpcodes::CLIENT_DISCONNECT:
+          dave->removeUsers({j["d"]["user_id"]});
+        break;
         case 15: // undocumented
         case 12:
         case 18:

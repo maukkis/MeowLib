@@ -16,6 +16,27 @@ void Dave::addToLut(std::function<std::optional<std::string>(const std::string_v
   daveLut.at(opc - 21) = f;
 }
 
+void Dave::addUsers(const std::vector<std::string>& a){
+  for(const auto& user : a){
+    users.emplace(std::stoull(user));
+  }
+}
+
+
+void Dave::removeUsers(const std::vector<std::string>& a){
+  for(const auto& user : a){
+    users.erase(std::stoull(user));
+  }
+}
+
+
+uint64_t snowflakeFromCredential(const mls::bytes_ns::bytes& val){
+  uint64_t a{};
+  for(const uint64_t byte : val){
+    a = (a << 8) | byte;
+  }
+  return a;
+}
 
 
 void Dave::createEncryptor(){

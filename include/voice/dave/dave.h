@@ -6,6 +6,8 @@
 #include <mlspp/mls/state.h>
 #include <array>
 #include <functional>
+#include <unordered_set>
+#include <vector>
 #include "../voiceOpcodes.h"
 #include "encryptor.h"
 
@@ -27,6 +29,8 @@ class Dave {
 public:
   Dave(const std::string& userId, uint64_t groupId);
   bool ready();
+  void addUsers(const std::vector<std::string>& a);
+  void removeUsers(const std::vector<std::string>& a);
   DaveProcessInfo processDavePayload(const std::string_view payload, bool json = false);
   std::string getKeyPackagePayload();
   std::optional<Encryptor> encryptor;
@@ -56,6 +60,7 @@ private:
   std::unique_ptr<mls::HPKEPrivateKey> hpekKey;
   std::unique_ptr<mls::SignaturePrivateKey> sigPrivKey;
   std::array<std::function<std::optional<std::string>(const std::string_view)>, 11> daveLut{nullptr};
+  std::unordered_set<uint64_t> users;
   std::string botId;
   mls::HashRatchet keyratchet;
   friend Encryptor;
@@ -71,5 +76,7 @@ mls::bytes_ns::bytes bytesFrom(const T& value, size_t size){
   }
   return bytes;
 }
+
+uint64_t snowflakeFromCredential(const mls::bytes_ns::bytes& val);
 
 #endif

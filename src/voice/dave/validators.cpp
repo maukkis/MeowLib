@@ -1,5 +1,6 @@
 #include "../../../include/voice/dave/dave.h"
 #include "../../../include/log.h"
+#include <cstdint>
 #include <mlspp/tls/tls_syntax.h>
 #include <mlspp/mls/messages.h>
 
@@ -19,7 +20,16 @@ bool Dave::isValidProposal(const mls::ValidatedContent& a){
     Log::error("proposal from a sender that is not the voice gateway");
     return false;
   }
-  // TODO: add checking if the member is expected to be in the group
+  
+  if(proposal.proposal_type() == mls::ProposalType::add){
+    auto add = std::get<mls::Add>(proposal.content);
+    uint64_t snowflake = snowflakeFromCredential(add.key_package.leaf_node.credential.get<mls::BasicCredential>().identity);
+    if(!users.contains(snowflake)){
+      Log::error("proposing to add a member to the group who shouldnt be in the group");
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -39,5 +49,18 @@ bool Dave::isValidWelcomeState(){
     Log::error("state has a different external sender than what the voice gateway sent");
     return false;
   }
+  if(currentState->roster().size() != users.size()){
+    Log::error("not the same amount of users in the group");
+    return false;
+  }
+  
+  for(const auto& leaf : currentState->roster()){
+    uint64_t snowflake = snowflakeFromCredential(leaf.credential.get<mls::BasicCredential>().identity);
+    if(!users.contains(snowflake)){
+      Log::error("snowflake in group thats not supposed to be there");
+      return false;
+    }
+  }
+
   return true;
 }
