@@ -69,6 +69,7 @@ bool isBinaryEvent(int opcode){
     case VoiceOpcodes::DAVE_MLS_KEY_PACKAGE:
     case VoiceOpcodes::DAVE_MLS_PROPOSALS:
     case VoiceOpcodes::DAVE_MLS_COMMIT_WELCOME:
+    case VoiceOpcodes::DAVE_PREPARE_EPOCH:
     return true;
   }
   return false;

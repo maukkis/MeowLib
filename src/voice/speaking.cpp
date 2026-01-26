@@ -128,7 +128,7 @@ void VoiceConnection::sendSilence(){
   }
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
-    auto a = frameRtp(silence, frameSize);
+    auto a = frameRtp(silence, 960);
     if(a.second == 0) return;
     #ifdef WIN32
     // WHY TF IS THIS MARKED NO DISCARD
@@ -136,7 +136,7 @@ void VoiceConnection::sendSilence(){
     #else
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     #endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));
+    std::this_thread::sleep_for(std::chrono::milliseconds(960 / 48));
   } 
 }
 

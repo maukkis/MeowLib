@@ -43,7 +43,7 @@ constexpr int aes256GcmAADSize = 12;
 constexpr int aes256GcmIvSize = 12;
 constexpr int xchacha20Poly1305IvSIze = 24;
 constexpr int sampleRate = 48000;
-constexpr int frameSize = 960;
+constexpr int frameSize = 960 * 3; // 60 ms frames
 
 
 struct IpDiscovery {

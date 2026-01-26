@@ -41,8 +41,10 @@ public:
 private:
   void createEncryptor();
   std::vector<uint8_t> getKeyForGeneration(uint32_t generation);
+  void reset();
   void addToLut(std::function<std::optional<std::string>(const std::string_view)> f, VoiceOpcodes opc);
   std::optional<std::string> processExternalSender(const std::string_view);
+  std::optional<std::string> prepareEpoch(const std::string_view);
   std::optional<std::string> processProposals(const std::string_view);
   std::optional<std::string> processCommitTransition(const std::string_view);
   std::optional<std::string> processWelcome(const std::string_view);

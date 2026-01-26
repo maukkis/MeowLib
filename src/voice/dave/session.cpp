@@ -12,6 +12,7 @@
 #include <mlspp/mls/credential.h>
 #include <mlspp/mls/crypto.h>
 #include <mlspp/mls/core_types.h>
+#include <optional>
 
 namespace {
 
@@ -48,6 +49,7 @@ mls::Credential generateDaveMLSCredential(const std::string& userId){
   return mls::Credential::basic(a);
 }
 
+
 nlohmann::json makeInvalidWelcomeOrCommit(uint16_t transitionId){
   nlohmann::json j;
   j["op"] = VoiceOpcodes::DAVE_MLS_INVALID_COMMIT_WELCOME;
@@ -64,6 +66,7 @@ Dave::Dave(const std::string& userId, uint64_t groupId){
   botId = userId;
   this->groupId = genBEBytes(groupId, sizeof(groupId));
   addToLut(std::bind(&Dave::prepareTransition, this, std::placeholders::_1), VoiceOpcodes::DAVE_PREPARE_TRANSITION);
+  addToLut(std::bind(&Dave::prepareEpoch, this, std::placeholders::_1), VoiceOpcodes::DAVE_PREPARE_EPOCH);
   addToLut(std::bind(&Dave::processExternalSender, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_EXTERNAL_SENDER);
   addToLut(std::bind(&Dave::processProposals, this, std::placeholders::_1), VoiceOpcodes::DAVE_MLS_PROPOSALS);
   addToLut(std::bind(&Dave::processCommitTransition, this ,std::placeholders::_1), VoiceOpcodes::DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION);
@@ -76,6 +79,13 @@ bool Dave::ready(){
   return currentState.has_value() && encryptor.has_value();
 }
 
+void Dave::reset(){
+  encryptor.reset();
+  currentState.reset();
+  commitState.reset();
+  cachedState.reset();
+  pendingState.reset();
+}
 
 std::string Dave::getKeyPackagePayload(){
   // we should ALWAYS generate a new key package
@@ -112,6 +122,25 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
     *leaf,
     generateStateExtensionList(*externalSender)
   );
+  return std::nullopt;
+}
+
+
+std::optional<std::string> Dave::prepareEpoch(const std::string_view a){
+  auto j = nlohmann::json::parse(a);
+  if(j["d"]["epoch"] == 1){
+    Log::dbg("reseting MLS state");
+    reset();
+    pendingState = mls::State(
+      groupId,
+      getCipherSuite(),
+      *hpekKey,
+      *sigPrivKey,
+      *leaf,
+      generateStateExtensionList(*externalSender)
+    );
+    return getKeyPackagePayload();
+  }
   return std::nullopt;
 }
 
@@ -232,6 +261,10 @@ std::optional<std::string> Dave::prepareTransition(const std::string_view a){
     .transitionId = j["d"]["transition_id"],
     .protocolVersion = j["d"]["protocol_version"],
   };
+  if(transitionInfo->transitionId == 0){
+    transitionInfo.reset();
+    return std::nullopt;
+  }
   nlohmann::json d;
   d["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
   d["d"]["transition_id"] = transitionInfo->transitionId;
