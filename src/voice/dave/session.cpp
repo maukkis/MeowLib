@@ -48,6 +48,13 @@ mls::Credential generateDaveMLSCredential(const std::string& userId){
   return mls::Credential::basic(a);
 }
 
+nlohmann::json makeInvalidWelcomeOrCommit(uint16_t transitionId){
+  nlohmann::json j;
+  j["op"] = VoiceOpcodes::DAVE_MLS_INVALID_COMMIT_WELCOME;
+  j["d"]["transition_id"] = transitionId;
+  return j;
+}
+
 }
 
 
@@ -162,13 +169,17 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   Log::dbg(std::format("handling commit transition with an id of: {}", transitionId));
   mls::MLSMessage message;
   istream >> message;
+  auto msg = commitState->unwrap(message);
+  if(!isValidCommit(msg)){
+    Log::error("not a valid commit");
+    return makeInvalidWelcomeOrCommit(transitionId).dump(); 
+  }
   auto state = commitState->handle(message, *cachedState);
   currentState = std::move(state);
   Log::dbg(std::format("succesfully moved to a new epoch our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
   commitState.reset();
   pendingState.reset();
-  createEncryptor();
   if(transitionId != 0){
     transitionInfo = TransitionInfo{
       .transitionId = transitionId,
@@ -179,6 +190,7 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
     j["d"]["transition_id"] = transitionId;
     return j.dump();
   }
+  createEncryptor(); // we should only create a new encryptor if we are initially creating the group otherwise we should when the transition gets executed
   return std::nullopt;
 }
 
@@ -203,10 +215,7 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
   if(!isValidWelcomeState()){
     currentState.reset();
     Log::error("failed to process welcome");
-    nlohmann::json j;
-    j["op"] = VoiceOpcodes::DAVE_MLS_INVALID_COMMIT_WELCOME;
-    j["d"]["transition_id"] = transitionId;
-    return j.dump();
+    return makeInvalidWelcomeOrCommit(transitionId).dump();
   }
   Log::dbg(std::format("succesfully welcomed into the group our leaf index is: {} and the epoch is: {}", currentState->index().val, currentState->epoch()));
   cachedState.reset();
@@ -240,6 +249,7 @@ std::optional<std::string> Dave::executeTransition(const std::string_view a){
   if(transitionInfo->protocolVersion == 0){
     encryptor->passthrough = true;
   } else {
+    createEncryptor();
     encryptor->passthrough = false;
   }
   transitionInfo.reset();

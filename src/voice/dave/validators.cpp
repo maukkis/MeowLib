@@ -33,6 +33,21 @@ bool Dave::isValidProposal(const mls::ValidatedContent& a){
   return true;
 }
 
+bool Dave::isValidCommit(const mls::ValidatedContent& a){
+  if(a.authenticated_content().content.content_type() != mls::ContentType::commit){
+    Log::error("not a commit");
+    return false;
+  }
+  auto commit = std::get<mls::Commit>(a.authenticated_content().content.content);
+  for(const auto& pro : commit.proposals){
+    if(mls::tls::variant<mls::ProposalOrRefType>::type(pro.content) != mls::ProposalOrRefType::reference){
+      Log::error("trying to introduce an unknown proposal to the commit");
+      return false;
+    }
+  }
+  return true;
+}
+
 
 bool Dave::isValidWelcomeState(){
 

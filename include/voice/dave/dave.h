@@ -50,6 +50,7 @@ private:
   std::optional<std::string> executeTransition(const std::string_view);
   bool isValidProposal(const mls::ValidatedContent& a);
   bool isValidWelcomeState();
+  bool isValidCommit(const mls::ValidatedContent& a);
   void initLeaf(const std::string& userId);
   std::optional<mls::State> currentState;
   std::optional<mls::State> pendingState;
