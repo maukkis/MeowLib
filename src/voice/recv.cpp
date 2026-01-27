@@ -128,4 +128,5 @@ void VoiceConnection::listen(){
         continue;
     }
   }
+  fcv.notify_all();
 }
