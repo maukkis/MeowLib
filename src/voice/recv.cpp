@@ -67,8 +67,10 @@ void VoiceConnection::listen(){
           case 4006:
           case 4021:
             api.stop = true;
+            fcv.notify_all();
             return;
           break;
+          case 4014:
           case 4022:
             reconnect(false, true);
           break;

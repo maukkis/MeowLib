@@ -11,8 +11,6 @@
 #include "../voiceOpcodes.h"
 #include "encryptor.h"
 
-#define todo(x) Log::error(x);\
-                std::terminate();
 inline static constexpr int daveVersion = 1;
 
 struct DaveProcessInfo {
@@ -25,6 +23,12 @@ struct TransitionInfo {
   int transitionId{};
   int protocolVersion{};
 };
+
+struct ProposalData {
+  mls::ValidatedContent content;
+  mls::bytes_ns::bytes ref;
+};
+
 
 bool isDaveEvent(int opcode);
 bool isBinaryEvent(int opcode);
@@ -72,6 +76,7 @@ private:
   std::string botId;
   mls::HashRatchet keyratchet;
   std::optional<TransitionInfo> transitionInfo;
+  std::vector<ProposalData> proposalCache;
   friend Encryptor;
 };
 

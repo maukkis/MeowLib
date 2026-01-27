@@ -85,6 +85,7 @@ void Dave::reset(){
   commitState.reset();
   cachedState.reset();
   pendingState.reset();
+  proposalCache.clear();
 }
 
 std::string Dave::getKeyPackagePayload(){
@@ -145,26 +146,55 @@ std::optional<std::string> Dave::prepareEpoch(const std::string_view a){
 }
 
 std::optional<std::string> Dave::processProposals(const std::string_view s){
-  if(s.at(0) == 1){
-    todo("proposal revokes not implemented");
-  }
-  commitState = (pendingState ? *pendingState : *currentState);
-  Log::dbg("processing proposals");
   try{
+
     mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
-    bool meow;
+    bool meow{};
     stream >> meow;
-    std::vector<mls::MLSMessage> messages;
-    stream >> messages;
-    for(const auto& a : messages){
-      Log::dbg("handling message");
-      auto msg = commitState->unwrap(a);
-      if(!isValidProposal(msg)){
-        Log::error("not a valid proposal bailing out from handling proposals");
-        return std::nullopt;
+    if(meow){
+      Log::dbg("revoking proposals");
+      std::vector<mls::bytes_ns::bytes> revokes;
+      stream >> revokes;
+      for(const auto& a : revokes){
+        for(auto it = proposalCache.begin(); const auto& b : proposalCache){
+          if(a == b.ref){
+            proposalCache.erase(it);
+            break;
+          }
+          ++it;
+        }
       }
-      commitState->handle(msg);
+      commitState = (pendingState ? *pendingState : *currentState);
+      for(const auto& pro : proposalCache){
+        commitState->handle(pro.content);
+      }
+
+
+    } else {
+
+      commitState = (pendingState ? *pendingState : *currentState);
+      Log::dbg("processing proposals");
+      mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
+      std::vector<mls::MLSMessage> messages;
+      stream >> messages;
+      for(const auto& a : messages){
+        Log::dbg("handling message");
+        auto msg = commitState->unwrap(a);
+        if(!isValidProposal(msg)){
+          Log::error("not a valid proposal bailing out from handling proposals");
+          return std::nullopt;
+        }
+        proposalCache.push_back(
+          {
+            .content = msg,
+            .ref = commitState->cipher_suite().ref(msg.authenticated_content())
+          }
+        );
+        commitState->handle(msg);
+      }
     }
+
+
     auto secret = mls::hpke::random_bytes(commitState->cipher_suite().secret_size());
     auto co = mls::CommitOpts{
       {},
@@ -209,6 +239,7 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   cachedState.reset();
   commitState.reset();
   pendingState.reset();
+  proposalCache.clear();
   if(transitionId != 0){
     transitionInfo = TransitionInfo{
       .transitionId = transitionId,
@@ -250,6 +281,7 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
   cachedState.reset();
   commitState.reset();
   pendingState.reset();
+  proposalCache.clear();
   createEncryptor();
   return std::nullopt;
 }
