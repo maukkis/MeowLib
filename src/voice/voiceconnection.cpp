@@ -114,9 +114,6 @@ void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){
   if(waitForNewVoice){
     api.state = VoiceGatewayState::CHANGING_VOICE_SERVER;
     udpInterrupt = true;
-    std::unique_lock<std::mutex> lockq(qmtx);
-    voiceDataQueue.clear();
-    lockq.unlock();
     std::unique_lock lock(voiceServerUpdatemtx);
     Log::dbg("waiting 5 seconds for new voice information");
     voiceServerUpdatecv.wait_for(lock, std::chrono::seconds(5), [this]{
@@ -128,6 +125,7 @@ void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){
       return;
     };
     voiceServerUpdateFlag = false;
+    dave = std::make_unique<Dave>(bot->user.getCurrent()->id, std::stoull(*voiceinfo.channelId));
   }
   handle.setUrl("https://" + voiceinfo.endpoint + "/?v=8");
   if(handle.perform() != OK){

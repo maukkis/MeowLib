@@ -50,7 +50,6 @@ bool Dave::isValidCommit(const mls::ValidatedContent& a){
 
 
 bool Dave::isValidWelcomeState(){
-
   if(currentState->extensions().extensions.size() != 1){
     Log::error("state has more than one extension");
     return false;

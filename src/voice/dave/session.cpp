@@ -129,7 +129,7 @@ std::optional<std::string> Dave::processExternalSender(const std::string_view pa
 std::optional<std::string> Dave::prepareEpoch(const std::string_view a){
   auto j = nlohmann::json::parse(a);
   if(j["d"]["epoch"] == 1){
-    Log::dbg("reseting MLS state");
+    Log::dbg("resetting MLS state");
     reset();
     pendingState = mls::State(
       groupId,
@@ -280,7 +280,8 @@ std::optional<std::string> Dave::executeTransition(const std::string_view a){
   }
   Log::dbg(std::format("executing transition with an id of {}", j["d"]["transition_id"].get<int>()));
   if(transitionInfo->protocolVersion == 0){
-    encryptor->passthrough = true;
+    if(encryptor) // we may actually not have an encryptor here if we are transitioning before the initial group creation
+      encryptor->passthrough = true;
   } else {
     createEncryptor();
     encryptor->passthrough = false;
@@ -303,6 +304,5 @@ void Dave::initLeaf(const std::string& userId) {
     mls::ExtensionList{},
     *sigPrivKey
   );
-  Log::dbg(std::format("user id: {}", snowflakeFromCredential(leaf->credential.get<mls::BasicCredential>().identity)));
   Log::dbg("initialized leaf");
 }

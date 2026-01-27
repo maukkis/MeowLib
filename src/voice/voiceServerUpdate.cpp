@@ -8,7 +8,7 @@ void setSessionId(std::unordered_map<std::string, VoiceCallbacks>& arf, const nl
   }
    
   auto& task = arf.at(j["d"]["guild_id"]);
-  jsonToOptional(task.channelId, j["d"], "channel_id");
+  jsonToOptional(task.info.channelId, j["d"], "channel_id");
   std::unique_lock<std::mutex> lock(task.mtx);
   task.info.sessionId = j["d"]["session_id"];
   lock.unlock();
