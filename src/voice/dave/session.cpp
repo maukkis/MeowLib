@@ -166,7 +166,7 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
       }
       commitState = (pendingState ? *pendingState : *currentState);
       for(const auto& pro : proposalCache){
-        commitState->handle(pro.content);
+        commitState->handle(pro.content); // these all are already validated so no point in validating them again
       }
 
 

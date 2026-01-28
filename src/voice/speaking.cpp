@@ -71,7 +71,7 @@ void VoiceConnection::udpLoop(){
       }
     } else Log::dbg("poll timeout reached or error");
     // at this time as we have to wait anyway we should prepare the next thing to send
-    if(!voiceDataQueue.empty()){
+    if(!voiceDataQueue.empty() && !udpInterrupt){
       lock.lock();
       auto a = voiceDataQueue.front();
       voiceDataQueue.pop_front();
@@ -116,10 +116,9 @@ void VoiceConnection::sendSpeaking(){
 
 void VoiceConnection::sendSilence(){
   // we need exclusive access to the queue
-  std::unique_lock<std::mutex> lock(qmtx);
-  if(!voiceDataQueue.empty()){
-    auto item = voiceDataQueue.front();
-    voiceDataQueue.clear();
+  if(!sendDataQueue.empty()){
+    auto item = sendDataQueue.front();
+    sendDataQueue.clear();
     rtpHeader a;
     std::memcpy(&a, item.payload.data(), sizeof(a));
     api.rtpSeq = ntohs(a.seq);
