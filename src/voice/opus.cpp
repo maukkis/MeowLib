@@ -39,7 +39,7 @@ std::expected<std::nullopt_t, int> VoiceConnection::sendPcmData(const uint8_t* p
   }
   opus_encoder_destroy(enc);
   for(auto& a : frames){
-    int samples = opus_packet_get_nb_samples(a.data(), a.size(),sampleRate);
+    int samples = opus_packet_get_nb_samples(a.data(), a.size(), sampleRate);
     sendOpusData(a.data(), samples / static_cast<int>(sampleRate / 1000), a.size());
   }
   return std::nullopt;

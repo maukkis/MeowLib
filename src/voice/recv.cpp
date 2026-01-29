@@ -14,6 +14,10 @@ void VoiceConnection::handleDave(const std::string_view buf, bool json){
     size_t size = handle.wsSend(*a.toSend, a.opcode);
     Log::dbg("sent " + std::to_string(size) + " bytes");
   }
+  if(a.shouldSendKeyPackage){
+    size_t size = handle.wsSend(dave->getKeyPackagePayload(), meowWs::meowWS_BINARY);
+    Log::dbg("sent key package " + std::to_string(size) + " bytes");
+  }
 }
 
 void VoiceConnection::listen(){

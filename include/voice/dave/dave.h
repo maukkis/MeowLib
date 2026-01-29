@@ -17,6 +17,7 @@ struct DaveProcessInfo {
   std::optional<std::string> toSend;
   std::optional<uint16_t> seq;
   meowWs::opcodes opcode;
+  bool shouldSendKeyPackage = false;
 };
 
 struct TransitionInfo {

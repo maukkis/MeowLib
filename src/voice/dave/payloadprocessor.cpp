@@ -31,5 +31,8 @@ DaveProcessInfo Dave::processDavePayload(const std::string_view payload, bool js
   }
   info.toSend = fun(data);
   info.opcode = isBinaryEvent(opc) ? meowWs::meowWS_BINARY : meowWs::meowWS_TEXT;
+  if((opc == VoiceOpcodes::DAVE_MLS_WELCOME || opc == VoiceOpcodes::DAVE_MLS_ANNOUNCE_COMMIT_TRANSITION) && info.toSend){
+    info.shouldSendKeyPackage = true;
+  }
   return info;
 }
