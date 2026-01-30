@@ -174,7 +174,6 @@ std::optional<std::string> Dave::processProposals(const std::string_view s){
 
       commitState = (pendingState ? *pendingState : *currentState);
       Log::dbg("processing proposals");
-      mls::tls::istream stream(std::vector<uint8_t>(s.begin(), s.end()));
       std::vector<mls::MLSMessage> messages;
       stream >> messages;
       for(const auto& a : messages){
