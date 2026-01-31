@@ -2,7 +2,9 @@
 #define _INCLUDE_VOICE_VOICECONNECTION_H
 
 
+#include <algorithm>
 #include <array>
+#include "dave/dave.h"
 #include <atomic>
 #include <condition_variable>
 #include <coroutine>
@@ -27,21 +29,12 @@
 #include <vector>
 #include <deque>
 #include "../voice.h"
-
+#include "voiceOpcodes.h"
 
 
 class NyaBot;
 
-enum VoiceOpcodes {
-  IDENTIFY,
-  SELECT_PROTOCOL,
-  READY,
-  HEARTBEAT,
-  SESSION_DESCRIPTION,
-  SPEAKING,
-  HEARTBEAT_ACK,
-  CLIENT_CONNECT = 11,
-};
+
 
 constexpr int msToNs = 1000000;
 constexpr int rtpFrameSize = 12;
@@ -50,7 +43,7 @@ constexpr int aes256GcmAADSize = 12;
 constexpr int aes256GcmIvSize = 12;
 constexpr int xchacha20Poly1305IvSIze = 24;
 constexpr int sampleRate = 48000;
-constexpr int frameSize = 960;
+constexpr int frameSize = 960 * 3; // 60 ms frames
 
 
 struct IpDiscovery {
@@ -72,6 +65,7 @@ struct VoiceData {
   std::vector<uint8_t> payload;
   uint64_t payloadLen{};
   uint64_t duration{};
+  int samples{};
 };
 
 struct VoiceReady {
@@ -99,6 +93,7 @@ enum class VoiceGatewayState {
 struct VoiceApiInfo {
   std::string guildId;
   Ciphers cipher;
+  int daveVersion{};
   uint32_t pNonce = 0;
   int seq = -1;
   uint32_t ssrc{};
@@ -126,6 +121,13 @@ public:
   void flush();
   void disconnect();
 private:
+  std::tuple<std::vector<uint8_t>, uint32_t, int> transportEncrypt(uint8_t *pt,
+                                                             int ptLen,
+                                                             uint8_t *key,
+                                                             uint8_t *aad,
+                                                             int aadlen);
+
+  void handleDave(const std::string_view a, bool json = false);
   VoiceInfo& getConnectInfo(const std::string& guildId, const std::string_view channelId);
   struct VoiceTask {
     VoiceConnection *a;
@@ -174,6 +176,7 @@ private:
   void closer(bool forget);
   std::optional<std::coroutine_handle<>> hp;
   meowWs::Websocket handle;
+  std::unique_ptr<Dave> dave;
   NyaBot *bot = nullptr;
   std::thread th;
   std::thread uth;
@@ -190,6 +193,7 @@ private:
   std::condition_variable fcv;
   inline static std::vector<uint8_t> silence {0xf8, 0xff, 0xfe};
   std::deque<VoiceData> voiceDataQueue;
+  std::deque<VoiceData> sendDataQueue;
 };
 
 #endif

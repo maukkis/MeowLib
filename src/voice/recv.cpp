@@ -6,6 +6,20 @@
 #include <string>
 
 
+
+void VoiceConnection::handleDave(const std::string_view buf, bool json){
+  auto a = dave->processDavePayload(buf, json);
+  api.seq = a.seq.value_or(api.seq);
+  if(a.toSend){
+    size_t size = handle.wsSend(*a.toSend, a.opcode);
+    Log::dbg("sent " + std::to_string(size) + " bytes");
+  }
+  if(a.shouldSendKeyPackage){
+    size_t size = handle.wsSend(dave->getKeyPackagePayload(), meowWs::meowWS_BINARY);
+    Log::dbg("sent key package " + std::to_string(size) + " bytes");
+  }
+}
+
 void VoiceConnection::listen(){
   using namespace std::chrono_literals;
   auto sentHB = std::chrono::steady_clock::now();
@@ -57,8 +71,10 @@ void VoiceConnection::listen(){
           case 4006:
           case 4021:
             api.stop = true;
+            fcv.notify_all();
             return;
           break;
+          case 4014:
           case 4022:
             reconnect(false, true);
           break;
@@ -69,7 +85,15 @@ void VoiceConnection::listen(){
         continue;
       }
       Log::dbg("voice received: " + std::to_string(frame.payloadLen) + " bytes");
+      if(frame.opcode == meowWs::meowWS_BINARY){
+        handleDave(buf);
+        continue;
+      }
       auto j = nlohmann::json::parse(buf);
+      if(isDaveEvent(j["op"])){
+        handleDave(buf, true);
+        continue;
+      }
       switch(j["op"].get<int>()){
         case VoiceOpcodes::READY:
           Log::dbg("voice ready");
@@ -85,6 +109,11 @@ void VoiceConnection::listen(){
         case VoiceOpcodes::SPEAKING:
         break;
         case VoiceOpcodes::CLIENT_CONNECT:
+          dave->addUsers(j["d"]["user_ids"]);
+        break;
+        case VoiceOpcodes::CLIENT_DISCONNECT:
+          dave->removeUsers({j["d"]["user_id"]});
+        break;
         case 15: // undocumented
         case 12:
         case 18:
@@ -98,7 +127,10 @@ void VoiceConnection::listen(){
     } catch(meowHttp::Exception& e){
         Log::dbg(e.what());
         reconnect(true);
+        lastHB = std::chrono::steady_clock::now();
+        sentHB = std::chrono::steady_clock::now();
         continue;
     }
   }
+  fcv.notify_all();
 }

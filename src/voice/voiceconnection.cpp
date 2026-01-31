@@ -1,5 +1,6 @@
 #include "../../include/nyaBot.h"
 #include "../../include/voice/voiceconnection.h"
+#include "../../include/voice/dave/dave.h"
 #include "../../include/eventCodes.h"
 #include <cstdint>
 #include <exception>
@@ -15,7 +16,7 @@
 #define closeSock(x) ::close(x)
 #endif
 
-VoiceConnection::VoiceConnection(NyaBot *a) : bot{a} {
+VoiceConnection::VoiceConnection(NyaBot *a) : bot{a}{  
   std::random_device dev;
   std::mt19937 gen(dev());
   std::uniform_int_distribution<uint32_t> distrib(0, std::numeric_limits<uint32_t>::max());
@@ -36,6 +37,7 @@ void VoiceConnection::flush(){
 
 MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const std::string_view channelId){
   api.guildId = guildId;
+  dave = std::make_unique<Dave>(bot->user.getCurrent().value().id, std::stoull(std::string(channelId)));
   if(!(bot->api.intents & Intents::GUILD_VOICE_STATES)){
     Log::warn("you do not have GUILD_VOICE_STATES intent enabled please enable it to be able to use voice");
     co_return;
@@ -50,6 +52,8 @@ MeowAsync<void> VoiceConnection::connect(const std::string_view guildId, const s
   api.state = VoiceGatewayState::CONNECTED;
   getHello();
   sendIdentify(info);
+
+
   th = std::thread(&VoiceConnection::listen, this);
 }
 
@@ -110,9 +114,6 @@ void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){
   if(waitForNewVoice){
     api.state = VoiceGatewayState::CHANGING_VOICE_SERVER;
     udpInterrupt = true;
-    std::unique_lock<std::mutex> lockq(qmtx);
-    voiceDataQueue.clear();
-    lockq.unlock();
     std::unique_lock lock(voiceServerUpdatemtx);
     Log::dbg("waiting 5 seconds for new voice information");
     voiceServerUpdatecv.wait_for(lock, std::chrono::seconds(5), [this]{
@@ -124,6 +125,7 @@ void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){
       return;
     };
     voiceServerUpdateFlag = false;
+    dave = std::make_unique<Dave>(bot->user.getCurrent()->id, std::stoull(*voiceinfo.channelId));
   }
   handle.setUrl("https://" + voiceinfo.endpoint + "/?v=8");
   if(handle.perform() != OK){
@@ -156,6 +158,7 @@ void VoiceConnection::sendIdentify(const VoiceInfo& info){
   e["user_id"] = bot->api.appId;
   e["session_id"] = info.sessionId;
   e["token"] = info.token;
+  e["max_dave_protocol_version"] = daveVersion;
   j["d"] = e;
   handle.wsSend(j.dump(), meowWs::meowWS_TEXT);
 }

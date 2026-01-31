@@ -16,6 +16,8 @@ struct VoiceInfo {
   std::string guildId;
   std::string token;
   std::string sessionId;
+
+  std::optional<std::string> channelId = std::nullopt;
 };
 
 struct VoiceState {
@@ -30,10 +32,9 @@ struct VoiceCallbacks {
   VoiceCallbacks() = default;
   std::mutex mtx;
   VoiceInfo info;
-  std::optional<std::string> channelId = std::nullopt;
   bool ready(){
     return !info.endpoint.empty() && !info.guildId.empty()
-            && !info.token.empty() && !info.sessionId.empty();
+            && !info.token.empty() && !info.sessionId.empty() && info.channelId;
   }
   std::function<void(bool)> closeCallback;
   std::function<void(VoiceInfo&)> voiceServerUpdate;

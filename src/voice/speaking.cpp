@@ -7,6 +7,7 @@
 #include <cstring>
 #include <meowHttp/websocket.h>
 #include <mutex>
+#include <sys/socket.h>
 #include <thread>
 #include <utility>
 
@@ -36,12 +37,25 @@ void VoiceConnection::udpLoop(){
     std::unique_lock<std::mutex> lock(qmtx);
     if(voiceDataQueue.empty()) fcv.notify_all();
     qcv.wait(lock, [this](){
-      return (!voiceDataQueue.empty() && !udpInterrupt) || api.stop;
+      return ((!voiceDataQueue.empty() || !sendDataQueue.empty()) && !udpInterrupt) || api.stop;
     });
     if(api.stop) return;
-    auto a = std::move(voiceDataQueue.front());
-    voiceDataQueue.pop_front();
+
+    if(sendDataQueue.empty()){
+      auto b = std::move(voiceDataQueue.front());
+      voiceDataQueue.pop_front();
+      auto [data, len] = frameRtp(b.payload, b.samples);
+      sendDataQueue.emplace_front(
+        VoiceData{
+          .payload = std::move(data),
+          .payloadLen = len,
+          .duration = b.duration,
+          .samples = b.samples,
+        });
+    }
     lock.unlock();
+    auto a = std::move(sendDataQueue.front());
+    sendDataQueue.pop_front();
     pollfd pfd;
     pfd.fd = uSockfd;
     pfd.events = POLLOUT;
@@ -56,7 +70,21 @@ void VoiceConnection::udpLoop(){
         Log::dbg("couldnt send");
       }
     } else Log::dbg("poll timeout reached or error");
-
+    // at this time as we have to wait anyway we should prepare the next thing to send
+    if(!voiceDataQueue.empty() && !udpInterrupt){
+      lock.lock();
+      auto a = voiceDataQueue.front();
+      voiceDataQueue.pop_front();
+      lock.unlock();
+      auto [data, len] = frameRtp(a.payload, a.samples);
+      sendDataQueue.emplace_front(
+        VoiceData{
+          .payload = data,
+          .payloadLen = len,
+          .duration = a.duration,
+          .samples = a.samples,
+        });
+    }
     auto time = std::chrono::high_resolution_clock::now() - lastSent;
     auto tts = std::chrono::nanoseconds(
       a.duration * msToNs
@@ -88,10 +116,9 @@ void VoiceConnection::sendSpeaking(){
 
 void VoiceConnection::sendSilence(){
   // we need exclusive access to the queue
-  std::unique_lock<std::mutex> lock(qmtx);
-  if(!voiceDataQueue.empty()){
-    auto item = voiceDataQueue.front();
-    voiceDataQueue.clear();
+  if(!sendDataQueue.empty()){
+    auto item = sendDataQueue.front();
+    sendDataQueue.clear();
     rtpHeader a;
     std::memcpy(&a, item.payload.data(), sizeof(a));
     api.rtpSeq = ntohs(a.seq);
@@ -100,7 +127,7 @@ void VoiceConnection::sendSilence(){
   }
   for(size_t i = 0; i < 5; ++i){
     Log::dbg("sending silence");
-    auto a = frameRtp(silence, frameSize);
+    auto a = frameRtp(silence, 960);
     if(a.second == 0) return;
     #ifdef WIN32
     // WHY TF IS THIS MARKED NO DISCARD
@@ -108,7 +135,7 @@ void VoiceConnection::sendSilence(){
     #else
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     #endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(frameSize / 48));
+    std::this_thread::sleep_for(std::chrono::milliseconds(960 / 48));
   } 
 }
 
