@@ -1,5 +1,4 @@
 #include "../../include/nyaBot.h"
-#include "../../include/voice/voiceconnection.h"
 
 #ifndef VOICE_ENABLED 
 // we have to have a stub for voice server update
