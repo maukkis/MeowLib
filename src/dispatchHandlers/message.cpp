@@ -59,4 +59,5 @@ void NyaBot::messagePollVoteRemove(nlohmann::json j){
   }
 }
 
-
+// placeholder
+void NyaBot::messageDeleteBulk([[maybe_unused]]nlohmann::json j){}

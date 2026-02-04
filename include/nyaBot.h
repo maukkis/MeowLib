@@ -388,6 +388,7 @@ private:
   void messageDelete(nlohmann::json j);
   void messageReactionAdd(nlohmann::json j);
   void messageReactionRemove(nlohmann::json j);
+  void messageDeleteBulk(nlohmann::json j);
 
   void messagePollVoteAdd(nlohmann::json j);
   void messagePollVoteRemove(nlohmann::json j);
@@ -460,6 +461,7 @@ private:
     {"READY", std::bind(&NyaBot::ready, this, std::placeholders::_1)},
     {"RESUMED", std::bind(&NyaBot::resumed, this, std::placeholders::_1)},
     {"MESSAGE_CREATE", std::bind(&NyaBot::messageCreate, this, std::placeholders::_1)},
+    {"MESSAGE_DELETE_BULK", std::bind(&NyaBot::messageDeleteBulk, this, std::placeholders::_1)},
     {"MESSAGE_UPDATE", std::bind(&NyaBot::messageUpdate, this, std::placeholders::_1)},
     {"MESSAGE_DELETE", std::bind(&NyaBot::messageDelete, this, std::placeholders::_1)},
     {"MESSAGE_POLL_VOTE_ADD", std::bind(&NyaBot::messagePollVoteAdd, this, std::placeholders::_1)},

@@ -405,7 +405,7 @@ std::expected<std::nullopt_t, Error> GuildApiRoutes::createBan(const std::string
 {
   nlohmann::json j;
   if(dms)
-    j["delete_messages_seconds"] = *dms;
+    j["delete_message_seconds"] = *dms;
 
   auto res = bot->rest.put(std::format(APIURL "/guilds/{}/bans/{}", guildId, userId), j.dump(), reason.has_value() ? 
     std::make_optional(std::vector<std::string>{"x-audit-log-reason: " + *reason }) : std::nullopt);
