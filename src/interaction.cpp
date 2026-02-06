@@ -125,7 +125,7 @@ std::expected<Message, Error> Interaction::createFollowUpMessage(const Message& 
 std::expected<std::nullopt_t, Error> Interaction::respond(int flags){
   nlohmann::json j;
   j["type"] = 5;
-  j["flags"] = flags;
+  j["data"]["flags"] = flags;
   return manualResponse(j);
 }
 
