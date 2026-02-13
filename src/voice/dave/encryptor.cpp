@@ -10,13 +10,12 @@
 
 constexpr int truncTagSize = 8;
 constexpr uint16_t magicBytes = 0xFAFA;
-constexpr int supplementalDataSize = 1;
 
 Encryptor::Encryptor(const std::vector<uint8_t>& key, Dave *dave): dave{dave}, key{key}{}
 
 
 constexpr uint32_t Encryptor::getMaxHeaderSize(){
-  return sizeof(nonce) + truncTagSize + sizeof(magicBytes) + supplementalDataSize;
+  return sizeof(nonce) + truncTagSize + sizeof(magicBytes) + sizeof(uint8_t);
 }
 
 std::vector<uint8_t> Encryptor::uleb128encode(uint64_t a){
@@ -47,7 +46,7 @@ std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
   previousNonce = nonce >> 24;
   int len = aes128GcmEncrypt(vec.data(), vec.size(), data.data());
   if(len == -1){
-    Log::error("something went wrong with dave E2EE encryption");
+    Log::error("something went wrong with dave encryption");
     return {};
   }
   uint32_t nonce = this->nonce++;
@@ -56,7 +55,7 @@ std::vector<uint8_t> Encryptor::encrypt(const std::vector<uint8_t>& vec){
     ++i;
     data.emplace_back(a);
   }
-  uint8_t supplementalDataSize = truncTagSize + i + sizeof(magicBytes) + ::supplementalDataSize;
+  uint8_t supplementalDataSize = truncTagSize + i + sizeof(magicBytes) + sizeof(supplementalDataSize);
   data.emplace_back(supplementalDataSize);
   for(size_t i = 0; i < sizeof(magicBytes); ++i)
     data.emplace_back(std::bit_cast<uint8_t *>(&magicBytes)[i]);
