@@ -11,6 +11,9 @@
 using SelectData = std::unordered_set<std::string>;
 using TextInputData = std::string;
 using FileUploadData = std::unordered_set<std::string>;
+using RadioActionGroupData = std::string;
+using CheckboxData = bool;
+using CheckboxGroupData = std::unordered_set<std::string>;
 
 struct ModalData {
   template<typename T>
@@ -19,7 +22,7 @@ struct ModalData {
   }
   ComponentTypes type;
   // std::string if Text Input std::unordered_set<std::string> if select or file upload
-  std::variant<std::string, std::unordered_set<std::string>> data;
+  std::variant<std::string, std::unordered_set<std::string>, CheckboxData> data;
 };
 
 class ModalInteraction : public Interaction {
