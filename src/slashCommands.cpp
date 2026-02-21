@@ -1,5 +1,6 @@
 #include "../include/slashCommands.h"
 #include "../include/nyaBot.h"
+#include <cstdint>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <format>
@@ -70,6 +71,8 @@ nlohmann::json SlashCommand::generate() const {
   j["name"] = name;
   j["type"] = 1;
   j["description"] = desc;
+  if(defaultMemberPermissions)
+    j["default_member_permissions"] = *defaultMemberPermissions;
   if(types == IntegrationTypes::BOTH){
     j["integration_types"] = {0,1};
     j["contexts"] = {0,1,2};
@@ -88,6 +91,12 @@ nlohmann::json SlashCommand::generate() const {
   }
   return j;
 }
+
+SlashCommand& SlashCommand::setDefaultMemberPermissions(const uint64_t a){
+  defaultMemberPermissions = std::to_string(a);
+  return *this;
+}
+
 
 std::expected<std::nullopt_t, Error> NyaBot::syncSlashCommands(){
   return syncApplicationCommands();

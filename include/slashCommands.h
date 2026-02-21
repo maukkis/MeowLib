@@ -1,5 +1,6 @@
 #ifndef _SLASH_COMMAND_H
 #define _SLASH_COMMAND_H
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -49,6 +50,8 @@ public:
     return *this;
   }
   nlohmann::json generate() const;
+  SlashCommand& setDefaultMemberPermissions(const uint64_t a);
+  std::optional<std::string> defaultMemberPermissions = std::nullopt;
   std::string name;
   std::string desc;
   std::vector<SlashCommandParameter> params;
