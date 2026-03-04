@@ -173,21 +173,18 @@ User::User(const nlohmann::json& j){
   username = j["username"],
   bot = j.contains("bot") ? j["bot"].get<bool>() : false,
   primaryGuild = j.contains("primary_guild") &&
-    !j["primary_guild"].is_null() &&
-    !j["primary_guild"]["identity_guild_id"].is_null() ?
+    !j["primary_guild"].is_null() ?
       std::make_optional(deserializePrimaryGuild(j["primary_guild"]))
     : std::nullopt;
 }
 
 
 PrimaryGuild deserializePrimaryGuild(const nlohmann::json& j){
-  return {
-    .identityGuildId = j["identity_guild_id"],
-    .identityEnabled = j["identity_enabled"].is_null() ?
-        std::nullopt 
-      : std::make_optional(j["identity_enabled"].get<bool>()),
-    .tag = j["tag"],
-    .badge = j["badge"]
-  };
+  PrimaryGuild g;
+  jsonToOptional(g.identityGuildId, j, "identity_guild_id");
+  jsonToOptional(g.identityEnabled, j, "identity_enabled");
+  jsonToOptional(g.tag, j, "tag");
+  jsonToOptional(g.badge, j, "badge");
+  return g;
 }
 

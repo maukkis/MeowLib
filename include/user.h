@@ -15,10 +15,10 @@ class NyaBot;
 struct Guild;
 
 struct PrimaryGuild {
-  std::string identityGuildId;
+  std::optional<std::string> identityGuildId;
   std::optional<bool> identityEnabled;
-  std::string tag;
-  std::string badge;
+  std::optional<std::string> tag;
+  std::optional<std::string> badge;
 };
 
 
