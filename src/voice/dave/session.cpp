@@ -281,8 +281,14 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
   commitState.reset();
   pendingState.reset();
   proposalCache.clear();
-  createEncryptor();
-  return std::nullopt;
+  transitionInfo = TransitionInfo{
+    .transitionId = transitionId,
+    .protocolVersion = daveVersion,
+  };
+  nlohmann::json d;
+  d["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
+  d["d"]["transition_id"] = transitionId;
+  return d.dump();
 }
 
 

@@ -77,19 +77,26 @@ void VoiceConnection::disconnect(){
 
 void VoiceConnection::close(){
   // we should... actually stop and join the thread
-  api.state = VoiceGatewayState::DISONNECTED;
-  Log::dbg("closing voice :3");
   api.stop = true;
+  api.state = VoiceGatewayState::DISONNECTED;
+  if(bot && bot->voiceTaskList.contains(api.guildId)){
+    std::unique_lock lock(bot->voiceTaskmtx);
+    bot->voiceTaskList.erase(api.guildId);
+    Log::dbg("removed voice task");
+  }
+
+
+  Log::dbg("closing voice :3");
   qcv.notify_all();
   fcv.notify_all();
   if(th.joinable()) th.join();
   if(uth.joinable()) uth.join();
 
-
   sendSilence();
 
   handle.wsClose(1000, "bye :3");
   closeSock(uSockfd);
+  if(!bot) return;
   nlohmann::json j;
   j["op"] = VoiceStateUpdate;
   nlohmann::json d;
@@ -98,14 +105,8 @@ void VoiceConnection::close(){
   d["self_mute"] = false;
   d["self_deaf"] = true;
   j["d"] = d;
-  if(!bot) return;
   int shard = calculateShardId(api.guildId, bot->getNumShards());
   bot->shards.at(shard).queue.addToQueue(j.dump());
-  if(bot->voiceTaskList.contains(api.guildId)){
-    std::unique_lock lock(bot->voiceTaskmtx);
-    bot->voiceTaskList.erase(api.guildId);
-  }
-
 }
 
 void VoiceConnection::reconnect(bool resume, bool waitForNewVoice){

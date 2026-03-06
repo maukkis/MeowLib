@@ -104,6 +104,7 @@ struct VoiceApiInfo {
   std::array<uint8_t, secretKeyLen> secretKey;
   VoiceGatewayState state = VoiceGatewayState::DISONNECTED;
   sockaddr_in dest;
+  std::atomic<bool> silenceSent = false;
 };
 
 class VoiceConnection {

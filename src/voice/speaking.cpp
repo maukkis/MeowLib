@@ -115,6 +115,7 @@ void VoiceConnection::sendSpeaking(){
 
 
 void VoiceConnection::sendSilence(){
+  if(api.silenceSent) return;
   // we need exclusive access to the queue
   if(!sendDataQueue.empty()){
     auto item = sendDataQueue.front();
@@ -136,7 +137,8 @@ void VoiceConnection::sendSilence(){
     sendto(uSockfd, a.first.data(), a.second, 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
     #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(960 / 48));
-  } 
+  }
+  api.silenceSent = true;
 }
 
 
