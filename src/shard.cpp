@@ -138,7 +138,8 @@ void Shard::getHeartbeatInterval(){
       rlen = handle.wsRecv(buf, &frame);
     if(rlen == 0){
       Log::error("failed to receive hello bailing out");
-      std::terminate();
+      bot->stop = true;
+      return;
     }
     auto meowJson = nlohmann::json::parse(buf);
     api.interval = meowJson["d"]["heartbeat_interval"];
