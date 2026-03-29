@@ -1,33 +1,33 @@
 #include "../include/attachment.h"
+#include "../include/helpers.h"
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <nlohmann/json.hpp>
 
+
 ResolvedAttachment::ResolvedAttachment(const nlohmann::json& j){
-  id = j["id"];
-  filename = j["filename"];
-  if(j.contains("title"))
-    title = j["title"];
+  try {
+    id = j["id"];
+    filename = j["filename"];
+    jsonToOptional(title, j, "title");
+    
+    jsonToOptional(description, j, "description");
 
-  if(j.contains("description"))
-    description = j["description"];
+    jsonToOptional(contentType, j, "content_type");
 
-  if(j.contains("content_type"))
-    contentType = j["content_type"];
+    size = j["size"];
+    url = j["url"];
+    proxyUrl = j["proxy_url"];
+    jsonToOptional(height, j, "height");
 
-  size = j["size"];
-  url = j["url"];
-  proxyUrl = j["proxy_url"];
-  if(j.contains("height") && !j["height"].is_null())
-    height = j["height"];
+    jsonToOptional(width, j, "width");
 
-  if(j.contains("width") && !j["width"].is_null())
-    width = j["width"];
-
-  if(j.contains("ephemeral"))
-    ephemeral = j["ephemeral"];
+    jsonToOptional(ephemeral, j, "ephemeral");
+  } catch(nlohmann::json::exception& e){
+    Log::error("please check this potential attachment bug\n" + std::string(e.what()) + "\n" + j.dump());
+  }
 }
 
 Attachment readFile(const std::string& a){
