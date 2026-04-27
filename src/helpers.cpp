@@ -23,11 +23,17 @@ std::string makeFormData(const nlohmann::json j, const std::string_view boundary
 }
 
 std::chrono::time_point<std::chrono::system_clock> ISO8601ToTimepoint(const std::string& str){
-  std::chrono::time_point<std::chrono::system_clock> a;
   std::istringstream b{str};
+  #if defined(__APPLE__)
+  std::tm t{};
+  strptime(str.c_str(), "%FT%T%Ez", &t);
+  return std::chrono::system_clock::from_time_t(mktime(&t));
+  #else
+  std::chrono::time_point<std::chrono::system_clock> a;
   // discord usually sends in this format
   b >> std::chrono::parse("%FT%T%Ez", a);
   return a;
+  #endif
 }
 
 std::string attachmentToDataUri(const Attachment& file){
