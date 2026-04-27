@@ -9,7 +9,7 @@
 
 
 template<typename... T>
-concept AllowedInContainer = std::conjunction<TopLevelComponent<T>...>::value;
+concept AllowedInContainer = std::conjunction<TopLevelComponent<std::remove_cvref_t<T>>...>::value;
 
 
 class ContainerComponent : public Component {
