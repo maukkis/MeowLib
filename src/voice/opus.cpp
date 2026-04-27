@@ -27,7 +27,7 @@ std::expected<std::nullopt_t, int> VoiceConnection::sendPcmData(const uint8_t* p
   std::vector<std::vector<uint8_t>> frames;
   for(size_t i = 0; i < data.size() / pcmDataSize; ++i){
     const opus_int16 *d = std::bit_cast<const opus_int16*>(data.data() + i * pcmDataSize);
-    std::vector<uint8_t> opusData(4000);
+    std::vector<uint8_t> opusData(65535);
     int ret = opus_encode(enc, d, frameSize, opusData.data(), opusData.size());
     if(ret <= 0){
       Log::error(std::string("failed to encode opus") + opus_strerror(ret));
