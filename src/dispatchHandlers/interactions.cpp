@@ -113,7 +113,13 @@ SlashCommandInteraction constructSlash(nlohmann::json& json, NyaBot *a){
   slash.resolvedRoles = deserializeResolved<Role>(json["data"]);
   if(json["data"].contains("options")){
     for (const auto& it : json["data"]["options"]){
-      slash.parameters.insert({it["name"], it["value"].get<std::string>()});
+      std::string val;
+      if(it["value"].is_number())
+        val = std::to_string(it["value"].get<int>());
+      else if(it["value"].is_boolean())
+        val = std::to_string(it["value"].get<bool>());
+      else val = it["value"];
+      slash.parameters.insert({it["name"], val});
     }
   }
   return slash;
