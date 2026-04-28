@@ -19,9 +19,11 @@ void NyaBot::guildCreate(nlohmann::json j){
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   guild.cache.insertGuildRole(a.id, a.roles);
   guild.cache.insert(a.id, a);
+  std::shared_lock lock(api.unavailableGuildIdsmtx);
   if(api.unavailableGuildIds.contains(j["d"]["id"])){
+    lock.unlock();
     Log::dbg("Guild id: " + j["d"]["id"].get<std::string>() + " meant for caching. Caching the guild and returning");
-    std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
+    std::unique_lock lock(api.unavailableGuildIdsmtx);
     api.unavailableGuildIds.erase(j["d"]["id"]);
 
     return;
@@ -46,8 +48,10 @@ void NyaBot::guildDelete(nlohmann::json j){
   while(shards.at(shard).api.state != GatewayStates::READY){
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
+  std::shared_lock lock(api.unavailableGuildIdsmtx);
   if(api.unavailableGuildIds.contains(a.id)){
-    std::unique_lock<std::mutex> lock(api.UnavailableGuildIdsmtx);
+    lock.unlock();
+    std::unique_lock lock(api.unavailableGuildIdsmtx);
     api.unavailableGuildIds.erase(a.id);
     return;
   }

@@ -28,6 +28,7 @@
 #include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include "error.h"
+#include <shared_mutex>
 #include <string>
 #include <atomic>
 #include "log.h"
@@ -46,7 +47,7 @@
 
 struct ImportantApiStuff {
   std::string token;
-  std::mutex UnavailableGuildIdsmtx;
+  std::shared_mutex unavailableGuildIdsmtx;
   std::unordered_set<std::string> unavailableGuildIds;
   std::string appId;
   std::string defaultUrl;
