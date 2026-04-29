@@ -28,6 +28,7 @@ void NyaBot::ready(nlohmann::json j){
     ready.guilds.emplace_back(UnavailableGuild{.id = a["id"], .unavailable = a["unavailable"]});
     api.unavailableGuildIds.insert(a["id"]);
   }
+  lock.unlock();
   api.appId = ready.user.id;
   shards.at(shard).api.state = GatewayStates::READY;
   if(funs.onReadyF && shard == 0)
