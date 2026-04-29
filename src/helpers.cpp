@@ -5,6 +5,9 @@
 #include <string_view>
 #include <format>
 #include <vector>
+#if defined(__APPLE__)
+#include <ctime>
+#endif
 #include "../include/helpers.h"
 #include "../include/base64.h"
 
@@ -23,16 +26,26 @@ std::string makeFormData(const nlohmann::json j, const std::string_view boundary
 }
 
 std::chrono::time_point<std::chrono::system_clock> ISO8601ToTimepoint(const std::string& str){
-  std::istringstream b{str};
   #if defined(__APPLE__)
   std::tm t{};
-  strptime(str.c_str(), "%FT%T%Ez", &t);
-  return std::chrono::system_clock::from_time_t(mktime(&t));
+  strptime(str.c_str(), "%FT%T%z", &t);
+  size_t start = str.find(".");
+  auto time = std::chrono::system_clock::from_time_t(timegm(&t));
+  if(start != std::string::npos){
+    ++start;
+    auto end = str.find("+", start);
+    if(end == std::string::npos) return time;
+    std::string fractions = str.substr(start, end - start);
+    time += std::chrono::microseconds(std::stoi(fractions));
+  }
+  return time;
   #else
+  std::istringstream b{str};
   std::chrono::time_point<std::chrono::system_clock> a;
   // discord usually sends in this format
   b >> std::chrono::parse("%FT%T%Ez", a);
   return a;
+
   #endif
 }
 
