@@ -24,6 +24,12 @@ enum class IntegrationTypes {
   BOTH
 };
 
+enum class InteractionContexts {
+  GUILD,
+  BOT_DM,
+  PRIVATE_CHANNEL
+};
+
 class SlashCommandParameter{
 public:
   SlashCommandParameter(const std::string_view name, const std::string_view desc, Types type, bool required);
@@ -49,13 +55,15 @@ public:
     handler = std::make_unique<T>(std::forward<Args>(args)...);
     return *this;
   }
+  SlashCommand& setContexts(const std::vector<InteractionContexts>& contexts);
   nlohmann::json generate() const;
   SlashCommand& setDefaultMemberPermissions(const uint64_t a);
   std::optional<std::string> defaultMemberPermissions = std::nullopt;
   std::string name;
   std::string desc;
   std::vector<SlashCommandParameter> params;
-  IntegrationTypes types;
+  std::vector<int> types;
+  std::vector<InteractionContexts> contexts;
   std::unique_ptr<Command> handler = nullptr;
 };
 #endif

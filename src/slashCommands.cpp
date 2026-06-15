@@ -8,8 +8,28 @@
 
 SlashCommand::SlashCommand(const std::string_view name, const std::string_view desc, enum IntegrationTypes type) 
   : name{name},
-    desc{desc},
-    types{static_cast<int>(type)} {}
+    desc{desc}
+{
+  if(type == IntegrationTypes::BOTH){
+    types = {0,1};
+    contexts = {InteractionContexts::GUILD, InteractionContexts::BOT_DM, InteractionContexts::PRIVATE_CHANNEL};
+  } else {
+    types = {static_cast<int>(type)};
+    if(type == IntegrationTypes::USER_INSTALL){
+      contexts = {InteractionContexts::PRIVATE_CHANNEL};
+    }
+    else{
+      contexts = {InteractionContexts::GUILD};
+    }
+  }
+}
+
+
+
+SlashCommand& SlashCommand::setContexts(const std::vector<InteractionContexts>& contexts){
+  this->contexts = contexts;
+  return *this;
+}
 
 SlashCommand& SlashCommand::addParam(const SlashCommandParameter& a){
   params.emplace_back(a);
@@ -73,18 +93,8 @@ nlohmann::json SlashCommand::generate() const {
   j["description"] = desc;
   if(defaultMemberPermissions)
     j["default_member_permissions"] = *defaultMemberPermissions;
-  if(types == IntegrationTypes::BOTH){
-    j["integration_types"] = {0,1};
-    j["contexts"] = {0,1,2};
-  } else {
-    j["integration_types"] = {types};
-    if(types == IntegrationTypes::USER_INSTALL){
-      j["contexts"] = {2};
-    }
-    else{
-      j["contexts"] = {0};
-    }
-  }
+  j["contexts"] = contexts;
+  j["integration_types"] = types;
   j["options"] = nlohmann::json::array();
   for(const auto& param : params){
     j["options"].emplace_back(param.generate());

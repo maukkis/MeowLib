@@ -3,25 +3,34 @@
 #include "../include/nyaBot.h"
 
 
-ContextMenuCommand::ContextMenuCommand(const std::string_view name, ContextMenuTypes type, IntegrationTypes types)
-  : name{name}, type{type}, types{types} {}
+ContextMenuCommand::ContextMenuCommand(const std::string_view name, ContextMenuTypes type, IntegrationTypes itypes)
+  : name{name}, type{type}
+{
+  if(itypes == IntegrationTypes::BOTH){
+    types = {0,1};
+    contexts = {InteractionContexts::GUILD, InteractionContexts::BOT_DM, InteractionContexts::PRIVATE_CHANNEL};
+  } else {
+    types = {static_cast<int>(itypes)};
+    if(itypes == IntegrationTypes::USER_INSTALL){
+      contexts = {InteractionContexts::PRIVATE_CHANNEL};
+    }
+    else{
+      contexts = {InteractionContexts::GUILD};
+    }
+  }
+}
+
+ContextMenuCommand& ContextMenuCommand::setContexts(const std::vector<InteractionContexts> contexts){
+  this->contexts = contexts;
+  return *this;
+}
 
 nlohmann::json ContextMenuCommand::generate() const {
   nlohmann::json j;
   j["name"] = name;
   j["type"] = type;
-  if(types == IntegrationTypes::BOTH){
-    j["integration_types"] = {0,1};
-    j["contexts"] = {0,1,2};
-  } else {
-    j["integration_types"] = {types};
-    if(types == IntegrationTypes::USER_INSTALL){
-      j["contexts"] = {2};
-    }
-    else{
-      j["contexts"] = {0};
-    }
-  }
+  j["contexts"] = contexts;
+  j["integration_types"] = types;
   return j;
 }
 

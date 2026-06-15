@@ -15,10 +15,12 @@ class ContextMenuCommand {
 public:
   ContextMenuCommand(const std::string_view name, ContextMenuTypes type, IntegrationTypes types);
   nlohmann::json generate() const;
+  ContextMenuCommand& setContexts(const std::vector<InteractionContexts> contexts);
 private:
   std::string name;
   ContextMenuTypes type;
-  IntegrationTypes types;
+  std::vector<int> types;
+  std::vector<InteractionContexts> contexts;
 };
 
 
