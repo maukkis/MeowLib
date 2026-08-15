@@ -1,5 +1,6 @@
 #ifndef _INCLUDE_VOICE_DAVE_DAVE_H
 #define _INCLUDE_VOICE_DAVE_DAVE_H
+#include <bit>
 #include <cstdint>
 #include <meowHttp/websocket.h>
 #include <mlspp/mls/messages.h>
@@ -84,10 +85,16 @@ private:
 mls::CipherSuite getCipherSuite();
 
 template<typename T>
-mls::bytes_ns::bytes bytesFrom(const T& value, size_t size){
+mls::bytes_ns::bytes lebytesFrom(const T& value, size_t size){
   mls::bytes_ns::bytes bytes;
-  for(size_t i = 0; i < size; ++i){
-    bytes.push_back(std::bit_cast<uint8_t *>(&value)[i]);
+  if constexpr(std::endian::native == std::endian::big){
+    for(size_t i = size - 1; i >= 0; --i){
+      bytes.push_back(std::bit_cast<uint8_t *>(&value)[i]);
+    }
+  } else {
+    for(size_t i = 0; i < size; ++i){
+      bytes.push_back(std::bit_cast<uint8_t *>(&value)[i]);
+    }
   }
   return bytes;
 }

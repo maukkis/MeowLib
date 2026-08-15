@@ -44,7 +44,7 @@ void Dave::createEncryptor(){
     Log::error("cannot create an encryptor without a state");
     return;
   }
-  auto userId = bytesFrom(std::stoull(botId), sizeof(uint64_t));
+  auto userId = lebytesFrom(std::stoull(botId), sizeof(uint64_t));
   auto baseSecret = currentState->do_export(std::string(exporterLabel), userId, 16);
   keyratchet = mls::HashRatchet(getCipherSuite(), baseSecret);
   auto key = getKeyForGeneration(0); // when we create an encryptor for a new epoch we start the generation from zero always

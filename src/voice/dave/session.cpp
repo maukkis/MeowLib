@@ -145,6 +145,7 @@ std::optional<std::string> Dave::prepareEpoch(const std::string_view a){
   return std::nullopt;
 }
 
+
 std::optional<std::string> Dave::processProposals(const std::string_view s){
   try{
 
@@ -239,7 +240,7 @@ std::optional<std::string> Dave::processCommitTransition(const std::string_view 
   commitState.reset();
   pendingState.reset();
   proposalCache.clear();
-  if(transitionId != 0){
+  if(transitionId != 0){ // initial group creates marked with transition id 0 dont send execute transition
     transitionInfo = TransitionInfo{
       .transitionId = transitionId,
       .protocolVersion = daveVersion,
@@ -281,14 +282,18 @@ std::optional<std::string> Dave::processWelcome(const std::string_view a){
   commitState.reset();
   pendingState.reset();
   proposalCache.clear();
-  transitionInfo = TransitionInfo{
-    .transitionId = transitionId,
-    .protocolVersion = daveVersion,
-  };
-  nlohmann::json d;
-  d["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
-  d["d"]["transition_id"] = transitionId;
-  return d.dump();
+  if(transitionId != 0){
+    transitionInfo = TransitionInfo{
+      .transitionId = transitionId,
+      .protocolVersion = daveVersion,
+    };
+    nlohmann::json d;
+    d["op"] = VoiceOpcodes::DAVE_TRANSITION_READY;
+    d["d"]["transition_id"] = transitionId;
+    return d.dump();
+  }
+  createEncryptor();
+  return std::nullopt;
 }
 
 
