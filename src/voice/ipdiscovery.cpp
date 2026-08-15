@@ -57,11 +57,6 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
   api.dest.sin_port = htons(a.port);
   inet_pton(AF_INET, a.ip.c_str(), &api.dest.sin_addr);
 
-  if(::connect(uSockfd, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest))){
-    Log::error("failed to connect to voice gateway");
-    return std::unexpected(std::nullopt);
-  }
-  Log::dbg("connected to voice udp socket");
   std::array<uint8_t, bufSize> buf{0}; 
   
   uint16_t type = htons(IpDiscoveryCodes::SEND);
@@ -73,9 +68,9 @@ std::expected<IpDiscovery, std::nullopt_t> VoiceConnection::performIpDiscovery(c
   uint32_t ssrc = htonl(a.ssrc);
   std::memcpy(&buf.at(ssrcStart), &ssrc, sizeof(ssrc));
   #ifdef WIN32
-  size_t slen = send(uSockfd, std::bit_cast<char*>(buf.data()), buf.size(), 0);
+  size_t slen = sendto(uSockfd, std::bit_cast<char*>(buf.data()), buf.size(), 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
   #else
-  size_t slen = send(uSockfd, buf.data(), buf.size(), 0);
+  size_t slen = sendto(uSockfd, buf.data(), buf.size(), 0, std::bit_cast<sockaddr*>(&api.dest), sizeof(api.dest));
   #endif
 
   if(slen <= 0){

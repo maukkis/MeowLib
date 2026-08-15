@@ -78,6 +78,11 @@ int Encryptor::aes128GcmEncrypt(uint8_t const *pt, int ptlen, uint8_t *ct){
     return -1;
   }
   std::array<uint8_t, 12> aa{0};
+
+  uint32_t nonce = this->nonce;
+  if constexpr(std::endian::native == std::endian::big) // we are always sending the nonce as LE this is why the swap
+    nonce = std::byteswap(nonce);
+
   std::memcpy(aa.data() + 8, &nonce, sizeof(nonce));
   if(EVP_EncryptInit_ex2(ctx, nullptr, key.data(), aa.data(), nullptr) != 1){
     EVP_CIPHER_CTX_free(ctx);

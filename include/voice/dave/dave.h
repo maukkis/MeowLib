@@ -88,7 +88,7 @@ template<typename T>
 mls::bytes_ns::bytes lebytesFrom(const T& value, size_t size){
   mls::bytes_ns::bytes bytes;
   if constexpr(std::endian::native == std::endian::big){
-    for(size_t i = size - 1; i >= 0; --i){
+    for(ssize_t i = size - 1; i >= 0; --i){
       bytes.push_back(std::bit_cast<uint8_t *>(&value)[i]);
     }
   } else {
