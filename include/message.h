@@ -76,6 +76,14 @@ struct MessageReaction {
 };
 
 
+class AllowedMentions {
+public:
+  nlohmann::json generate() const;
+  std::optional<std::vector<std::string>> parse = std::nullopt;
+  std::optional<std::vector<std::string>> roles = std::nullopt;
+  std::optional<std::vector<std::string>> users = std::nullopt;
+  std::optional<bool> repliedUser = std::nullopt;
+};
 
 
 
@@ -115,6 +123,7 @@ public:
   std::optional<InteractionMetaData> interactionData;
   std::optional<Poll> poll;
   std::vector<ResolvedAttachment> resolvedAttachments;
+  std::optional<AllowedMentions> allowedMentions = std::nullopt;
   //this would have been an optional but i cant have recursive optionals
   std::unique_ptr<Message> referencedMessage = nullptr;
 private:

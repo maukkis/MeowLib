@@ -49,6 +49,21 @@ MessageReaction::MessageReaction(const nlohmann::json& j){
 }
 
 
+nlohmann::json AllowedMentions::generate() const {
+  nlohmann::json j;
+  if(parse)
+    j["parse"] = *parse;
+  if(roles)
+    j["roles"] = *roles;
+  if(users)
+    j["users"] = *users;
+  if(repliedUser)
+    j["replied_user"] = *repliedUser;
+
+  return j;
+}
+
+
 Message::Message(const nlohmann::json& j){
   content = j["content"];
   msgflags = j["flags"];
@@ -125,6 +140,9 @@ nlohmann::json Message::generate() const {
 
   if(poll)
     j["poll"] = poll->generate();
+  if(allowedMentions){
+    j["allowed_mentions"] = allowedMentions->generate();
+  }
   return j;
 }
 
