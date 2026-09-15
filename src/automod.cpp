@@ -1,14 +1,16 @@
 #include "../include/automod.h"
 #include "../include/nyaBot.h"
 #include <nlohmann/json.hpp>
+#include <variant>
 
 
 AutoModAction::AutoModAction(const nlohmann::json& j){
   type = j["type"];
-  if(j["metadata"].empty()) return;
+  if(!j.contains("metadata") || j["metadata"].empty()) return;
   switch(type){ 
     case AutoModActionType::BLOCK_MESSAGE:
-      metadata.emplace<static_cast<int>(AutoModActionType::BLOCK_MESSAGE)-1>(j["metadata"]["custom_message"]);
+      if(j["metadata"].contains("custom_message") && !j["metadata"]["custom_message"].is_null())
+        metadata.emplace<static_cast<int>(AutoModActionType::BLOCK_MESSAGE)-1>(j["metadata"]["custom_message"]);
     break;
     case AutoModActionType::TIMEOUT:
       metadata.emplace<static_cast<int>(AutoModActionType::TIMEOUT)-1>(j["metadata"]["timeout"]);
@@ -26,7 +28,8 @@ nlohmann::json AutoModAction::generate() const {
   j["type"] = type;
   switch(type){ 
     case AutoModActionType::BLOCK_MESSAGE:
-      j["metadata"]["custom_message"] = std::get<0>(metadata);
+      if(metadata.index() == 0)
+        j["metadata"]["custom_message"] = std::get<0>(metadata);
     break;
     case AutoModActionType::TIMEOUT:
       j["metadata"]["timeout"] = std::get<2>(metadata);
