@@ -28,6 +28,18 @@ enum class ChannelType{
 };
 
 
+enum class ChannelFlags : int {
+  PINNED = 1 << 1,
+  REQUIRE_TAG = 1 << 4,
+  HIDE_MEDIA_DOWNLOAD_OPTIONS = 1 << 15,
+  CHANNEL_OBFUSCATED = 1 << 17,
+  IS_SPOILER_CHANNEL = 1 << 21,
+
+
+};
+
+int operator&(ChannelFlags a, ChannelFlags b);
+
 struct ThreadMetadata {
   ThreadMetadata() = default;
   ThreadMetadata(const nlohmann::json& j);
@@ -50,6 +62,7 @@ struct Channel {
   std::optional<int> position = std::nullopt;
   std::optional<std::string> name = std::nullopt;
   std::optional<std::string> topic = std::nullopt;
+  std::optional<ChannelFlags> flags = std::nullopt;
   std::optional<bool> nsfw = std::nullopt;
   std::optional<std::string> lastPinTimestamp = std::nullopt;
   std::optional<std::string> parentId = std::nullopt;

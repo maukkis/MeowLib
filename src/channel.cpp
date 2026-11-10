@@ -1,5 +1,14 @@
 #include "../include/channel.h"
 #include "../include/nyaBot.h"
+#include "helpers.h"
+#include <type_traits>
+
+
+
+int operator&(ChannelFlags a, ChannelFlags b){
+  return static_cast<std::underlying_type<ChannelFlags>::type>(a) &
+    static_cast<std::underlying_type<ChannelFlags>::type>(b);
+}
 
 Channel::Channel(const nlohmann::json& j) {
   id = j["id"];
@@ -25,6 +34,7 @@ Channel::Channel(const nlohmann::json& j) {
     nsfw = j["nsfw"];
   if(j.contains("thread_metadata"))
     threadMetadata = ThreadMetadata(j["thread_metadata"]);
+  jsonToOptional(flags, j, "flags");
 }
 
 

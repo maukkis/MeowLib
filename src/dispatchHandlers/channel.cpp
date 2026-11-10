@@ -1,3 +1,4 @@
+#include "channel.h"
 #include "../../include/nyaBot.h"
 #include "../../include/typingstart.h"
 
@@ -17,9 +18,10 @@ TypingStart::TypingStart(const nlohmann::json& j){
 
 void NyaBot::channelCreate(nlohmann::json j){
   Channel a(j["d"]);
-  channel.cache.insert(a.id, a);
-  if(a.guildId)
-    guild.cache.insertGuildChannel(a);
+  if(!(a.flags.value_or(static_cast<ChannelFlags>(0)) & ChannelFlags::CHANNEL_OBFUSCATED)){
+    channel.cache.insert(a.id, a);
+    if(a.guildId) guild.cache.insertGuildChannel(a);
+  }
   if(funs.onChannelCreateF){
     funs.onChannelCreateF(a);
   }
@@ -41,9 +43,10 @@ void NyaBot::channelDelete(nlohmann::json j){
 
 void NyaBot::channelUpdate(nlohmann::json j){
   Channel a(j["d"]);
-  channel.cache.insert(a.id, a);
-  if(a.guildId)
-    guild.cache.insertGuildChannel(a);
+  if(!(a.flags.value_or(static_cast<ChannelFlags>(0)) & ChannelFlags::CHANNEL_OBFUSCATED)){
+    channel.cache.insert(a.id, a);
+    if(a.guildId) guild.cache.insertGuildChannel(a);
+  }
   if(funs.onChannelUpdateF){
     funs.onChannelUpdateF(a);
   }
