@@ -90,7 +90,9 @@ std::expected<Channel, Error> ChannelApiRoutes::close(const std::string_view id)
     err.printErrors();
     return std::unexpected(err);
   }
-  return Channel(nlohmann::json::parse(res->first));
+  Channel a(nlohmann::json::parse(res->first));
+  cache.erase(a.id);
+  return a;
 }
 
 

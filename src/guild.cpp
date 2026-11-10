@@ -293,6 +293,7 @@ std::expected<std::vector<Channel>, Error> GuildCache::fetchGuildChannels(const 
   std::vector<Channel> vec;
   auto j = nlohmann::json::parse(res->first);
   std::unique_lock<std::mutex> lock(relatedObjects[guildId].channelmtx);
+  relatedObjects[guildId].channelIds.clear();
   for(const auto& channel : j){
     Channel a(channel);
     relatedObjects[guildId].channelIds.emplace(a.id);
@@ -314,6 +315,7 @@ std::expected<std::vector<Role>, Error> GuildCache::fetchGuildRoles(const std::s
   std::vector<Role> roles;
   auto j = nlohmann::json::parse(res->first);
   std::unique_lock<std::mutex> lock(relatedObjects[guildId].rolesmtx);
+  relatedObjects[guildId].roles.clear();
   for(const auto& role : j){
     Role a(role);
     relatedObjects[guildId].roles.emplace(a.id);
